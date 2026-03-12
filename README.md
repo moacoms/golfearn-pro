@@ -2,6 +2,13 @@
 
 골프 레슨 프로를 위한 고객 관리 시스템 (CRM) Flutter 앱
 
+## 📚 문서
+상세한 개발 가이드와 진행 상황은 `docs/` 폴더를 확인하세요:
+- **[개발 환경 설정](docs/SETUP_GUIDE.md)** - Flutter, IntelliJ 설정 방법
+- **[개발 진행 상황](docs/DEVELOPMENT_LOG.md)** - 현재까지 완성된 기능들
+- **[통합 가이드](docs/INTEGRATION.md)** - 기존 Golfearn 시스템과의 연동
+- **[Claude Code 가이드](docs/CLAUDE.md)** - AI 개발 도우미 사용법
+
 ## 📱 플랫폼
 - iOS
 - Android  

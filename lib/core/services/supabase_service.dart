@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../main.dart';
@@ -52,13 +53,29 @@ class SupabaseService {
   
   // 프로필 조회
   Future<Map<String, dynamic>?> getProfile(String userId) async {
-    final response = await client
-        .from('profiles')
-        .select()
-        .eq('id', userId)
-        .single();
-    
-    return response;
+    try {
+      final response = await client
+          .from('users')
+          .select()
+          .eq('id', userId)
+          .single();
+      
+      return response;
+    } catch (e) {
+      // users 테이블이 없으면 profiles 테이블 시도
+      try {
+        final response = await client
+            .from('profiles')
+            .select()
+            .eq('id', userId)
+            .single();
+        
+        return response;
+      } catch (e) {
+        print('프로필 조회 실패: $e');
+        return null;
+      }
+    }
   }
   
   // 레슨프로 여부 확인
@@ -128,7 +145,7 @@ class SupabaseService {
     required String path,
     required List<int> bytes,
   }) async {
-    await client.storage.from(bucket).uploadBinary(path, bytes);
+    await client.storage.from(bucket).uploadBinary(path, Uint8List.fromList(bytes));
     
     final url = client.storage.from(bucket).getPublicUrl(path);
     return url;

@@ -5,6 +5,8 @@ import '../services/supabase_service.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/students/presentation/pages/students_list_page.dart';
 import '../../features/schedule/presentation/pages/schedule_page.dart';
 import '../../features/packages/presentation/pages/packages_page.dart';
@@ -14,26 +16,44 @@ import '../../shared/widgets/main_scaffold.dart';
 
 /// 라우터 프로바이더
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final supabaseService = ref.watch(supabaseServiceProvider);
+  final isAuthenticated = ref.watch(isAuthenticatedProvider);
   
   return GoRouter(
     initialLocation: '/',
     debugLogDiagnostics: true,
     redirect: (context, state) {
-      final isLoggedIn = supabaseService.currentUser != null;
       final isAuthRoute = state.matchedLocation == '/login' || 
                          state.matchedLocation == '/register';
+      final isSplashRoute = state.matchedLocation == '/';
+      
+      print('라우터 리다이렉트: ${state.matchedLocation}, 인증상태: $isAuthenticated');
+      
+      // OAuth 콜백 파라미터가 있는 경우 제거하고 로그인 페이지로
+      if (state.uri.queryParameters.containsKey('code') || 
+          state.uri.queryParameters.containsKey('error')) {
+        print('OAuth 파라미터 감지, 로그인으로 리다이렉트');
+        return '/login';
+      }
+      
+      // 스플래시 화면은 항상 허용
+      if (isSplashRoute) {
+        print('스플래시 화면 허용');
+        return null;
+      }
       
       // 로그인하지 않은 경우 로그인 페이지로
-      if (!isLoggedIn && !isAuthRoute) {
+      if (!isAuthenticated && !isAuthRoute) {
+        print('미인증 사용자, 로그인으로 리다이렉트');
         return '/login';
       }
       
       // 로그인한 경우 인증 페이지 접근 시 홈으로
-      if (isLoggedIn && isAuthRoute) {
+      if (isAuthenticated && isAuthRoute) {
+        print('인증된 사용자가 로그인 페이지 접근, 홈으로 리다이렉트');
         return '/home';
       }
       
+      print('리다이렉트 없음');
       return null;
     },
     routes: [
@@ -150,22 +170,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 });
 
 // Placeholder 페이지들 (실제 구현 전 임시)
-class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
-  
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('대시보드'));
-  }
-}
-
 class StudentDetailPage extends StatelessWidget {
   final String studentId;
   const StudentDetailPage({super.key, required this.studentId});
   
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text('학생 상세: $studentId'));
+    return Scaffold(
+      appBar: AppBar(title: Text('학생 상세: $studentId')),
+      body: const Center(child: Text('학생 상세 페이지 (준비 중)')),
+    );
   }
 }
 
@@ -174,6 +188,9 @@ class StudentFormPage extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text('학생 추가/수정'));
+    return Scaffold(
+      appBar: AppBar(title: const Text('학생 추가/수정')),
+      body: const Center(child: Text('학생 추가/수정 페이지 (준비 중)')),
+    );
   }
 }
