@@ -8,6 +8,8 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/students/presentation/pages/students_list_page.dart';
+import '../../features/students/presentation/pages/student_detail_page.dart';
+import '../../features/students/presentation/pages/student_form_page.dart';
 import '../../features/schedule/presentation/pages/schedule_page.dart';
 import '../../features/packages/presentation/pages/packages_page.dart';
 import '../../features/lessons/presentation/pages/lessons_page.dart';
@@ -110,6 +112,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               child: const StudentsListPage(),
             ),
             routes: [
+              // 학생 추가 (new를 :id 앞에 배치)
+              GoRoute(
+                path: 'new',
+                name: 'student-new',
+                pageBuilder: (context, state) => MaterialPage(
+                  key: state.pageKey,
+                  child: const StudentFormPage(),
+                ),
+              ),
               // 학생 상세
               GoRoute(
                 path: ':id',
@@ -121,15 +132,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     child: StudentDetailPage(studentId: studentId),
                   );
                 },
-              ),
-              // 학생 추가
-              GoRoute(
-                path: 'new',
-                name: 'student-new',
-                pageBuilder: (context, state) => MaterialPage(
-                  key: state.pageKey,
-                  child: const StudentFormPage(),
-                ),
               ),
             ],
           ),
@@ -163,34 +165,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               child: const IncomePage(),
             ),
           ),
+
+          // 패키지 관리
+          GoRoute(
+            path: '/packages',
+            name: 'packages',
+            pageBuilder: (context, state) => MaterialPage(
+              key: state.pageKey,
+              child: const PackagesPage(),
+            ),
+          ),
         ],
       ),
     ],
   );
 });
 
-// Placeholder 페이지들 (실제 구현 전 임시)
-class StudentDetailPage extends StatelessWidget {
-  final String studentId;
-  const StudentDetailPage({super.key, required this.studentId});
-  
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('학생 상세: $studentId')),
-      body: const Center(child: Text('학생 상세 페이지 (준비 중)')),
-    );
-  }
-}
-
-class StudentFormPage extends StatelessWidget {
-  const StudentFormPage({super.key});
-  
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('학생 추가/수정')),
-      body: const Center(child: Text('학생 추가/수정 페이지 (준비 중)')),
-    );
-  }
-}

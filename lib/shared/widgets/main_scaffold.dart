@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../../features/auth/presentation/providers/auth_controller.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 
@@ -40,9 +40,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       route: '/lessons',
     ),
     NavItem(
-      icon: Icons.attach_money,
-      label: '수입관리',
-      route: '/income',
+      icon: Icons.inventory_2,
+      label: '패키지',
+      route: '/packages',
     ),
   ];
 
@@ -51,84 +51,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     final currentUser = ref.watch(currentUserProvider);
     final isLessonPro = ref.watch(isLessonProProvider);
 
-    // 레슨프로가 아닌 경우 접근 제한
+    // 레슨프로가 아닌 경우 등록 화면 표시
     if (!isLessonPro) {
-      return Scaffold(
-        body: Center(
-          child: Padding(
-            padding: EdgeInsets.all(24.w),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.lock_outline,
-                  size: 64.w,
-                  color: Colors.grey[400],
-                ),
-                SizedBox(height: 24.h),
-                Text(
-                  '레슨프로 전용 앱입니다',
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                Text(
-                  '이 앱은 골프 레슨프로를 위한 CRM 시스템입니다.\n레슨프로로 등록하시면 모든 기능을 사용하실 수 있습니다.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: Colors.grey[600],
-                    height: 1.5,
-                  ),
-                ),
-                SizedBox(height: 40.h),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // TODO: 레슨프로 등록 페이지로 이동
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('레슨프로 등록 기능은 준비 중입니다.'),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981),
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                    ),
-                    child: Text(
-                      '레슨프로 등록하기',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                TextButton(
-                  onPressed: () => context.go('/login'),
-                  child: Text(
-                    '로그아웃',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
+      return _buildLessonProRegistration(context, ref, currentUser);
     }
 
     // 현재 위치에 따른 선택된 인덱스 업데이트
@@ -225,6 +150,131 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
             label: item.label,
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildLessonProRegistration(BuildContext context, WidgetRef ref, dynamic currentUser) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.sports_golf,
+                size: 64.w,
+                color: const Color(0xFF10B981),
+              ),
+              SizedBox(height: 24.h),
+              Text(
+                '레슨프로 전용 앱입니다',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                '이 앱은 골프 레슨프로를 위한 CRM 시스템입니다.\n아래 버튼을 눌러 레슨프로로 등록하세요.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: Colors.grey[600],
+                  height: 1.5,
+                ),
+              ),
+              SizedBox(height: 40.h),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      // Supabase profiles 테이블에서 is_lesson_pro = true로 업데이트
+                      final userId = Supabase.instance.client.auth.currentUser?.id;
+                      if (userId == null) return;
+
+                      await Supabase.instance.client
+                          .from('profiles')
+                          .update({'is_lesson_pro': true})
+                          .eq('id', userId);
+
+                      // 상태 새로고침 - authController를 무효화하여 프로필 다시 로드
+                      ref.invalidate(authControllerProvider);
+                      ref.invalidate(currentUserProvider);
+                      ref.invalidate(isLessonProProvider);
+
+                      // 인증 상태를 다시 로드하기 위해 로그인 다시 트리거
+                      final profile = await Supabase.instance.client
+                          .from('profiles')
+                          .select()
+                          .eq('id', userId)
+                          .single();
+
+                      // AuthController 상태를 업데이트된 프로필로 갱신
+                      final user = currentUser;
+                      if (user != null) {
+                        ref.read(authControllerProvider.notifier).state = AuthState(
+                          user: user.copyWith(isLessonPro: true),
+                        );
+                      }
+
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('레슨프로로 등록되었습니다!'),
+                            backgroundColor: Color(0xFF10B981),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('등록 실패: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                  child: Text(
+                    '레슨프로로 등록하기',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              TextButton(
+                onPressed: () async {
+                  await Supabase.instance.client.auth.signOut();
+                  ref.invalidate(authControllerProvider);
+                  if (context.mounted) context.go('/login');
+                },
+                child: Text(
+                  '로그아웃',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
