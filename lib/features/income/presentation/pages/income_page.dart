@@ -115,6 +115,16 @@ class IncomePage extends ConsumerWidget {
             ),
           ),
 
+          // 카테고리별 & 결제수단별 통계
+          recordsAsync.when(
+            data: (records) {
+              if (records.isEmpty) return const SizedBox.shrink();
+              return _buildStatisticsSection(records);
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+
           // 수입 기록 리스트
           Expanded(
             child: recordsAsync.when(
@@ -145,6 +155,163 @@ class IncomePage extends ConsumerWidget {
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text('오류: $e')),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatisticsSection(List<IncomeEntity> records) {
+    // 카테고리별 합계
+    final lessonTotal = records
+        .where((r) => r.category == 'lesson')
+        .fold<int>(0, (sum, r) => sum + r.amount);
+    final packageTotal = records
+        .where((r) => r.category == 'package')
+        .fold<int>(0, (sum, r) => sum + r.amount);
+    final otherCategoryTotal = records
+        .where((r) => r.category == 'other')
+        .fold<int>(0, (sum, r) => sum + r.amount);
+
+    // 결제수단별 합계
+    final cashTotal = records
+        .where((r) => r.paymentMethod == 'cash')
+        .fold<int>(0, (sum, r) => sum + r.amount);
+    final cardTotal = records
+        .where((r) => r.paymentMethod == 'card')
+        .fold<int>(0, (sum, r) => sum + r.amount);
+    final transferTotal = records
+        .where((r) => r.paymentMethod == 'transfer')
+        .fold<int>(0, (sum, r) => sum + r.amount);
+
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 12.h),
+          // 카테고리별 수입
+          Text(
+            '카테고리별',
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.sports_golf,
+                  label: '레슨비',
+                  amount: lessonTotal,
+                  color: Colors.blue,
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.inventory,
+                  label: '패키지',
+                  amount: packageTotal,
+                  color: Colors.purple,
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.receipt,
+                  label: '기타',
+                  amount: otherCategoryTotal,
+                  color: Colors.orange,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          // 결제수단별 수입
+          Text(
+            '결제수단별',
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.money,
+                  label: '현금',
+                  amount: cashTotal,
+                  color: const Color(0xFF10B981),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.credit_card,
+                  label: '카드',
+                  amount: cardTotal,
+                  color: const Color(0xFF3B82F6),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.account_balance,
+                  label: '이체',
+                  amount: transferTotal,
+                  color: const Color(0xFF8B5CF6),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String label,
+    required int amount,
+    required Color color,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: color.withOpacity(0.15)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 18.w, color: color),
+          SizedBox(height: 4.h),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11.sp,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 2.h),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              _formatCurrency(amount),
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
           ),
         ],

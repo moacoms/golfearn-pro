@@ -42,8 +42,8 @@ class PackageModel {
   });
 
   factory PackageModel.fromJson(Map<String, dynamic> json) {
-    String? name;
-    if (json['lesson_students'] != null) {
+    String? name = json['student_name'] as String?;
+    if (name == null && json['lesson_students'] != null) {
       name = json['lesson_students']['student_name'] as String?;
     }
 

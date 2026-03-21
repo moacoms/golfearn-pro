@@ -14,6 +14,7 @@ import '../../features/schedule/presentation/pages/schedule_page.dart';
 import '../../features/packages/presentation/pages/packages_page.dart';
 import '../../features/lessons/presentation/pages/lessons_page.dart';
 import '../../features/income/presentation/pages/income_page.dart';
+import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../shared/widgets/main_scaffold.dart';
 
 /// 라우터 프로바이더
@@ -173,6 +174,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => MaterialPage(
               key: state.pageKey,
               child: const PackagesPage(),
+            ),
+          ),
+
+          // 설정
+          GoRoute(
+            path: '/settings',
+            name: 'settings',
+            pageBuilder: (context, state) => MaterialPage(
+              key: state.pageKey,
+              child: const SettingsPage(),
             ),
           ),
         ],

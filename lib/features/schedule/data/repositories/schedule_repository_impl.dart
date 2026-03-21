@@ -16,7 +16,7 @@ class ScheduleRepositoryImpl {
     try {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonSchedules)
-          .select('*, lesson_students(student_name)')
+          .select('*')
           .eq(DatabaseConstants.scheduleProId, proId)
           .gte(DatabaseConstants.scheduleLessonDate, startDate.toIso8601String().split('T').first)
           .lte(DatabaseConstants.scheduleLessonDate, endDate.toIso8601String().split('T').first)
@@ -68,7 +68,7 @@ class ScheduleRepositoryImpl {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonSchedules)
           .insert(data)
-          .select('*, lesson_students(student_name)')
+          .select('*')
           .single();
 
       return ScheduleModel.fromJson(response).toEntity();
@@ -86,7 +86,7 @@ class ScheduleRepositoryImpl {
           .from(DatabaseConstants.lessonSchedules)
           .update(data)
           .eq(DatabaseConstants.scheduleId, scheduleId)
-          .select('*, lesson_students(student_name)')
+          .select('*')
           .single();
 
       return ScheduleModel.fromJson(response).toEntity();

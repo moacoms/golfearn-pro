@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../providers/auth_controller.dart';
 import '../widgets/auth_form_field.dart';
 import '../widgets/auth_button.dart';
@@ -338,8 +339,21 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     if (value == null || value.isEmpty) {
       return '이메일을 입력해주세요';
     }
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-      return '올바른 이메일 형식을 입력해주세요';
+    final trimmed = value.trim();
+    if (!trimmed.contains('@')) {
+      return '@ 기호를 포함해야 합니다';
+    }
+    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(trimmed)) {
+      return '올바른 이메일 형식을 입력해주세요 (예: example@gmail.com)';
+    }
+    final domain = trimmed.split('@').last.toLowerCase();
+    final validDomains = ['gmail.com', 'naver.com', 'daum.net', 'hanmail.net', 'kakao.com', 'nate.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'moacoms.com'];
+    if (!domain.contains('.')) {
+      return '올바른 도메인을 입력해주세요';
+    }
+    // 도메인이 유효한 형식인지 추가 확인
+    if (domain.length < 4) {
+      return '올바른 이메일 도메인을 입력해주세요';
     }
     return null;
   }
@@ -348,8 +362,16 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     if (value == null || value.isEmpty) {
       return '전화번호를 입력해주세요';
     }
-    if (!RegExp(r'^01[016789]-?\d{3,4}-?\d{4}$').hasMatch(value)) {
-      return '올바른 전화번호 형식을 입력해주세요';
+    // 숫자와 하이픈만 남기기
+    final digitsOnly = value.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digitsOnly.length < 10 || digitsOnly.length > 11) {
+      return '전화번호는 10~11자리여야 합니다';
+    }
+    if (!digitsOnly.startsWith('01')) {
+      return '휴대폰 번호는 01로 시작해야 합니다';
+    }
+    if (!RegExp(r'^01[016789]\d{7,8}$').hasMatch(digitsOnly)) {
+      return '올바른 전화번호 형식을 입력해주세요 (예: 010-1234-5678)';
     }
     return null;
   }
@@ -377,6 +399,36 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.replaceAll(RegExp(r'[^0-9]'), '');
+
+    // 이메일 중복 체크
+    try {
+      // Supabase에 동일 이메일로 로그인 시도하여 존재 여부 확인
+      // signInWithPassword는 실패하지만 에러 메시지로 구분 가능
+      // 대신 profiles 테이블에서 전화번호 중복 확인
+      final phoneCheck = await Supabase.instance.client
+          .from('profiles')
+          .select('id')
+          .eq('pro_phone', phone)
+          .maybeSingle();
+
+      if (phoneCheck != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('이미 등록된 전화번호입니다.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+    } catch (e) {
+      // 체크 실패 시 무시하고 진행
+      print('중복 체크 실패: $e');
+    }
+
     try {
       // 기본 회원가입
       await ref.read(authControllerProvider.notifier).signUp(
@@ -386,14 +438,35 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             phoneNumber: _phoneController.text.trim(),
           );
 
+      // 세션이 있는지 확인 (이메일 인증이 필요한 경우 세션이 없을 수 있음)
+      final authState = ref.read(authControllerProvider);
+      if (authState.user == null) {
+        // 이메일 인증 필요
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('회원가입이 완료되었습니다. 이메일을 확인해주세요.'),
+              backgroundColor: Color(0xFF10B981),
+              duration: Duration(seconds: 3),
+            ),
+          );
+          context.go('/login');
+        }
+        return;
+      }
+
       // 레슨프로로 선택했다면 추가 등록
       if (_isLessonPro) {
-        await ref.read(authControllerProvider.notifier).registerAsLessonPro(
-              fullName: _fullNameController.text.trim(),
-              phoneNumber: _phoneController.text.trim(),
-            );
+        try {
+          await ref.read(authControllerProvider.notifier).registerAsLessonPro(
+                fullName: _fullNameController.text.trim(),
+                phoneNumber: _phoneController.text.trim(),
+              );
+        } catch (e) {
+          print('레슨프로 등록 실패 (나중에 재시도 가능): $e');
+        }
       }
-      
+
       if (mounted) {
         context.go('/home');
       }

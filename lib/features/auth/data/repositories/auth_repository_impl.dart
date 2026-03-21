@@ -33,21 +33,22 @@ class AuthRepositoryImpl implements AuthRepository {
       try {
         // 프로필 정보 조회
         final profile = await _supabaseService.getProfile(user.id);
-        if (profile == null) {
-          return UserEntity(
-            id: user.id,
-            email: user.email!,
-          );
+        if (profile != null) {
+          final entity = UserModel.fromJson(profile).toEntity();
+          // profiles 테이블에 email이 없으므로 auth에서 보완
+          return entity.copyWith(email: user.email ?? entity.email);
         }
-
-        return UserModel.fromJson(profile).toEntity();
       } catch (e) {
-        // 프로필 조회 실패 시 기본 정보만 반환
-        return UserEntity(
-          id: user.id,
-          email: user.email!,
-        );
+        print('프로필 조회 실패: $e');
       }
+
+      // 프로필이 없으면 auth 메타데이터에서 기본 정보 반환
+      return UserEntity(
+        id: user.id,
+        email: user.email!,
+        fullName: user.userMetadata?['full_name'] as String?,
+        phoneNumber: user.userMetadata?['phone_number'] as String?,
+      );
     });
   }
 
@@ -119,24 +120,50 @@ class AuthRepositoryImpl implements AuthRepository {
         throw Exception('회원가입에 실패했습니다.');
       }
 
-      // 프로필 생성
-      final profileData = {
-        'id': response.user!.id,
-        'email': email,
-        'full_name': fullName,
-        'phone_number': phoneNumber,
-        'is_lesson_pro': false,
-        'is_student': true,
-        'is_admin': false,
-      };
+      // 프로필 조회 - 이미 있으면 업데이트, 없으면 생성
+      try {
+        final existingProfile = await _supabaseService.getProfile(response.user!.id);
 
-      final profile = await _supabaseService.client
-          .from('profiles')
-          .insert(profileData)
-          .select()
-          .single();
-
-      return UserModel.fromJson(profile).toEntity();
+        if (existingProfile != null) {
+          // 프로필이 있으면 업데이트
+          final updated = await _supabaseService.client
+              .from('profiles')
+              .update({
+                'full_name': fullName,
+                'pro_phone': phoneNumber,
+                'updated_at': DateTime.now().toIso8601String(),
+              })
+              .eq('id', response.user!.id)
+              .select()
+              .single();
+          final entity = UserModel.fromJson(updated).toEntity();
+          return entity.copyWith(email: email);
+        } else {
+          // 프로필이 없으면 생성 (profiles 테이블에 email 컬럼 없음)
+          final profile = await _supabaseService.client
+              .from('profiles')
+              .insert({
+                'id': response.user!.id,
+                'full_name': fullName,
+                'pro_phone': phoneNumber,
+                'is_lesson_pro': false,
+                'is_student': true,
+              })
+              .select()
+              .single();
+          final entity = UserModel.fromJson(profile).toEntity();
+          return entity.copyWith(email: email);
+        }
+      } catch (e) {
+        print('프로필 처리 실패: $e');
+        // 프로필 처리 실패해도 기본 정보로 진행
+        return UserEntity(
+          id: response.user!.id,
+          email: email,
+          fullName: fullName,
+          phoneNumber: phoneNumber,
+        );
+      }
     } on AuthException catch (e) {
       throw Exception(_getAuthErrorMessage(e.message));
     } catch (e) {
@@ -170,7 +197,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final updateData = <String, dynamic>{};
       if (fullName != null) updateData['full_name'] = fullName;
-      if (phoneNumber != null) updateData['phone_number'] = phoneNumber;
+      if (phoneNumber != null) updateData['pro_phone'] = phoneNumber;
       if (avatarUrl != null) updateData['avatar_url'] = avatarUrl;
 
       if (updateData.isEmpty) {
@@ -206,16 +233,15 @@ class AuthRepositoryImpl implements AuthRepository {
         throw Exception('로그인이 필요합니다.');
       }
 
-      final updateData = {
+      final updateData = <String, dynamic>{
         'full_name': fullName,
-        'phone_number': phoneNumber,
+        'pro_phone': phoneNumber,
         'is_lesson_pro': true,
         'is_student': false,
-        'bio': bio,
-        'certifications': certifications,
-        'experience_years': experience,
         'updated_at': DateTime.now().toIso8601String(),
       };
+      if (bio != null) updateData['pro_introduction'] = bio;
+      if (experience != null) updateData['pro_experience_years'] = experience;
 
       final profile = await _supabaseService.client
           .from('profiles')

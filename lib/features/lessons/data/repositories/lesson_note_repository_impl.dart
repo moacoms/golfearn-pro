@@ -12,7 +12,7 @@ class LessonNoteRepositoryImpl {
     try {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonNotes)
-          .select('*, lesson_students(student_name)')
+          .select('*')
           .eq('pro_id', proId)
           .order('lesson_date', ascending: false)
           .order('created_at', ascending: false);
@@ -30,7 +30,7 @@ class LessonNoteRepositoryImpl {
     try {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonNotes)
-          .select('*, lesson_students(student_name)')
+          .select('*')
           .eq('pro_id', proId)
           .eq('student_id', studentId)
           .order('lesson_date', ascending: false);
@@ -69,7 +69,7 @@ class LessonNoteRepositoryImpl {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonNotes)
           .insert(data)
-          .select('*, lesson_students(student_name)')
+          .select('*')
           .single();
 
       return LessonNoteModel.fromJson(response).toEntity();
@@ -86,7 +86,7 @@ class LessonNoteRepositoryImpl {
           .from(DatabaseConstants.lessonNotes)
           .update(data)
           .eq('id', noteId)
-          .select('*, lesson_students(student_name)')
+          .select('*')
           .single();
 
       return LessonNoteModel.fromJson(response).toEntity();

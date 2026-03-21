@@ -13,7 +13,7 @@ class PackageRepositoryImpl {
     try {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonPackages)
-          .select('*, lesson_students(student_name)')
+          .select('*')
           .eq(DatabaseConstants.packageProId, proId)
           .order('created_at', ascending: false);
 
@@ -30,7 +30,7 @@ class PackageRepositoryImpl {
     try {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonPackages)
-          .select('*, lesson_students(student_name)')
+          .select('*')
           .eq(DatabaseConstants.packageProId, proId)
           .eq(DatabaseConstants.packageStudentId, studentId)
           .eq(DatabaseConstants.packageStatus, 'active')
@@ -80,7 +80,7 @@ class PackageRepositoryImpl {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonPackages)
           .insert(data)
-          .select('*, lesson_students(student_name)')
+          .select('*')
           .single();
 
       return PackageModel.fromJson(response).toEntity();
@@ -117,7 +117,7 @@ class PackageRepositoryImpl {
           .from(DatabaseConstants.lessonPackages)
           .update(updateData)
           .eq(DatabaseConstants.packageId, packageId)
-          .select('*, lesson_students(student_name)')
+          .select('*')
           .single();
 
       return PackageModel.fromJson(response).toEntity();

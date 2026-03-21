@@ -55,26 +55,15 @@ class SupabaseService {
   Future<Map<String, dynamic>?> getProfile(String userId) async {
     try {
       final response = await client
-          .from('users')
+          .from('profiles')
           .select()
           .eq('id', userId)
-          .single();
-      
+          .maybeSingle();
+
       return response;
     } catch (e) {
-      // users 테이블이 없으면 profiles 테이블 시도
-      try {
-        final response = await client
-            .from('profiles')
-            .select()
-            .eq('id', userId)
-            .single();
-        
-        return response;
-      } catch (e) {
-        print('프로필 조회 실패: $e');
-        return null;
-      }
+      print('프로필 조회 실패: $e');
+      return null;
     }
   }
   

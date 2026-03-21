@@ -431,6 +431,11 @@ class SchedulePage extends ConsumerWidget {
     final locationController = TextEditingController();
     final memoController = TextEditingController();
 
+    // 반복 설정
+    bool isRecurring = false;
+    String repeatType = 'weekly'; // 'weekly' or 'biweekly'
+    DateTime? repeatEndDate;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -586,6 +591,86 @@ class SchedulePage extends ConsumerWidget {
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
                       ),
                     ),
+                    SizedBox(height: 16.h),
+
+                    // 반복 설정
+                    Container(
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '반복 레슨',
+                                style: TextStyle(
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Switch(
+                                value: isRecurring,
+                                activeColor: const Color(0xFF10B981),
+                                onChanged: (v) => setState(() {
+                                  isRecurring = v;
+                                  if (!v) {
+                                    repeatEndDate = null;
+                                  }
+                                }),
+                              ),
+                            ],
+                          ),
+                          if (isRecurring) ...[
+                            SizedBox(height: 8.h),
+                            DropdownButtonFormField<String>(
+                              value: repeatType,
+                              items: const [
+                                DropdownMenuItem(value: 'weekly', child: Text('매주')),
+                                DropdownMenuItem(value: 'biweekly', child: Text('격주')),
+                              ],
+                              onChanged: (v) => setState(() => repeatType = v!),
+                              decoration: InputDecoration(
+                                labelText: '반복 주기',
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                              ),
+                            ),
+                            SizedBox(height: 12.h),
+                            GestureDetector(
+                              onTap: () async {
+                                final selectedDate = ref.read(selectedDateProvider);
+                                final date = await showDatePicker(
+                                  context: context,
+                                  initialDate: repeatEndDate ?? selectedDate.add(const Duration(days: 28)),
+                                  firstDate: selectedDate.add(const Duration(days: 1)),
+                                  lastDate: selectedDate.add(const Duration(days: 365)),
+                                );
+                                if (date != null) setState(() => repeatEndDate = date);
+                              },
+                              child: InputDecorator(
+                                decoration: InputDecoration(
+                                  labelText: '반복 종료일 *',
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                                  suffixIcon: const Icon(Icons.calendar_today),
+                                ),
+                                child: Text(
+                                  repeatEndDate != null
+                                      ? '${repeatEndDate!.year}년 ${repeatEndDate!.month}월 ${repeatEndDate!.day}일'
+                                      : '종료일을 선택하세요',
+                                  style: TextStyle(
+                                    color: repeatEndDate != null ? Colors.black : Colors.grey[500],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                     SizedBox(height: 20.h),
 
                     // 저장 버튼
@@ -593,39 +678,82 @@ class SchedulePage extends ConsumerWidget {
                       width: double.infinity,
                       height: 48.h,
                       child: ElevatedButton(
-                        onPressed: selectedStudentId == null
+                        onPressed: selectedStudentId == null || (isRecurring && repeatEndDate == null)
                             ? null
                             : () async {
                                 try {
                                   final user = ref.read(currentUserProvider);
                                   final selectedDate = ref.read(selectedDateProvider);
-                                  await ref.read(scheduleRepositoryProvider).createSchedule(
-                                    proId: user!.id,
-                                    studentId: selectedStudentId!,
-                                    packageId: selectedPackageId,
-                                    lessonDate: selectedDate,
-                                    lessonTime: '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
-                                    durationMinutes: duration,
-                                    lessonType: lessonType,
-                                    location: locationController.text.isEmpty
-                                        ? null
-                                        : locationController.text,
-                                    memo: memoController.text.isEmpty
-                                        ? null
-                                        : memoController.text,
-                                  );
+                                  final timeString = '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}';
+                                  final location = locationController.text.isEmpty
+                                      ? null
+                                      : locationController.text;
+                                  final memo = memoController.text.isEmpty
+                                      ? null
+                                      : memoController.text;
 
-                                  ref.invalidate(weeklySchedulesProvider);
-                                  ref.invalidate(todaySchedulesProvider);
+                                  if (isRecurring && repeatEndDate != null) {
+                                    // 반복 레슨 생성
+                                    final intervalDays = repeatType == 'weekly' ? 7 : 14;
+                                    final List<DateTime> dates = [];
+                                    DateTime current = selectedDate;
+                                    while (!current.isAfter(repeatEndDate!)) {
+                                      dates.add(current);
+                                      current = current.add(Duration(days: intervalDays));
+                                    }
 
-                                  if (context.mounted) {
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('레슨이 추가되었습니다'),
-                                        backgroundColor: Color(0xFF10B981),
-                                      ),
+                                    for (final date in dates) {
+                                      await ref.read(scheduleRepositoryProvider).createSchedule(
+                                        proId: user!.id,
+                                        studentId: selectedStudentId!,
+                                        packageId: selectedPackageId,
+                                        lessonDate: date,
+                                        lessonTime: timeString,
+                                        durationMinutes: duration,
+                                        lessonType: lessonType,
+                                        location: location,
+                                        memo: memo,
+                                      );
+                                    }
+
+                                    ref.invalidate(weeklySchedulesProvider);
+                                    ref.invalidate(todaySchedulesProvider);
+
+                                    if (context.mounted) {
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('반복 레슨 ${dates.length}개가 추가되었습니다'),
+                                          backgroundColor: const Color(0xFF10B981),
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    // 단일 레슨 생성
+                                    await ref.read(scheduleRepositoryProvider).createSchedule(
+                                      proId: user!.id,
+                                      studentId: selectedStudentId!,
+                                      packageId: selectedPackageId,
+                                      lessonDate: selectedDate,
+                                      lessonTime: timeString,
+                                      durationMinutes: duration,
+                                      lessonType: lessonType,
+                                      location: location,
+                                      memo: memo,
                                     );
+
+                                    ref.invalidate(weeklySchedulesProvider);
+                                    ref.invalidate(todaySchedulesProvider);
+
+                                    if (context.mounted) {
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('레슨이 추가되었습니다'),
+                                          backgroundColor: Color(0xFF10B981),
+                                        ),
+                                      );
+                                    }
                                   }
                                 } catch (e) {
                                   if (context.mounted) {
@@ -642,7 +770,10 @@ class SchedulePage extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(12.r),
                           ),
                         ),
-                        child: Text('레슨 추가', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
+                        child: Text(
+                          isRecurring ? '반복 레슨 추가' : '레슨 추가',
+                          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
+                        ),
                       ),
                     ),
                   ],

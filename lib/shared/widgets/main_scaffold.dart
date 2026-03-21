@@ -44,6 +44,11 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       label: '패키지',
       route: '/packages',
     ),
+    NavItem(
+      icon: Icons.settings,
+      label: '설정',
+      route: '/settings',
+    ),
   ];
 
   @override

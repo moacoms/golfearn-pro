@@ -34,9 +34,8 @@ class ScheduleModel {
   });
 
   factory ScheduleModel.fromJson(Map<String, dynamic> json) {
-    // lesson_students join 데이터에서 학생 이름 추출
-    String? name;
-    if (json['lesson_students'] != null) {
+    String? name = json['student_name'] as String?;
+    if (name == null && json['lesson_students'] != null) {
       name = json['lesson_students']['student_name'] as String?;
     }
 

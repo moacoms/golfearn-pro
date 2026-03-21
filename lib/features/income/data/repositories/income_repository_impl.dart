@@ -15,7 +15,7 @@ class IncomeRepositoryImpl {
     try {
       var query = _supabaseService.client
           .from(DatabaseConstants.proIncomeRecords)
-          .select('*, lesson_students(student_name)')
+          .select()
           .eq('pro_id', proId);
 
       if (startDate != null) {
@@ -63,7 +63,7 @@ class IncomeRepositoryImpl {
       final response = await _supabaseService.client
           .from(DatabaseConstants.proIncomeRecords)
           .insert(data)
-          .select('*, lesson_students(student_name)')
+          .select()
           .single();
 
       return IncomeModel.fromJson(response).toEntity();
