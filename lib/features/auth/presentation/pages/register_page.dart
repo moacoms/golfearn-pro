@@ -133,130 +133,148 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(height: 20.h),
-                
-                // 회원 유형 선택
-                _buildUserTypeSelector(),
-                SizedBox(height: 30.h),
-                
-                // 이름 입력
-                AuthFormField(
-                  controller: _fullNameController,
-                  label: '이름',
-                  hintText: '실명을 입력하세요',
-                  validator: _validateName,
-                  focusNode: _nameFocus,
-                  textInputAction: TextInputAction.next,
-                  onFieldSubmitted: (_) => _emailFocus.requestFocus(),
-                ),
-                SizedBox(height: 20.h),
+          child: FocusTraversalGroup(
+            policy: OrderedTraversalPolicy(),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: 20.h),
 
-                // 이메일 입력
-                AuthFormField(
-                  controller: _emailController,
-                  label: '이메일',
-                  hintText: 'example@golfearn.com',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: _validateEmail,
-                  focusNode: _emailFocus,
-                  textInputAction: TextInputAction.next,
-                  onFieldSubmitted: (_) => _phoneFocus.requestFocus(),
-                  errorText: _emailError,
-                  suffixIcon: _checkingEmail
-                      ? Padding(
-                          padding: EdgeInsets.all(12.w),
-                          child: SizedBox(
-                            width: 20.w,
-                            height: 20.w,
-                            child: const CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : _emailError != null
-                          ? Icon(Icons.error, color: Colors.red, size: 20.w)
-                          : null,
-                ),
-                SizedBox(height: 20.h),
+                  // 회원 유형 선택
+                  _buildUserTypeSelector(),
+                  SizedBox(height: 30.h),
 
-                // 전화번호 입력
-                AuthFormField(
-                  controller: _phoneController,
-                  label: '전화번호',
-                  hintText: '010-1234-5678',
-                  keyboardType: TextInputType.phone,
-                  validator: _validatePhone,
-                  focusNode: _phoneFocus,
-                  textInputAction: TextInputAction.next,
-                  onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
-                ),
-                SizedBox(height: 20.h),
-
-                // 비밀번호 입력
-                AuthFormField(
-                  controller: _passwordController,
-                  label: '비밀번호',
-                  hintText: '6자 이상 입력하세요',
-                  obscureText: _obscurePassword,
-                  focusNode: _passwordFocus,
-                  textInputAction: TextInputAction.next,
-                  onFieldSubmitted: (_) => _confirmPasswordFocus.requestFocus(),
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                      color: Colors.grey[600],
+                  // 1. 이름 입력
+                  FocusTraversalOrder(
+                    order: const NumericFocusOrder(1),
+                    child: AuthFormField(
+                      controller: _fullNameController,
+                      label: '이름',
+                      hintText: '실명을 입력하세요',
+                      validator: _validateName,
+                      focusNode: _nameFocus,
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) => _emailFocus.requestFocus(),
                     ),
                   ),
-                  validator: _validatePassword,
-                ),
-                SizedBox(height: 20.h),
+                  SizedBox(height: 20.h),
 
-                // 비밀번호 확인 입력
-                AuthFormField(
-                  controller: _confirmPasswordController,
-                  label: '비밀번호 확인',
-                  hintText: '비밀번호를 다시 입력하세요',
-                  obscureText: _obscureConfirmPassword,
-                  focusNode: _confirmPasswordFocus,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _handleRegister(),
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
-                    icon: Icon(
-                      _obscureConfirmPassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      color: Colors.grey[600],
+                  // 2. 이메일 입력
+                  FocusTraversalOrder(
+                    order: const NumericFocusOrder(2),
+                    child: AuthFormField(
+                      controller: _emailController,
+                      label: '이메일',
+                      hintText: 'example@golfearn.com',
+                      keyboardType: TextInputType.emailAddress,
+                      validator: _validateEmail,
+                      focusNode: _emailFocus,
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) => _phoneFocus.requestFocus(),
+                      errorText: _emailError,
+                      suffixIcon: _checkingEmail
+                          ? Padding(
+                              padding: EdgeInsets.all(12.w),
+                              child: SizedBox(
+                                width: 20.w,
+                                height: 20.w,
+                                child: const CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : _emailError != null
+                              ? Icon(Icons.error, color: Colors.red, size: 20.w)
+                              : null,
                     ),
                   ),
-                  validator: _validateConfirmPassword,
-                ),
+                  SizedBox(height: 20.h),
+
+                  // 3. 전화번호 입력
+                  FocusTraversalOrder(
+                    order: const NumericFocusOrder(3),
+                    child: AuthFormField(
+                      controller: _phoneController,
+                      label: '전화번호',
+                      hintText: '010-1234-5678',
+                      keyboardType: TextInputType.phone,
+                      validator: _validatePhone,
+                      focusNode: _phoneFocus,
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+
+                  // 4. 비밀번호 입력
+                  FocusTraversalOrder(
+                    order: const NumericFocusOrder(4),
+                    child: AuthFormField(
+                      controller: _passwordController,
+                      label: '비밀번호',
+                      hintText: '6자 이상 입력하세요',
+                      obscureText: _obscurePassword,
+                      focusNode: _passwordFocus,
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) => _confirmPasswordFocus.requestFocus(),
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      validator: _validatePassword,
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+
+                  // 5. 비밀번호 확인 입력
+                  FocusTraversalOrder(
+                    order: const NumericFocusOrder(5),
+                    child: AuthFormField(
+                      controller: _confirmPasswordController,
+                      label: '비밀번호 확인',
+                      hintText: '비밀번호를 다시 입력하세요',
+                      obscureText: _obscureConfirmPassword,
+                      focusNode: _confirmPasswordFocus,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _handleRegister(),
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _obscureConfirmPassword = !_obscureConfirmPassword;
+                          });
+                        },
+                        icon: Icon(
+                          _obscureConfirmPassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      validator: _validateConfirmPassword,
+                    ),
+                  ),
                 SizedBox(height: 40.h),
                 
-                // 회원가입 버튼
-                AuthButton(
-                  onPressed: authState.isLoading ? null : _handleRegister,
-                  isLoading: authState.isLoading,
-                  text: '회원가입',
-                ),
-                SizedBox(height: 20.h),
-                
-                // 로그인 링크
-                _buildLoginLink(),
-                SizedBox(height: 40.h),
-              ],
+                  // 회원가입 버튼
+                  AuthButton(
+                    onPressed: authState.isLoading ? null : _handleRegister,
+                    isLoading: authState.isLoading,
+                    text: '회원가입',
+                  ),
+                  SizedBox(height: 20.h),
+
+                  // 로그인 링크
+                  _buildLoginLink(),
+                  SizedBox(height: 40.h),
+                ],
+              ),
             ),
           ),
         ),
