@@ -120,6 +120,19 @@ class AuthRepositoryImpl implements AuthRepository {
         throw Exception('회원가입에 실패했습니다.');
       }
 
+      // 이미 등록된 이메일인지 확인
+      // Supabase는 보안상 기존 이메일로 가입 시도 시 에러 대신 세션 없는 응답을 반환
+      if (response.session == null) {
+        // 세션이 없으면 이메일 인증 대기이거나 이미 등록된 이메일
+        // identities가 비어있으면 이미 등록된 이메일
+        final identities = response.user!.identities;
+        if (identities == null || identities.isEmpty) {
+          throw AuthException('User already registered');
+        }
+        // identities가 있으면 이메일 인증 대기 상태 (신규 가입)
+        throw Exception('이메일 인증이 필요합니다. 이메일을 확인해주세요.');
+      }
+
       // 프로필 조회 - 이미 있으면 업데이트, 없으면 생성
       try {
         final existingProfile = await _supabaseService.getProfile(response.user!.id);
