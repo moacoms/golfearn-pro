@@ -18,37 +18,22 @@ class MainScaffold extends ConsumerStatefulWidget {
 class _MainScaffoldState extends ConsumerState<MainScaffold> {
   int _selectedIndex = 0;
 
-  final List<NavItem> _navItems = [
-    NavItem(
-      icon: Icons.dashboard,
-      label: '홈',
-      route: '/home',
-    ),
-    NavItem(
-      icon: Icons.people,
-      label: '학생관리',
-      route: '/students',
-    ),
-    NavItem(
-      icon: Icons.calendar_today,
-      label: '스케줄',
-      route: '/schedule',
-    ),
-    NavItem(
-      icon: Icons.note,
-      label: '레슨노트',
-      route: '/lessons',
-    ),
-    NavItem(
-      icon: Icons.inventory_2,
-      label: '패키지',
-      route: '/packages',
-    ),
-    NavItem(
-      icon: Icons.settings,
-      label: '설정',
-      route: '/settings',
-    ),
+  // 레슨프로용 네비
+  final List<NavItem> _proNavItems = [
+    NavItem(icon: Icons.dashboard, label: '홈', route: '/home'),
+    NavItem(icon: Icons.people, label: '학생관리', route: '/students'),
+    NavItem(icon: Icons.calendar_today, label: '스케줄', route: '/schedule'),
+    NavItem(icon: Icons.note, label: '레슨노트', route: '/lessons'),
+    NavItem(icon: Icons.inventory_2, label: '패키지', route: '/packages'),
+    NavItem(icon: Icons.settings, label: '설정', route: '/settings'),
+  ];
+
+  // 학생용 네비
+  final List<NavItem> _studentNavItems = [
+    NavItem(icon: Icons.dashboard, label: '홈', route: '/home'),
+    NavItem(icon: Icons.calendar_today, label: '내 레슨', route: '/schedule'),
+    NavItem(icon: Icons.note, label: '레슨노트', route: '/lessons'),
+    NavItem(icon: Icons.settings, label: '설정', route: '/settings'),
   ];
 
   @override
@@ -56,21 +41,24 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     final currentUser = ref.watch(currentUserProvider);
     final isLessonPro = ref.watch(isLessonProProvider);
 
-    // 레슨프로가 아닌 경우 등록 화면 표시
-    if (!isLessonPro) {
-      return _buildLessonProRegistration(context, ref, currentUser);
-    }
+    // 레슨프로가 아닌 경우: 학생(일반회원)으로 처리
+    // 프로필이 없거나 isStudent=false여도 레슨프로가 아니면 학생 화면 표시
+
+    final navItems = isLessonPro ? _proNavItems : _studentNavItems;
 
     // 현재 위치에 따른 선택된 인덱스 업데이트
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final location = GoRouterState.of(context).uri.path;
-      final index = _navItems.indexWhere((item) => item.route == location);
+      final index = navItems.indexWhere((item) => item.route == location);
       if (index != -1 && index != _selectedIndex) {
         setState(() {
           _selectedIndex = index;
         });
       }
     });
+
+    // selectedIndex가 현재 navItems 범위를 벗어나지 않도록
+    final safeIndex = _selectedIndex < navItems.length ? _selectedIndex : 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -132,12 +120,12 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       body: widget.child,
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
+        currentIndex: safeIndex,
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
           });
-          context.go(_navItems[index].route);
+          context.go(navItems[index].route);
         },
         selectedItemColor: const Color(0xFF10B981),
         unselectedItemColor: Colors.grey[600],
@@ -149,7 +137,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
           fontSize: 12.sp,
           fontWeight: FontWeight.w500,
         ),
-        items: _navItems.map((item) {
+        items: navItems.map((item) {
           return BottomNavigationBarItem(
             icon: Icon(item.icon, size: 24.w),
             label: item.label,

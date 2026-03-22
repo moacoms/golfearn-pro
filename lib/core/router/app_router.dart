@@ -7,6 +7,7 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
+import '../../features/dashboard/presentation/pages/student_dashboard_page.dart';
 import '../../features/students/presentation/pages/students_list_page.dart';
 import '../../features/students/presentation/pages/student_detail_page.dart';
 import '../../features/students/presentation/pages/student_form_page.dart';
@@ -94,14 +95,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) => MainScaffold(child: child),
         routes: [
-          // 홈 (대시보드)
+          // 홈 (대시보드 - 프로/학생 구분)
           GoRoute(
             path: '/home',
             name: 'home',
-            pageBuilder: (context, state) => MaterialPage(
-              key: state.pageKey,
-              child: const DashboardPage(),
-            ),
+            pageBuilder: (context, state) {
+              final isLessonPro = ref.read(isLessonProProvider);
+              return MaterialPage(
+                key: state.pageKey,
+                child: isLessonPro ? const DashboardPage() : const StudentDashboardPage(),
+              );
+            },
           ),
           
           // 학생 관리
