@@ -10,6 +10,11 @@ class AuthFormField extends StatelessWidget {
   final Widget? suffixIcon;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final void Function(String)? onFieldSubmitted;
+  final bool enabled;
+  final String? errorText;
 
   const AuthFormField({
     super.key,
@@ -21,6 +26,11 @@ class AuthFormField extends StatelessWidget {
     this.suffixIcon,
     this.validator,
     this.onChanged,
+    this.focusNode,
+    this.textInputAction,
+    this.onFieldSubmitted,
+    this.enabled = true,
+    this.errorText,
   });
 
   @override
@@ -43,6 +53,10 @@ class AuthFormField extends StatelessWidget {
           keyboardType: keyboardType,
           validator: validator,
           onChanged: onChanged,
+          focusNode: focusNode,
+          textInputAction: textInputAction ?? TextInputAction.next,
+          onFieldSubmitted: onFieldSubmitted,
+          enabled: enabled,
           style: TextStyle(fontSize: 16.sp),
           decoration: InputDecoration(
             hintText: hintText,
@@ -50,6 +64,7 @@ class AuthFormField extends StatelessWidget {
               fontSize: 16.sp,
               color: Colors.grey[400],
             ),
+            errorText: errorText,
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: Colors.grey[50],

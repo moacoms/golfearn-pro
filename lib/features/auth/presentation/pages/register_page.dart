@@ -25,6 +25,27 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   bool _obscureConfirmPassword = true;
   bool _isLessonPro = false;
 
+  // FocusNode로 탭 순서 제어
+  final _nameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _confirmPasswordFocus = FocusNode();
+
+  String? _emailError;
+  bool _checkingEmail = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 이메일 포커스 해제 시 중복 체크
+    _emailFocus.addListener(() {
+      if (!_emailFocus.hasFocus && _emailController.text.trim().isNotEmpty) {
+        _checkEmailExists(_emailController.text.trim());
+      }
+    });
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -32,7 +53,48 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     _confirmPasswordController.dispose();
     _fullNameController.dispose();
     _phoneController.dispose();
+    _nameFocus.dispose();
+    _emailFocus.dispose();
+    _phoneFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmPasswordFocus.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkEmailExists(String email) async {
+    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(email)) {
+      return; // 형식이 틀리면 체크하지 않음
+    }
+
+    setState(() {
+      _checkingEmail = true;
+      _emailError = null;
+    });
+
+    try {
+      // Supabase에 로그인 시도로 이메일 존재 여부 확인
+      // 잘못된 비밀번호로 시도하면 "Invalid login credentials" → 이메일 존재
+      // 가입되지 않은 이메일도 같은 에러를 반환하므로, signUp 응답으로 확인
+      final response = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: 'check_only_dummy_password_12345',
+      );
+
+      // identities가 비어있으면 이미 등록된 이메일
+      if (response.user != null) {
+        final identities = response.user!.identities;
+        if (identities == null || identities.isEmpty) {
+          setState(() => _emailError = '이미 가입된 이메일입니다.');
+        } else {
+          // 체크용으로 생성된 유저 정리 (Supabase에서 이메일 미인증 유저는 자동 정리됨)
+          setState(() => _emailError = null);
+        }
+      }
+    } catch (e) {
+      // 에러 발생 시 무시
+    } finally {
+      setState(() => _checkingEmail = false);
+    }
   }
 
   @override
@@ -88,9 +150,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   label: '이름',
                   hintText: '실명을 입력하세요',
                   validator: _validateName,
+                  focusNode: _nameFocus,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => _emailFocus.requestFocus(),
                 ),
                 SizedBox(height: 20.h),
-                
+
                 // 이메일 입력
                 AuthFormField(
                   controller: _emailController,
@@ -98,9 +163,25 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   hintText: 'example@golfearn.com',
                   keyboardType: TextInputType.emailAddress,
                   validator: _validateEmail,
+                  focusNode: _emailFocus,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => _phoneFocus.requestFocus(),
+                  errorText: _emailError,
+                  suffixIcon: _checkingEmail
+                      ? Padding(
+                          padding: EdgeInsets.all(12.w),
+                          child: SizedBox(
+                            width: 20.w,
+                            height: 20.w,
+                            child: const CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : _emailError != null
+                          ? Icon(Icons.error, color: Colors.red, size: 20.w)
+                          : null,
                 ),
                 SizedBox(height: 20.h),
-                
+
                 // 전화번호 입력
                 AuthFormField(
                   controller: _phoneController,
@@ -108,15 +189,21 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   hintText: '010-1234-5678',
                   keyboardType: TextInputType.phone,
                   validator: _validatePhone,
+                  focusNode: _phoneFocus,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
                 ),
                 SizedBox(height: 20.h),
-                
+
                 // 비밀번호 입력
                 AuthFormField(
                   controller: _passwordController,
                   label: '비밀번호',
                   hintText: '6자 이상 입력하세요',
                   obscureText: _obscurePassword,
+                  focusNode: _passwordFocus,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => _confirmPasswordFocus.requestFocus(),
                   suffixIcon: IconButton(
                     onPressed: () {
                       setState(() {
@@ -131,13 +218,16 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   validator: _validatePassword,
                 ),
                 SizedBox(height: 20.h),
-                
+
                 // 비밀번호 확인 입력
                 AuthFormField(
                   controller: _confirmPasswordController,
                   label: '비밀번호 확인',
                   hintText: '비밀번호를 다시 입력하세요',
                   obscureText: _obscureConfirmPassword,
+                  focusNode: _confirmPasswordFocus,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _handleRegister(),
                   suffixIcon: IconButton(
                     onPressed: () {
                       setState(() {
@@ -145,8 +235,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       });
                     },
                     icon: Icon(
-                      _obscureConfirmPassword 
-                          ? Icons.visibility 
+                      _obscureConfirmPassword
+                          ? Icons.visibility
                           : Icons.visibility_off,
                       color: Colors.grey[600],
                     ),
@@ -398,6 +488,17 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // 이메일 중복 에러가 있으면 가입 차단
+    if (_emailError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_emailError!),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     final email = _emailController.text.trim();
     final phone = _phoneController.text.replaceAll(RegExp(r'[^0-9]'), '');
