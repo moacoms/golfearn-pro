@@ -54,7 +54,7 @@ class AuthFormField extends StatelessWidget {
           validator: validator,
           onChanged: onChanged,
           focusNode: focusNode,
-          textInputAction: textInputAction ?? TextInputAction.next,
+          textInputAction: textInputAction,
           onFieldSubmitted: onFieldSubmitted,
           enabled: enabled,
           style: TextStyle(fontSize: 16.sp),

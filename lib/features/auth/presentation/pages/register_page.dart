@@ -155,8 +155,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       hintText: '실명을 입력하세요',
                       validator: _validateName,
                       focusNode: _nameFocus,
-                      textInputAction: TextInputAction.next,
-                      onFieldSubmitted: (_) => _emailFocus.requestFocus(),
                     ),
                   ),
                   SizedBox(height: 20.h),
@@ -171,8 +169,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       keyboardType: TextInputType.emailAddress,
                       validator: _validateEmail,
                       focusNode: _emailFocus,
-                      textInputAction: TextInputAction.next,
-                      onFieldSubmitted: (_) => _phoneFocus.requestFocus(),
                       errorText: _emailError,
                       suffixIcon: _checkingEmail
                           ? Padding(
@@ -200,8 +196,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       keyboardType: TextInputType.phone,
                       validator: _validatePhone,
                       focusNode: _phoneFocus,
-                      textInputAction: TextInputAction.next,
-                      onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
                     ),
                   ),
                   SizedBox(height: 20.h),
@@ -215,8 +209,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       hintText: '6자 이상 입력하세요',
                       obscureText: _obscurePassword,
                       focusNode: _passwordFocus,
-                      textInputAction: TextInputAction.next,
-                      onFieldSubmitted: (_) => _confirmPasswordFocus.requestFocus(),
                       suffixIcon: IconButton(
                         onPressed: () {
                           setState(() {
@@ -243,7 +235,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       obscureText: _obscureConfirmPassword,
                       focusNode: _confirmPasswordFocus,
                       textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _handleRegister(),
                       suffixIcon: IconButton(
                         onPressed: () {
                           setState(() {
