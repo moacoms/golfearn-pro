@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../../../core/constants/sport_constants.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../students/presentation/providers/student_provider.dart';
 import '../../../schedule/presentation/providers/schedule_provider.dart';
@@ -337,6 +338,7 @@ class DashboardPage extends ConsumerWidget {
   // ──────────────────────────────────────────────
 
   Widget _buildStatsGrid(WidgetRef ref) {
+    final sportType = ref.watch(currentSportTypeProvider);
     final studentCountAsync = ref.watch(studentCountProvider);
     final monthlyIncomeAsync = ref.watch(monthlyTotalIncomeProvider);
     final weeklyLessonAsync = ref.watch(weeklyLessonCountProvider);
@@ -393,7 +395,7 @@ class DashboardPage extends ConsumerWidget {
             loading: () => '...',
             error: (_, __) => '-',
           ),
-          icon: Icons.sports_golf,
+          icon: SportConstants.icon(sportType),
           color: Colors.orange,
         ),
         _buildStatCard(

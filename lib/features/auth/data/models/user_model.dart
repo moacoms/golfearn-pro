@@ -9,6 +9,7 @@ class UserModel {
   final bool isLessonPro;
   final bool isStudent;
   final bool isAdmin;
+  final String sportType;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -21,6 +22,7 @@ class UserModel {
     this.isLessonPro = false,
     this.isStudent = false,
     this.isAdmin = false,
+    this.sportType = 'golf',
     this.createdAt,
     this.updatedAt,
   });
@@ -35,6 +37,7 @@ class UserModel {
       isLessonPro: json['is_lesson_pro'] as bool? ?? false,
       isStudent: json['is_student'] as bool? ?? false,
       isAdmin: json['is_admin'] as bool? ?? false,
+      sportType: json['sport_type'] as String? ?? 'golf',
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -54,6 +57,7 @@ class UserModel {
       'is_lesson_pro': isLessonPro,
       'is_student': isStudent,
       'is_admin': isAdmin,
+      'sport_type': sportType,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
@@ -70,6 +74,7 @@ extension UserModelX on UserModel {
         isLessonPro: isLessonPro,
         isStudent: isStudent,
         isAdmin: isAdmin,
+        sportType: sportType,
         createdAt: createdAt,
         updatedAt: updatedAt,
       );

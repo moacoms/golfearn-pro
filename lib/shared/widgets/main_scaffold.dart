@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import '../../core/constants/sport_constants.dart';
 import '../../features/auth/presentation/providers/auth_controller.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 
@@ -40,11 +41,13 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
     final isLessonPro = ref.watch(isLessonProProvider);
+    final sportType = ref.watch(currentSportTypeProvider);
 
     // 레슨프로가 아닌 경우: 학생(일반회원)으로 처리
     // 프로필이 없거나 isStudent=false여도 레슨프로가 아니면 학생 화면 표시
 
     final navItems = isLessonPro ? _proNavItems : _studentNavItems;
+    final sportLabel = SportConstants.label(sportType);
 
     // 현재 위치에 따른 선택된 인덱스 업데이트
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -63,7 +66,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Golfearn Pro',
+          'Golfearn',
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
@@ -156,7 +159,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.sports_golf,
+                Icons.sports,
                 size: 64.w,
                 color: const Color(0xFF10B981),
               ),
@@ -171,7 +174,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
               ),
               SizedBox(height: 12.h),
               Text(
-                '이 앱은 골프 레슨프로를 위한 CRM 시스템입니다.\n아래 버튼을 눌러 레슨프로로 등록하세요.',
+                '이 앱은 레슨프로를 위한 CRM 시스템입니다.\n아래 버튼을 눌러 레슨프로로 등록하세요.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16.sp,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/database_constants.dart';
+import '../../../../core/constants/sport_constants.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../students/presentation/providers/student_provider.dart';
 import '../../../students/domain/entities/student_entity.dart';
@@ -422,12 +423,14 @@ class SchedulePage extends ConsumerWidget {
   }
 
   void _showScheduleForm(BuildContext context, WidgetRef ref, List<StudentEntity> students) {
+    final sportType = ref.read(currentSportTypeProvider);
+    final lessonTypeOptions = SportConstants.lessonTypes(sportType);
     String? selectedStudentId;
     String? selectedPackageId;
     List<PackageEntity> studentPackages = [];
     TimeOfDay selectedTime = TimeOfDay.now();
     int duration = 60;
-    String lessonType = DatabaseConstants.lessonTypeRegular;
+    String lessonType = lessonTypeOptions.keys.first;
     final locationController = TextEditingController();
     final memoController = TextEditingController();
 
@@ -555,12 +558,9 @@ class SchedulePage extends ConsumerWidget {
                         Expanded(
                           child: DropdownButtonFormField<String>(
                             value: lessonType,
-                            items: const [
-                              DropdownMenuItem(value: 'regular', child: Text('일반')),
-                              DropdownMenuItem(value: 'playing', child: Text('필드')),
-                              DropdownMenuItem(value: 'short_game', child: Text('숏게임')),
-                              DropdownMenuItem(value: 'putting', child: Text('퍼팅')),
-                            ],
+                            items: lessonTypeOptions.entries.map((e) {
+                              return DropdownMenuItem(value: e.key, child: Text(e.value));
+                            }).toList(),
                             onChanged: (v) => setState(() => lessonType = v!),
                             decoration: InputDecoration(
                               labelText: '레슨 타입',
@@ -577,7 +577,7 @@ class SchedulePage extends ConsumerWidget {
                       controller: locationController,
                       decoration: InputDecoration(
                         labelText: '장소',
-                        hintText: '예: 강남 골프존',
+                        hintText: SportConstants.locationHint(sportType),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
                       ),
                     ),

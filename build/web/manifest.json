@@ -1,6 +1,6 @@
 {
-    "name": "golfearn_pro",
-    "short_name": "golfearn_pro",
+    "name": "Golfearn",
+    "short_name": "Golfearn",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

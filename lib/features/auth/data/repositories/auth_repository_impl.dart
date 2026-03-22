@@ -201,6 +201,7 @@ class AuthRepositoryImpl implements AuthRepository {
     String? fullName,
     String? phoneNumber,
     String? avatarUrl,
+    String? sportType,
   }) async {
     try {
       final userId = _supabaseService.currentUser?.id;
@@ -212,6 +213,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (fullName != null) updateData['full_name'] = fullName;
       if (phoneNumber != null) updateData['pro_phone'] = phoneNumber;
       if (avatarUrl != null) updateData['avatar_url'] = avatarUrl;
+      if (sportType != null) updateData['sport_type'] = sportType;
 
       if (updateData.isEmpty) {
         throw Exception('업데이트할 정보가 없습니다.');
@@ -239,6 +241,7 @@ class AuthRepositoryImpl implements AuthRepository {
     String? bio,
     List<String>? certifications,
     int? experience,
+    String? sportType,
   }) async {
     try {
       final userId = _supabaseService.currentUser?.id;
@@ -255,6 +258,7 @@ class AuthRepositoryImpl implements AuthRepository {
       };
       if (bio != null) updateData['pro_introduction'] = bio;
       if (experience != null) updateData['pro_experience_years'] = experience;
+      if (sportType != null) updateData['sport_type'] = sportType;
 
       final profile = await _supabaseService.client
           .from('profiles')

@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../core/constants/sport_constants.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/user_entity.dart';
@@ -53,4 +54,11 @@ bool isStudent(Ref ref) {
 bool isAdmin(Ref ref) {
   final user = ref.watch(currentUserProvider);
   return user?.isAdmin ?? false;
+}
+
+/// 현재 사용자의 종목 타입 프로바이더
+@riverpod
+SportType currentSportType(Ref ref) {
+  final user = ref.watch(currentUserProvider);
+  return SportConstants.fromString(user?.sportType);
 }

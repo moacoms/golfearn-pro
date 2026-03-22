@@ -76,11 +76,28 @@ class ScheduleEntity {
   }
 
   String get lessonTypeLabel {
+    // 기본적으로는 코드 내 매핑을 사용 (하위 호환)
     switch (lessonType) {
       case 'regular': return '일반 레슨';
       case 'playing': return '필드 레슨';
       case 'short_game': return '숏게임';
       case 'putting': return '퍼팅';
+      case 'forehand': return '포핸드';
+      case 'backhand': return '백핸드';
+      case 'serve': return '서브';
+      case 'match': return '경기';
+      case 'basic': return '기본기';
+      case 'smash': return '스매시';
+      case 'defense': return '수비';
+      case 'freestyle': return '자유형';
+      case 'backstroke': return '배영';
+      case 'breaststroke': return '평영';
+      case 'butterfly': return '접영';
+      case 'mat': return '매트';
+      case 'equipment': return '기구';
+      case 'personal': return '개인';
+      case 'group': return '그룹';
+      case 'practice': return '연습';
       default: return lessonType ?? '일반 레슨';
     }
   }

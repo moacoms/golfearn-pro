@@ -324,3 +324,49 @@ final class IsAdminProvider extends $FunctionalProvider<bool, bool, bool>
 }
 
 String _$isAdminHash() => r'19ca3c6dcb8fc8d521c9311d750e9b50ce3cb6a5';
+
+/// 현재 사용자의 종목 타입 프로바이더
+
+@ProviderFor(currentSportType)
+final currentSportTypeProvider = CurrentSportTypeProvider._();
+
+/// 현재 사용자의 종목 타입 프로바이더
+
+final class CurrentSportTypeProvider
+    extends $FunctionalProvider<SportType, SportType, SportType>
+    with $Provider<SportType> {
+  /// 현재 사용자의 종목 타입 프로바이더
+  CurrentSportTypeProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentSportTypeProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentSportTypeHash();
+
+  @$internal
+  @override
+  $ProviderElement<SportType> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SportType create(Ref ref) {
+    return currentSportType(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SportType value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SportType>(value),
+    );
+  }
+}
+
+String _$currentSportTypeHash() => r'a05cede723d5bc1b96f9dc0bdae35f43f18d8e3f';

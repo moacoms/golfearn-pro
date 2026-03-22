@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/database_constants.dart';
+import '../../../../core/constants/sport_constants.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/student_entity.dart';
 import '../providers/student_provider.dart';
@@ -64,6 +65,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final sportType = ref.watch(currentSportTypeProvider);
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -116,8 +118,8 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
 
               SizedBox(height: 24.h),
 
-              // 골프 정보 섹션
-              _buildSectionTitle('골프 정보'),
+              // 종목 정보 섹션 (동적)
+              _buildSectionTitle(SportConstants.studentInfoSectionTitle(sportType)),
               SizedBox(height: 12.h),
               _buildDropdown(
                 label: '레벨',
@@ -129,18 +131,20 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
               _buildTextField(
                 controller: _goalController,
                 label: '목표',
-                hint: '예: 100타 깨기, 드라이버 비거리 향상',
+                hint: SportConstants.goalHint(sportType),
               ),
-              SizedBox(height: 12.h),
-              _buildTextField(
-                controller: _scoreController,
-                label: '평균 스코어',
-                hint: '숫자로 입력',
-                keyboardType: TextInputType.number,
-              ),
+              if (SportConstants.scoreLabel(sportType) != null) ...[
+                SizedBox(height: 12.h),
+                _buildTextField(
+                  controller: _scoreController,
+                  label: SportConstants.scoreLabel(sportType)!,
+                  hint: '숫자로 입력',
+                  keyboardType: TextInputType.number,
+                ),
+              ],
               SizedBox(height: 12.h),
               _buildDatePicker(
-                label: '골프 시작일',
+                label: SportConstants.startDateLabel(sportType),
                 value: _startedGolfAt,
                 onChanged: (date) => setState(() => _startedGolfAt = date),
               ),

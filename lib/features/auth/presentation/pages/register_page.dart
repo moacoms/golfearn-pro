@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import '../../../../core/constants/sport_constants.dart';
 import '../providers/auth_controller.dart';
 import '../widgets/auth_form_field.dart';
 import '../widgets/auth_button.dart';
@@ -24,6 +25,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLessonPro = false;
+  SportType _selectedSport = SportType.golf;
 
   // FocusNode로 탭 순서 제어
   final _nameFocus = FocusNode();
@@ -144,7 +146,16 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 ExcludeFocus(
                   child: _buildUserTypeSelector(),
                 ),
-                SizedBox(height: 30.h),
+                SizedBox(height: 20.h),
+
+                // 종목 선택 (레슨프로일 때만 표시)
+                if (_isLessonPro) ...[
+                  ExcludeFocus(
+                    child: _buildSportSelector(),
+                  ),
+                  SizedBox(height: 20.h),
+                ],
+                SizedBox(height: 10.h),
 
                 // 이름 입력
                 AuthFormField(
@@ -351,9 +362,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   child: Column(
                     children: [
                       Icon(
-                        Icons.golf_course,
+                        Icons.sports,
                         size: 32.w,
-                        color: _isLessonPro 
+                        color: _isLessonPro
                             ? const Color(0xFF10B981)
                             : Colors.grey[600],
                       ),
@@ -383,6 +394,71 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSportSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '레슨 종목',
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+          ),
+        ),
+        SizedBox(height: 12.h),
+        Wrap(
+          spacing: 8.w,
+          runSpacing: 8.h,
+          children: SportConstants.allTypes.map((type) {
+            final isSelected = _selectedSport == type;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedSport = type),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? const Color(0xFF10B981).withOpacity(0.1)
+                      : Colors.grey[50],
+                  border: Border.all(
+                    color: isSelected
+                        ? const Color(0xFF10B981)
+                        : Colors.grey[300]!,
+                    width: isSelected ? 2 : 1,
+                  ),
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      SportConstants.icon(type),
+                      size: 18.w,
+                      color: isSelected
+                          ? const Color(0xFF10B981)
+                          : Colors.grey[600],
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      SportConstants.label(type),
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isSelected
+                            ? const Color(0xFF10B981)
+                            : Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );
@@ -561,6 +637,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           await ref.read(authControllerProvider.notifier).registerAsLessonPro(
                 fullName: _fullNameController.text.trim(),
                 phoneNumber: _phoneController.text.trim(),
+                sportType: SportConstants.toDbString(_selectedSport),
               );
         } catch (e) {
           print('레슨프로 등록 실패 (나중에 재시도 가능): $e');

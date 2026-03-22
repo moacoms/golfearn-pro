@@ -137,15 +137,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             borderRadius: BorderRadius.circular(20.r),
           ),
           child: Icon(
-            Icons.golf_course,
+            Icons.sports,
             size: 40.w,
             color: Colors.white,
           ),
         ),
         SizedBox(height: 24.h),
-        
+
         Text(
-          'Golfearn Pro',
+          'Golfearn',
           style: TextStyle(
             fontSize: 28.sp,
             fontWeight: FontWeight.bold,
@@ -153,7 +153,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
         ),
         SizedBox(height: 8.h),
-        
+
         Text(
           '레슨프로를 위한 스마트 CRM',
           style: TextStyle(

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/constants/sport_constants.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../auth/domain/entities/user_entity.dart';
@@ -208,8 +209,63 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   // App Settings Card
   // ---------------------------------------------------------------------------
   Widget _buildAppSettingsCard() {
+    final isLessonPro = ref.watch(isLessonProProvider);
+    final sportType = ref.watch(currentSportTypeProvider);
+
     return _card(
       children: [
+        // Sport type (프로만)
+        if (isLessonPro) ...[
+          _settingsTile(
+            icon: SportConstants.icon(sportType),
+            title: '레슨 종목',
+            trailing: DropdownButton<SportType>(
+              value: sportType,
+              underline: const SizedBox.shrink(),
+              borderRadius: BorderRadius.circular(12.r),
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF10B981),
+              ),
+              items: SportConstants.allTypes.map((type) {
+                return DropdownMenuItem(
+                  value: type,
+                  child: Text(SportConstants.label(type)),
+                );
+              }).toList(),
+              onChanged: (value) async {
+                if (value == null) return;
+                try {
+                  await ref.read(authControllerProvider.notifier).updateProfile(
+                    sportType: SportConstants.toDbString(value),
+                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('종목이 ${SportConstants.label(value)}(으)로 변경되었습니다'),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                        backgroundColor: const Color(0xFF10B981),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('종목 변경 실패: $e'),
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: const Color(0xFFEF4444),
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ),
+          Divider(height: 1, color: const Color(0xFFF3F4F6), indent: 52.w),
+        ],
         // Default lesson duration
         _settingsTile(
           icon: Icons.timer_outlined,

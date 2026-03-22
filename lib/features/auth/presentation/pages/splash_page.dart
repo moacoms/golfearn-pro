@@ -108,7 +108,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                     
                     // 앱 이름
                     Text(
-                      'Golfearn Pro',
+                      'Golfearn',
                       style: TextStyle(
                         fontSize: 32.sp,
                         fontWeight: FontWeight.bold,

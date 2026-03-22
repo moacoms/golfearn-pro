@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/constants/sport_constants.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../students/presentation/providers/student_provider.dart';
 import '../../domain/entities/lesson_note_entity.dart';
@@ -54,6 +55,8 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
   @override
   Widget build(BuildContext context) {
     final studentsAsync = ref.watch(studentsProvider);
+    final sportType = ref.watch(currentSportTypeProvider);
+    final hints = SportConstants.noteHints(sportType);
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -138,7 +141,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
               // 제목
               TextFormField(
                 controller: _titleController,
-                decoration: _inputDecoration('제목').copyWith(hintText: '예: 드라이버 스윙 교정'),
+                decoration: _inputDecoration('제목').copyWith(hintText: hints['title']),
               ),
               SizedBox(height: 16.h),
 
@@ -149,7 +152,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
                 controller: _contentController,
                 maxLines: 6,
                 decoration: _inputDecoration('').copyWith(
-                  hintText: '오늘 레슨에서 진행한 내용을 작성하세요...',
+                  hintText: hints['content'],
                 ),
               ),
               SizedBox(height: 16.h),
@@ -161,7 +164,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
                 controller: _improvementController,
                 maxLines: 3,
                 decoration: _inputDecoration('').copyWith(
-                  hintText: '학생의 개선된 점이나 앞으로 개선할 점...',
+                  hintText: hints['improvement'],
                 ),
               ),
               SizedBox(height: 16.h),
@@ -173,7 +176,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
                 controller: _homeworkController,
                 maxLines: 3,
                 decoration: _inputDecoration('').copyWith(
-                  hintText: '다음 레슨까지 연습할 내용...',
+                  hintText: hints['homework'],
                 ),
               ),
               SizedBox(height: 32.h),

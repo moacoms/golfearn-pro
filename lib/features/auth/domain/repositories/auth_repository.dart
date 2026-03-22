@@ -29,8 +29,9 @@ abstract class AuthRepository {
     String? fullName,
     String? phoneNumber,
     String? avatarUrl,
+    String? sportType,
   });
-  
+
   /// 레슨프로 등록
   Future<UserEntity> registerAsLessonPro({
     required String fullName,
@@ -38,5 +39,6 @@ abstract class AuthRepository {
     String? bio,
     List<String>? certifications,
     int? experience,
+    String? sportType,
   });
 }

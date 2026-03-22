@@ -7,6 +7,7 @@ class UserEntity {
   final bool isLessonPro;
   final bool isStudent;
   final bool isAdmin;
+  final String sportType; // golf, tennis, badminton, swimming, pilates_yoga, other
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -19,6 +20,7 @@ class UserEntity {
     this.isLessonPro = false,
     this.isStudent = false,
     this.isAdmin = false,
+    this.sportType = 'golf',
     this.createdAt,
     this.updatedAt,
   });
@@ -33,6 +35,7 @@ class UserEntity {
       isLessonPro: json['isLessonPro'] as bool? ?? false,
       isStudent: json['isStudent'] as bool? ?? false,
       isAdmin: json['isAdmin'] as bool? ?? false,
+      sportType: json['sportType'] as String? ?? 'golf',
       createdAt: json['createdAt'] != null 
           ? DateTime.parse(json['createdAt'] as String) 
           : null,
@@ -52,6 +55,7 @@ class UserEntity {
       'isLessonPro': isLessonPro,
       'isStudent': isStudent,
       'isAdmin': isAdmin,
+      'sportType': sportType,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
@@ -66,6 +70,7 @@ class UserEntity {
     bool? isLessonPro,
     bool? isStudent,
     bool? isAdmin,
+    String? sportType,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -78,6 +83,7 @@ class UserEntity {
       isLessonPro: isLessonPro ?? this.isLessonPro,
       isStudent: isStudent ?? this.isStudent,
       isAdmin: isAdmin ?? this.isAdmin,
+      sportType: sportType ?? this.sportType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -95,6 +101,7 @@ class UserEntity {
         other.isLessonPro == isLessonPro &&
         other.isStudent == isStudent &&
         other.isAdmin == isAdmin &&
+        other.sportType == sportType &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt;
   }
@@ -110,6 +117,7 @@ class UserEntity {
       isLessonPro,
       isStudent,
       isAdmin,
+      sportType,
       createdAt,
       updatedAt,
     );
@@ -117,6 +125,6 @@ class UserEntity {
 
   @override
   String toString() {
-    return 'UserEntity(id: $id, email: $email, fullName: $fullName, phoneNumber: $phoneNumber, avatarUrl: $avatarUrl, isLessonPro: $isLessonPro, isStudent: $isStudent, isAdmin: $isAdmin, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'UserEntity(id: $id, email: $email, fullName: $fullName, phoneNumber: $phoneNumber, avatarUrl: $avatarUrl, isLessonPro: $isLessonPro, isStudent: $isStudent, isAdmin: $isAdmin, sportType: $sportType, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 }

@@ -142,14 +142,16 @@ class AuthController extends _$AuthController {
     String? fullName,
     String? phoneNumber,
     String? avatarUrl,
+    String? sportType,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final user = await _authRepository.updateProfile(
         fullName: fullName,
         phoneNumber: phoneNumber,
         avatarUrl: avatarUrl,
+        sportType: sportType,
       );
       state = state.copyWith(isLoading: false, user: user);
     } catch (e) {
@@ -168,9 +170,10 @@ class AuthController extends _$AuthController {
     String? bio,
     List<String>? certifications,
     int? experience,
+    String? sportType,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final user = await _authRepository.registerAsLessonPro(
         fullName: fullName,
@@ -178,6 +181,7 @@ class AuthController extends _$AuthController {
         bio: bio,
         certifications: certifications,
         experience: experience,
+        sportType: sportType,
       );
       state = state.copyWith(isLoading: false, user: user);
     } catch (e) {
