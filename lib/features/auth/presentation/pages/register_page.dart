@@ -72,24 +72,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     });
 
     try {
-      // Supabase에 로그인 시도로 이메일 존재 여부 확인
-      // 잘못된 비밀번호로 시도하면 "Invalid login credentials" → 이메일 존재
-      // 가입되지 않은 이메일도 같은 에러를 반환하므로, signUp 응답으로 확인
-      final response = await Supabase.instance.client.auth.signUp(
-        email: email,
-        password: 'check_only_dummy_password_12345',
-      );
-
-      // identities가 비어있으면 이미 등록된 이메일
-      if (response.user != null) {
-        final identities = response.user!.identities;
-        if (identities == null || identities.isEmpty) {
-          setState(() => _emailError = '이미 가입된 이메일입니다.');
-        } else {
-          // 체크용으로 생성된 유저 정리 (Supabase에서 이메일 미인증 유저는 자동 정리됨)
-          setState(() => _emailError = null);
-        }
-      }
+      // 잘못된 비밀번호로 로그인 시도하여 이메일 존재 여부 확인
+      // 존재하는 이메일: "Invalid login credentials" 에러
+      // 존재하지 않는 이메일: "Invalid login credentials" 에러 (동일하게 반환)
+      // 대안: profiles 테이블에서 직접 확인은 email 컬럼이 없으므로 불가
+      // 가입 시 자연스럽게 처리되도록 여기서는 기본 검증만 수행
+      setState(() => _emailError = null);
     } catch (e) {
       // 에러 발생 시 무시
     } finally {
@@ -535,12 +523,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             email: _emailController.text.trim(),
             password: _passwordController.text,
             fullName: _fullNameController.text.trim(),
-            phoneNumber: _phoneController.text.trim(),
+            phoneNumber: phone,
           );
 
       // 세션이 있는지 확인 (이메일 인증이 필요한 경우 세션이 없을 수 있음)
-      final authState = ref.read(authControllerProvider);
-      if (authState.user == null) {
+      final currentAuthState = ref.read(authControllerProvider);
+      if (currentAuthState.user == null) {
         // 이메일 인증 필요
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -560,7 +548,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         try {
           await ref.read(authControllerProvider.notifier).registerAsLessonPro(
                 fullName: _fullNameController.text.trim(),
-                phoneNumber: _phoneController.text.trim(),
+                phoneNumber: phone,
               );
         } catch (e) {
           print('레슨프로 등록 실패 (나중에 재시도 가능): $e');
@@ -571,7 +559,24 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         context.go('/home');
       }
     } catch (e) {
-      // 에러는 이미 ref.listen에서 처리됨
+      // 에러 메시지 사용자 친화적으로 표시
+      if (mounted) {
+        final errorMsg = e.toString();
+        String displayMsg;
+        if (errorMsg.contains('Database error saving new user')) {
+          displayMsg = '이미 가입된 이메일이거나 서버 오류입니다. 다시 시도해주세요.';
+        } else if (errorMsg.contains('already registered') || errorMsg.contains('이미 가입된')) {
+          displayMsg = '이미 가입된 이메일입니다. 로그인 해주세요.';
+        } else {
+          displayMsg = errorMsg.replaceAll('Exception: ', '');
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(displayMsg),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }
