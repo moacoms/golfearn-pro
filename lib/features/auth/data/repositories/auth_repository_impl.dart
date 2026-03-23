@@ -123,8 +123,6 @@ class AuthRepositoryImpl implements AuthRepository {
       // 이미 등록된 이메일인지 확인
       // Supabase는 보안상 기존 이메일로 가입 시도 시 에러 대신 세션 없는 응답을 반환
       if (response.session == null) {
-        // 세션이 없으면 이메일 인증 대기이거나 이미 등록된 이메일
-        // identities가 비어있으면 이미 등록된 이메일
         final identities = response.user!.identities;
         if (identities == null || identities.isEmpty) {
           throw AuthException('User already registered');
@@ -133,40 +131,22 @@ class AuthRepositoryImpl implements AuthRepository {
         throw Exception('이메일 인증이 필요합니다. 이메일을 확인해주세요.');
       }
 
-      // 프로필 조회 - 이미 있으면 업데이트, 없으면 생성
+      // 프로필 upsert - 트리거가 이미 생성했을 수도 있으므로 upsert 사용
       try {
-        final existingProfile = await _supabaseService.getProfile(response.user!.id);
-
-        if (existingProfile != null) {
-          // 프로필이 있으면 업데이트
-          final updated = await _supabaseService.client
-              .from('profiles')
-              .update({
-                'full_name': fullName,
-                'pro_phone': phoneNumber,
-                'updated_at': DateTime.now().toIso8601String(),
-              })
-              .eq('id', response.user!.id)
-              .select()
-              .single();
-          final entity = UserModel.fromJson(updated).toEntity();
-          return entity.copyWith(email: email);
-        } else {
-          // 프로필이 없으면 생성 (profiles 테이블에 email 컬럼 없음)
-          final profile = await _supabaseService.client
-              .from('profiles')
-              .insert({
-                'id': response.user!.id,
-                'full_name': fullName,
-                'pro_phone': phoneNumber,
-                'is_lesson_pro': false,
-                'is_student': true,
-              })
-              .select()
-              .single();
-          final entity = UserModel.fromJson(profile).toEntity();
-          return entity.copyWith(email: email);
-        }
+        final profile = await _supabaseService.client
+            .from('profiles')
+            .upsert({
+              'id': response.user!.id,
+              'full_name': fullName,
+              'pro_phone': phoneNumber,
+              'is_lesson_pro': false,
+              'is_student': true,
+              'updated_at': DateTime.now().toIso8601String(),
+            }, onConflict: 'id')
+            .select()
+            .single();
+        final entity = UserModel.fromJson(profile).toEntity();
+        return entity.copyWith(email: email);
       } catch (e) {
         print('프로필 처리 실패: $e');
         // 프로필 처리 실패해도 기본 정보로 진행
