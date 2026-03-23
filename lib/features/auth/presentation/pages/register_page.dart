@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
-import '../../../../core/constants/sport_constants.dart';
 import '../providers/auth_controller.dart';
 import '../widgets/auth_form_field.dart';
 import '../widgets/auth_button.dart';
@@ -25,7 +24,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLessonPro = false;
-  SportType _selectedSport = SportType.golf;
 
   // FocusNode로 탭 순서 제어
   final _nameFocus = FocusNode();
@@ -385,71 +383,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               ),
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSportSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '레슨 종목',
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-        ),
-        SizedBox(height: 12.h),
-        Wrap(
-          spacing: 8.w,
-          runSpacing: 8.h,
-          children: SportConstants.allTypes.map((type) {
-            final isSelected = _selectedSport == type;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedSport = type),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? const Color(0xFF10B981).withOpacity(0.1)
-                      : Colors.grey[50],
-                  border: Border.all(
-                    color: isSelected
-                        ? const Color(0xFF10B981)
-                        : Colors.grey[300]!,
-                    width: isSelected ? 2 : 1,
-                  ),
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      SportConstants.icon(type),
-                      size: 18.w,
-                      color: isSelected
-                          ? const Color(0xFF10B981)
-                          : Colors.grey[600],
-                    ),
-                    SizedBox(width: 6.w),
-                    Text(
-                      SportConstants.label(type),
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSelected
-                            ? const Color(0xFF10B981)
-                            : Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
         ),
       ],
     );
