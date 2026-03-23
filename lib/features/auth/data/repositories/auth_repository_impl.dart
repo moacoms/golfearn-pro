@@ -213,7 +213,8 @@ class AuthRepositoryImpl implements AuthRepository {
       if (fullName != null) updateData['full_name'] = fullName;
       if (phoneNumber != null) updateData['pro_phone'] = phoneNumber;
       if (avatarUrl != null) updateData['avatar_url'] = avatarUrl;
-      if (sportType != null) updateData['sport_type'] = sportType;
+      // sport_type은 DB 컬럼 추가 후 활성화
+      // if (sportType != null) updateData['sport_type'] = sportType;
 
       if (updateData.isEmpty) {
         throw Exception('업데이트할 정보가 없습니다.');
@@ -258,7 +259,8 @@ class AuthRepositoryImpl implements AuthRepository {
       };
       if (bio != null) updateData['pro_introduction'] = bio;
       if (experience != null) updateData['pro_experience_years'] = experience;
-      if (sportType != null) updateData['sport_type'] = sportType;
+      // sport_type은 DB 컬럼 추가 후 활성화
+      // if (sportType != null) updateData['sport_type'] = sportType;
 
       final profile = await _supabaseService.client
           .from('profiles')

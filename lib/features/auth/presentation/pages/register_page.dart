@@ -146,16 +146,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 ExcludeFocus(
                   child: _buildUserTypeSelector(),
                 ),
-                SizedBox(height: 20.h),
-
-                // 종목 선택 (레슨프로일 때만 표시)
-                if (_isLessonPro) ...[
-                  ExcludeFocus(
-                    child: _buildSportSelector(),
-                  ),
-                  SizedBox(height: 20.h),
-                ],
-                SizedBox(height: 10.h),
+                SizedBox(height: 30.h),
 
                 // 이름 입력
                 AuthFormField(
@@ -637,7 +628,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           await ref.read(authControllerProvider.notifier).registerAsLessonPro(
                 fullName: _fullNameController.text.trim(),
                 phoneNumber: _phoneController.text.trim(),
-                sportType: SportConstants.toDbString(_selectedSport),
               );
         } catch (e) {
           print('레슨프로 등록 실패 (나중에 재시도 가능): $e');
