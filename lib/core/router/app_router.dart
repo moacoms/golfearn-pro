@@ -8,6 +8,7 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/dashboard/presentation/pages/student_dashboard_page.dart';
+import '../../features/dashboard/presentation/pages/find_pro_page.dart';
 import '../../features/students/presentation/pages/students_list_page.dart';
 import '../../features/students/presentation/pages/student_detail_page.dart';
 import '../../features/students/presentation/pages/student_form_page.dart';
@@ -178,6 +179,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => MaterialPage(
               key: state.pageKey,
               child: const PackagesPage(),
+            ),
+          ),
+
+          // 레슨프로 찾기
+          GoRoute(
+            path: '/find-pro',
+            name: 'find-pro',
+            pageBuilder: (context, state) => MaterialPage(
+              key: state.pageKey,
+              child: const FindProPage(),
             ),
           ),
 
