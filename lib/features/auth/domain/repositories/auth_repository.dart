@@ -19,6 +19,7 @@ abstract class AuthRepository {
     required String password,
     String? fullName,
     String? phoneNumber,
+    bool isLessonPro = false,
   });
   
   /// 로그아웃

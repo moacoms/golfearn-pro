@@ -518,18 +518,18 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     }
 
     try {
-      // 기본 회원가입
+      // 회원가입 (isLessonPro 포함 - 트리거에 필요한 모든 데이터 전달)
       await ref.read(authControllerProvider.notifier).signUp(
             email: _emailController.text.trim(),
             password: _passwordController.text,
             fullName: _fullNameController.text.trim(),
             phoneNumber: phone,
+            isLessonPro: _isLessonPro,
           );
 
       // 세션이 있는지 확인 (이메일 인증이 필요한 경우 세션이 없을 수 있음)
       final currentAuthState = ref.read(authControllerProvider);
       if (currentAuthState.user == null) {
-        // 이메일 인증 필요
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -543,28 +543,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         return;
       }
 
-      // 레슨프로로 선택했다면 추가 등록
-      if (_isLessonPro) {
-        try {
-          await ref.read(authControllerProvider.notifier).registerAsLessonPro(
-                fullName: _fullNameController.text.trim(),
-                phoneNumber: phone,
-              );
-        } catch (e) {
-          print('레슨프로 등록 실패 (나중에 재시도 가능): $e');
-        }
-      }
-
       if (mounted) {
         context.go('/home');
       }
     } catch (e) {
-      // 에러 메시지 사용자 친화적으로 표시
       if (mounted) {
         final errorMsg = e.toString();
         String displayMsg;
-        if (errorMsg.contains('Database error saving new user')) {
-          displayMsg = '이미 가입된 이메일이거나 서버 오류입니다. 다시 시도해주세요.';
+        if (errorMsg.contains('Database error')) {
+          displayMsg = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
         } else if (errorMsg.contains('already registered') || errorMsg.contains('이미 가입된')) {
           displayMsg = '이미 가입된 이메일입니다. 로그인 해주세요.';
         } else {
