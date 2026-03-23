@@ -105,14 +105,20 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
     String? fullName,
     String? phoneNumber,
+    bool isLessonPro = false,
   }) async {
     try {
+      // 트리거(handle_new_user)가 raw_user_meta_data에서 읽는 모든 필드를 전달
       final response = await _supabaseService.signUp(
         email: email,
         password: password,
         data: {
           'full_name': fullName,
           'phone_number': phoneNumber,
+          'pro_phone': phoneNumber,
+          'is_lesson_pro': isLessonPro,
+          'is_student': !isLessonPro,
+          'sport_type': 'golf',
         },
       );
 
@@ -139,8 +145,9 @@ class AuthRepositoryImpl implements AuthRepository {
               'id': response.user!.id,
               'full_name': fullName,
               'pro_phone': phoneNumber,
-              'is_lesson_pro': false,
-              'is_student': true,
+              'is_lesson_pro': isLessonPro,
+              'is_student': !isLessonPro,
+              'sport_type': 'golf',
               'updated_at': DateTime.now().toIso8601String(),
             }, onConflict: 'id')
             .select()
@@ -148,18 +155,30 @@ class AuthRepositoryImpl implements AuthRepository {
         final entity = UserModel.fromJson(profile).toEntity();
         return entity.copyWith(email: email);
       } catch (e) {
-        print('프로필 처리 실패: $e');
-        // 프로필 처리 실패해도 기본 정보로 진행
+        print('프로필 upsert 실패 (트리거가 처리했을 수 있음): $e');
+        // 트리거가 이미 프로필을 생성한 경우 조회 시도
+        try {
+          final existingProfile = await _supabaseService.getProfile(response.user!.id);
+          if (existingProfile != null) {
+            final entity = UserModel.fromJson(existingProfile).toEntity();
+            return entity.copyWith(email: email);
+          }
+        } catch (_) {}
         return UserEntity(
           id: response.user!.id,
           email: email,
           fullName: fullName,
           phoneNumber: phoneNumber,
+          isLessonPro: isLessonPro,
+          isStudent: !isLessonPro,
         );
       }
     } on AuthException catch (e) {
       throw Exception(_getAuthErrorMessage(e.message));
     } catch (e) {
+      if (e.toString().contains('Database error')) {
+        throw Exception('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      }
       throw Exception('회원가입 중 오류가 발생했습니다: $e');
     }
   }

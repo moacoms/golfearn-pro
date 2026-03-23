@@ -96,15 +96,17 @@ class AuthController extends _$AuthController {
     required String password,
     String? fullName,
     String? phoneNumber,
+    bool isLessonPro = false,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final user = await _authRepository.signUpWithEmailAndPassword(
         email: email,
         password: password,
         fullName: fullName,
         phoneNumber: phoneNumber,
+        isLessonPro: isLessonPro,
       );
       state = state.copyWith(isLoading: false, user: user);
     } catch (e) {
