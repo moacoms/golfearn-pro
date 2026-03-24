@@ -135,6 +135,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 ),
                 SizedBox(height: 30.h),
 
+                // 버전 표시 (배포 확인용)
+                Text(
+                  'v1.0.3',
+                  style: TextStyle(fontSize: 10.sp, color: Colors.grey[400]),
+                  textAlign: TextAlign.right,
+                ),
+                SizedBox(height: 8.h),
+
                 // 이름 입력
                 AuthFormField(
                   controller: _fullNameController,
