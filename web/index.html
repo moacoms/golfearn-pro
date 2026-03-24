@@ -38,11 +38,22 @@
     input::-ms-reveal { display: none; }
     input::-webkit-search-cancel-button { display: none; }
     input::-webkit-clear-button { display: none; }
-    /* Flutter 입력 필드 IME 조합 중 깜빡임 방지 */
-    flt-glass-pane input {
+
+    /* Flutter 웹 한글 IME 조합 중 깨짐 방지 */
+    flt-glass-pane input,
+    flt-glass-pane textarea,
+    .flt-text-editing-host input,
+    .flt-text-editing-host textarea {
       -webkit-appearance: none;
+      font-family: 'Noto Sans KR', sans-serif, -apple-system, BlinkMacSystemFont !important;
+      -webkit-text-size-adjust: 100%;
+      ime-mode: active;
     }
   </style>
+  <!-- 한글 폰트 로드 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <!--

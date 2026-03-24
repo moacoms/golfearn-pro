@@ -35119,7 +35119,7 @@ r=r==null?null:r.b
 if(r==null)r=1
 return new A.xW(s,r,A.FK(a),A.dL(a),null,A.aX())},
 EX(a,b,c){return A.fZ(a).S1(b,null,c)},
-b2q(){var s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d=null,c="Pretendard",b=A.b2n(B.h,!1,d,d,0,B.bq,B.Tv,A.U(d,d,B.bq,d,d,d,d,d,c,d,d,$.c().T(18),d,d,B.M,d,d,!0,d,d,d,d,d,d,d,d)),a=$.c()
+b2q(){var s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d=null,c="Noto Sans KR",b=A.b2n(B.h,!1,d,d,0,B.bq,B.Tv,A.U(d,d,B.bq,d,d,d,d,d,c,d,d,$.c().T(18),d,d,B.M,d,d,!0,d,d,d,d,d,d,d,d)),a=$.c()
 a=A.ao(12*Math.min(a.gF(),a.gC()))
 s=24*$.c().gF()
 r=12*$.c().gC()
