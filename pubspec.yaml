@@ -96,11 +96,10 @@ flutter:
     - assets/animations/
     - .env
     
-  # fonts:
-    # - family: Pretendard
-    #   fonts:
-    #     - asset: assets/fonts/Pretendard-Regular.ttf
-    #       weight: 400
+  fonts:
+    - family: Noto Sans KR
+      fonts:
+        - asset: assets/fonts/NotoSansKR-Regular.ttf
           
 flutter_icons:
   android: "launcher_icon"
