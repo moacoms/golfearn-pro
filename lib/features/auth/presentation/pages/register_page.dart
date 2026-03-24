@@ -123,6 +123,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Form(
             key: _formKey,
+            autovalidateMode: AutovalidateMode.disabled,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
