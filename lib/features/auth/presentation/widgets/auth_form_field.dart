@@ -57,6 +57,8 @@ class AuthFormField extends StatelessWidget {
           textInputAction: textInputAction,
           onFieldSubmitted: onFieldSubmitted,
           enabled: enabled,
+          autocorrect: false,
+          enableSuggestions: false,
           style: TextStyle(fontSize: 16.sp),
           decoration: InputDecoration(
             hintText: hintText,

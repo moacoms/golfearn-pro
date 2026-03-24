@@ -31,6 +31,18 @@
 
   <title>Golfearn</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* 브라우저 기본 입력 필드 clear(x) 버튼 숨기기 */
+    input::-ms-clear { display: none; }
+    input::-ms-reveal { display: none; }
+    input::-webkit-search-cancel-button { display: none; }
+    input::-webkit-clear-button { display: none; }
+    /* Flutter 입력 필드 IME 조합 중 깜빡임 방지 */
+    flt-glass-pane input {
+      -webkit-appearance: none;
+    }
+  </style>
 </head>
 <body>
   <!--
