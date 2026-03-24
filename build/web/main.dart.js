@@ -110264,64 +110264,63 @@ case 6:case 1:return A.t(q,r)
 case 2:return A.r(o.at(-1),r)}})
 return A.u($async$xL,r)},
 uo(a,b,c,d,e){return this.acz(a,b,c,d,e)},
-acz(a8,a9,b0,b1,b2){var s=0,r=A.v(t.rP),q,p=2,o=[],n=this,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3,a4,a5,a6,a7
-var $async$uo=A.w(function(b3,b4){if(b3===1){o.push(b4)
+acz(a7,a8,a9,b0,b1){var s=0,r=A.v(t.rP),q,p=2,o=[],n=this,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3,a4,a5,a6
+var $async$uo=A.w(function(b2,b3){if(b2===1){o.push(b3)
 s=p}for(;;)switch(s){case 0:p=4
 d=n.a
-c=!b0
-b=t.N
-a=t.z
+c=t.N
+b=t.z
 s=7
-return A.p(d.mM(A.ab(["full_name",a9,"phone_number",b2,"pro_phone",b2,"is_lesson_pro",b0,"is_student",c],b,a),a8,b1),$async$uo)
-case 7:m=b4
+return A.p(d.mM(A.ab(["full_name",a8,"phone_number",b1],c,b),a7,b0),$async$uo)
+case 7:m=b3
 if(m.b==null){d=A.c5("\ud68c\uc6d0\uac00\uc785\uc5d0 \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4.")
 throw A.h(d)}if(m.a==null){l=m.b.cy
 if(l==null||J.cu(l)===0){d=A.m5("User already registered",null,null)
 throw A.h(d)}d=A.c5("\uc774\uba54\uc77c \uc778\uc99d\uc774 \ud544\uc694\ud569\ub2c8\ub2e4. \uc774\uba54\uc77c\uc744 \ud655\uc778\ud574\uc8fc\uc138\uc694.")
 throw A.h(d)}p=9
-a0=d.a.ej("profiles")
-a1=A.ab(["id",m.b.a,"full_name",a9,"pro_phone",b2,"is_lesson_pro",b0,"is_student",c,"updated_at",new A.ay(Date.now(),0,!1).dO()],b,t.X)
-a2=A.dE(a0.b,b,b)
-a2.m(0,"Prefer","resolution=merge-duplicates")
-a3=a0.f
-b=A.q(b,a)
-b.m(0,"on_conflict","id")
-b.U(0,a3.gh0())
-a3=a3.tU(b)
+a=d.a.ej("profiles")
+a0=A.ab(["id",m.b.a,"full_name",a8,"pro_phone",b1,"is_lesson_pro",a9,"is_student",!a9,"updated_at",new A.ay(Date.now(),0,!1).dO()],c,t.X)
+a1=A.dE(a.b,c,c)
+a1.m(0,"Prefer","resolution=merge-duplicates")
+a2=a.f
+c=A.q(c,b)
+c.m(0,"on_conflict","id")
+c.U(0,a2.gh0())
+a2=a2.tU(c)
 s=12
-return A.p(A.kt(a0.yb(a1,a2,"POST",a3),A.i(a0).h("mE.T")).jA().j8(0),$async$uo)
-case 12:k=b4
+return A.p(A.kt(a.yb(a0,a1,"POST",a2),A.i(a).h("mE.T")).jA().j8(0),$async$uo)
+case 12:k=b3
 j=A.a1I(A.a1J(k))
-b=j.Pg(a8)
-q=b
+c=j.Pg(a7)
+q=c
 s=1
 break
 p=4
 s=11
 break
 case 9:p=8
-a5=o.pop()
-i=A.a_(a5)
+a4=o.pop()
+i=A.a_(a4)
 A.cP("\ud504\ub85c\ud544 upsert \uc2e4\ud328 (\ud2b8\ub9ac\uac70\uac00 \ucc98\ub9ac\ud588\uc744 \uc218 \uc788\uc74c): "+A.k(i))
 p=14
 s=17
 return A.p(d.uc(m.b.a),$async$uo)
-case 17:h=b4
+case 17:h=b3
 if(h!=null){g=A.a1I(A.a1J(h))
-d=g.Pg(a8)
+d=g.Pg(a7)
 q=d
 s=1
 break}p=8
 s=16
 break
 case 14:p=13
-a6=o.pop()
+a5=o.pop()
 s=16
 break
 case 13:s=8
 break
 case 16:d=m.b.a
-q=new A.cD(d,a8,a9,b2,null,b0,c,!1,"golf",null,null)
+q=new A.cD(d,a7,a8,b1,null,a9,!a9,!1,"golf",null,null)
 s=1
 break
 s=11
@@ -110332,8 +110331,8 @@ case 11:p=2
 s=6
 break
 case 4:p=3
-a7=o.pop()
-d=A.a_(a7)
+a6=o.pop()
+d=A.a_(a6)
 if(d instanceof A.k6){f=d
 throw A.h(A.c5(n.Ya(f.a)))}else{e=d
 if(B.c.q(J.dv(e),"Database error"))throw A.h(A.c5("\uc11c\ubc84 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4. \uc7a0\uc2dc \ud6c4 \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694."))

@@ -108,16 +108,13 @@ class AuthRepositoryImpl implements AuthRepository {
     bool isLessonPro = false,
   }) async {
     try {
-      // 트리거(handle_new_user)가 raw_user_meta_data에서 읽는 모든 필드를 전달
+      // signUp에는 기본 정보만 전달 (트리거 호환성)
       final response = await _supabaseService.signUp(
         email: email,
         password: password,
         data: {
           'full_name': fullName,
           'phone_number': phoneNumber,
-          'pro_phone': phoneNumber,
-          'is_lesson_pro': isLessonPro,
-          'is_student': !isLessonPro,
         },
       );
 
