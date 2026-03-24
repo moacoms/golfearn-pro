@@ -118,7 +118,6 @@ class AuthRepositoryImpl implements AuthRepository {
           'pro_phone': phoneNumber,
           'is_lesson_pro': isLessonPro,
           'is_student': !isLessonPro,
-          'sport_type': 'golf',
         },
       );
 
@@ -147,7 +146,6 @@ class AuthRepositoryImpl implements AuthRepository {
               'pro_phone': phoneNumber,
               'is_lesson_pro': isLessonPro,
               'is_student': !isLessonPro,
-              'sport_type': 'golf',
               'updated_at': DateTime.now().toIso8601String(),
             }, onConflict: 'id')
             .select()
