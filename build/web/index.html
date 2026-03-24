@@ -64,6 +64,19 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  <script>
+    // flutter_bootstrap.js 로드 후 config override
+    // CanvasKit 대신 HTML 렌더러 사용 → 한글 IME 조합 깨짐 해결
+    window.addEventListener('load', function() {
+      if (window._flutter && window._flutter.loader) {
+        window._flutter.loader.load({
+          config: {
+            renderer: "html",
+          },
+        });
+      }
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
