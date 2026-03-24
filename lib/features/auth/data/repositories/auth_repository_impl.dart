@@ -108,14 +108,10 @@ class AuthRepositoryImpl implements AuthRepository {
     bool isLessonPro = false,
   }) async {
     try {
-      // signUp에는 기본 정보만 전달 (트리거 호환성)
+      // 1단계: signUp - metadata 없이 순수 가입만
       final response = await _supabaseService.signUp(
         email: email,
         password: password,
-        data: {
-          'full_name': fullName,
-          'phone_number': phoneNumber,
-        },
       );
 
       if (response.user == null) {
@@ -123,42 +119,54 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       // 이미 등록된 이메일인지 확인
-      // Supabase는 보안상 기존 이메일로 가입 시도 시 에러 대신 세션 없는 응답을 반환
       if (response.session == null) {
         final identities = response.user!.identities;
         if (identities == null || identities.isEmpty) {
           throw AuthException('User already registered');
         }
-        // identities가 있으면 이메일 인증 대기 상태 (신규 가입)
         throw Exception('이메일 인증이 필요합니다. 이메일을 확인해주세요.');
       }
 
-      // 프로필 upsert - 트리거가 이미 생성했을 수도 있으므로 upsert 사용
+      // 2단계: 프로필 생성/업데이트 - 트리거와 별개로 직접 처리
       try {
-        final profile = await _supabaseService.client
-            .from('profiles')
-            .upsert({
-              'id': response.user!.id,
-              'full_name': fullName,
-              'pro_phone': phoneNumber,
-              'is_lesson_pro': isLessonPro,
-              'is_student': !isLessonPro,
-              'updated_at': DateTime.now().toIso8601String(),
-            }, onConflict: 'id')
-            .select()
-            .single();
-        final entity = UserModel.fromJson(profile).toEntity();
-        return entity.copyWith(email: email);
+        // 트리거가 이미 프로필을 만들었는지 확인
+        final existing = await _supabaseService.getProfile(response.user!.id);
+
+        if (existing != null) {
+          // 트리거가 만든 프로필 업데이트
+          final profile = await _supabaseService.client
+              .from('profiles')
+              .update({
+                'full_name': fullName,
+                'pro_phone': phoneNumber,
+                'is_lesson_pro': isLessonPro,
+                'is_student': !isLessonPro,
+                'updated_at': DateTime.now().toIso8601String(),
+              })
+              .eq('id', response.user!.id)
+              .select()
+              .single();
+          final entity = UserModel.fromJson(profile).toEntity();
+          return entity.copyWith(email: email);
+        } else {
+          // 트리거가 안 만들었으면 직접 생성
+          final profile = await _supabaseService.client
+              .from('profiles')
+              .insert({
+                'id': response.user!.id,
+                'full_name': fullName,
+                'pro_phone': phoneNumber,
+                'is_lesson_pro': isLessonPro,
+                'is_student': !isLessonPro,
+              })
+              .select()
+              .single();
+          final entity = UserModel.fromJson(profile).toEntity();
+          return entity.copyWith(email: email);
+        }
       } catch (e) {
-        print('프로필 upsert 실패 (트리거가 처리했을 수 있음): $e');
-        // 트리거가 이미 프로필을 생성한 경우 조회 시도
-        try {
-          final existingProfile = await _supabaseService.getProfile(response.user!.id);
-          if (existingProfile != null) {
-            final entity = UserModel.fromJson(existingProfile).toEntity();
-            return entity.copyWith(email: email);
-          }
-        } catch (_) {}
+        print('프로필 처리 실패: $e');
+        // 프로필 처리 실패해도 기본 정보로 진행
         return UserEntity(
           id: response.user!.id,
           email: email,
