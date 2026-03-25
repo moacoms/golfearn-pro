@@ -195,6 +195,22 @@ class AuthController extends _$AuthController {
     }
   }
 
+  /// 비밀번호 재설정
+  Future<void> resetPassword({required String email}) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      await _authRepository.resetPassword(email: email);
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+      rethrow;
+    }
+  }
+
   /// 에러 클리어
   void clearError() {
     state = state.copyWith(error: null);

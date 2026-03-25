@@ -2,9 +2,87 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../packages/data/models/package_model.dart';
+import '../../../packages/domain/entities/package_entity.dart';
+
+// ──────────────────────────────────────────────
+// Student-side providers (no code generation needed)
+// ──────────────────────────────────────────────
+
+/// 현재 사용자의 lesson_students 레코드 ID 목록 조회
+final _myStudentRecordIdsProvider = FutureProvider<List<String>>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return [];
+
+  final response = await Supabase.instance.client
+      .from('lesson_students')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('is_active', true);
+
+  final list = List<Map<String, dynamic>>.from(response);
+  return list.map((e) => e['id'] as String).toList();
+});
+
+/// 학생의 총 레슨 횟수 (완료된 스케줄 수)
+final _myTotalLessonCountProvider = FutureProvider<int>((ref) async {
+  final studentIds = await ref.watch(_myStudentRecordIdsProvider.future);
+  if (studentIds.isEmpty) return 0;
+
+  final response = await Supabase.instance.client
+      .from('lesson_schedules')
+      .select('id')
+      .inFilter('student_id', studentIds)
+      .eq('status', 'completed');
+
+  return List.from(response).length;
+});
+
+/// 학생의 활성 패키지 목록
+final _myActivePackagesProvider =
+    FutureProvider<List<PackageEntity>>((ref) async {
+  final studentIds = await ref.watch(_myStudentRecordIdsProvider.future);
+  if (studentIds.isEmpty) return [];
+
+  final response = await Supabase.instance.client
+      .from('lesson_packages')
+      .select('*')
+      .inFilter('student_id', studentIds)
+      .eq('status', 'active')
+      .order('created_at', ascending: false);
+
+  final list = List<Map<String, dynamic>>.from(response);
+  return list.map((json) => PackageModel.fromJson(json).toEntity()).toList();
+});
+
+/// 학생의 다가오는 레슨 (미래 예정된 스케줄, 프로 이름 포함)
+final _myUpcomingLessonsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final studentIds = await ref.watch(_myStudentRecordIdsProvider.future);
+  if (studentIds.isEmpty) return [];
+
+  final today = DateTime.now().toIso8601String().split('T').first;
+
+  final response = await Supabase.instance.client
+      .from('lesson_schedules')
+      .select('*, profiles!lesson_schedules_pro_id_fkey(full_name)')
+      .inFilter('student_id', studentIds)
+      .eq('status', 'scheduled')
+      .gte('lesson_date', today)
+      .order('lesson_date')
+      .order('lesson_time')
+      .limit(5);
+
+  return List<Map<String, dynamic>>.from(response);
+});
+
+// ──────────────────────────────────────────────
+// StudentDashboardPage
+// ──────────────────────────────────────────────
 
 class StudentDashboardPage extends ConsumerWidget {
   const StudentDashboardPage({super.key});
@@ -19,26 +97,35 @@ class StudentDashboardPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.all(16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildWelcomeHeader(userName),
-              SizedBox(height: 24.h),
-              _buildQuickInfoCards(),
-              SizedBox(height: 24.h),
-              _buildUpcomingLessonsSection(),
-              SizedBox(height: 24.h),
-              _buildMyPackagesSection(),
-              SizedBox(height: 24.h),
-              _buildFindProSection(context),
-              SizedBox(height: 24.h),
-              _buildContactProSection(),
-              SizedBox(height: 24.h),
-              _buildSwitchToProSection(context, ref),
-            ],
+        child: RefreshIndicator(
+          color: _primary,
+          onRefresh: () async {
+            ref.invalidate(_myStudentRecordIdsProvider);
+            ref.invalidate(_myTotalLessonCountProvider);
+            ref.invalidate(_myActivePackagesProvider);
+            ref.invalidate(_myUpcomingLessonsProvider);
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildWelcomeHeader(userName),
+                SizedBox(height: 24.h),
+                _buildQuickInfoCards(ref),
+                SizedBox(height: 24.h),
+                _buildUpcomingLessonsSection(ref),
+                SizedBox(height: 24.h),
+                _buildMyPackagesSection(ref),
+                SizedBox(height: 24.h),
+                _buildFindProSection(context),
+                SizedBox(height: 24.h),
+                _buildContactProSection(),
+                SizedBox(height: 24.h),
+                _buildSwitchToProSection(context, ref),
+              ],
+            ),
           ),
         ),
       ),
@@ -93,15 +180,23 @@ class StudentDashboardPage extends ConsumerWidget {
   // 2. Quick info cards
   // ──────────────────────────────────────────────
 
-  Widget _buildQuickInfoCards() {
+  Widget _buildQuickInfoCards(WidgetRef ref) {
+    final lessonCountAsync = ref.watch(_myTotalLessonCountProvider);
+    final packagesAsync = ref.watch(_myActivePackagesProvider);
+
     return Row(
       children: [
         Expanded(
           child: _buildInfoCard(
             icon: Icons.sports_golf,
             title: '총 레슨 횟수',
-            value: '0회',
+            value: lessonCountAsync.when(
+              data: (count) => '${count}회',
+              loading: () => '...',
+              error: (_, __) => '0회',
+            ),
             color: Colors.blue,
+            isLoading: lessonCountAsync.isLoading,
           ),
         ),
         SizedBox(width: 12.w),
@@ -109,8 +204,13 @@ class StudentDashboardPage extends ConsumerWidget {
           child: _buildInfoCard(
             icon: Icons.card_giftcard,
             title: '활성 패키지',
-            value: '0개',
+            value: packagesAsync.when(
+              data: (packages) => '${packages.length}개',
+              loading: () => '...',
+              error: (_, __) => '0개',
+            ),
             color: Colors.orange,
+            isLoading: packagesAsync.isLoading,
           ),
         ),
       ],
@@ -122,6 +222,7 @@ class StudentDashboardPage extends ConsumerWidget {
     required String title,
     required String value,
     required Color color,
+    bool isLoading = false,
   }) {
     return Container(
       padding: EdgeInsets.all(20.w),
@@ -150,14 +251,23 @@ class StudentDashboardPage extends ConsumerWidget {
             ),
           ),
           SizedBox(height: 4.h),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
+          isLoading
+              ? SizedBox(
+                  width: 20.w,
+                  height: 20.w,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: color,
+                  ),
+                )
+              : Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
         ],
       ),
     );
@@ -167,7 +277,9 @@ class StudentDashboardPage extends ConsumerWidget {
   // 3. Upcoming lessons section
   // ──────────────────────────────────────────────
 
-  Widget _buildUpcomingLessonsSection() {
+  Widget _buildUpcomingLessonsSection(WidgetRef ref) {
+    final upcomingAsync = ref.watch(_myUpcomingLessonsProvider);
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(20.w),
@@ -200,10 +312,172 @@ class StudentDashboardPage extends ConsumerWidget {
             ],
           ),
           SizedBox(height: 20.h),
-          _buildEmptyState(
-            icon: Icons.event_available,
-            message: '예정된 레슨이 없습니다',
-            subMessage: '레슨프로가 일정을 등록하면 여기에 표시됩니다',
+          upcomingAsync.when(
+            data: (lessons) {
+              if (lessons.isEmpty) {
+                return _buildEmptyState(
+                  icon: Icons.event_available,
+                  message: '예정된 레슨이 없습니다',
+                  subMessage: '레슨프로가 일정을 등록하면 여기에 표시됩니다',
+                );
+              }
+              return Column(
+                children: lessons
+                    .map((lesson) => _buildUpcomingLessonItem(lesson))
+                    .toList(),
+              );
+            },
+            loading: () => Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.h),
+                child: SizedBox(
+                  width: 24.w,
+                  height: 24.w,
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: _primary,
+                  ),
+                ),
+              ),
+            ),
+            error: (_, __) => _buildEmptyState(
+              icon: Icons.event_available,
+              message: '예정된 레슨이 없습니다',
+              subMessage: '레슨프로가 일정을 등록하면 여기에 표시됩니다',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpcomingLessonItem(Map<String, dynamic> lessonData) {
+    final lessonDate = DateTime.parse(lessonData['lesson_date'] as String);
+    final lessonTime = lessonData['lesson_time'] as String? ?? '';
+    final duration = lessonData['duration_minutes'] as int? ?? 60;
+    final lessonType = lessonData['lesson_type'] as String?;
+    final location = lessonData['location'] as String?;
+
+    // Pro name from joined profiles
+    String proName = '레슨프로';
+    final profiles = lessonData['profiles'];
+    if (profiles != null && profiles is Map) {
+      proName = (profiles['full_name'] as String?) ?? '레슨프로';
+    }
+
+    final timeStr = lessonTime.length >= 5 ? lessonTime.substring(0, 5) : lessonTime;
+    const weekdayKo = ['', '월', '화', '수', '목', '금', '토', '일'];
+    final dayLabel = weekdayKo[lessonDate.weekday];
+
+    // Lesson type label
+    String typeLabel;
+    switch (lessonType) {
+      case 'regular':
+        typeLabel = '일반 레슨';
+        break;
+      case 'playing':
+        typeLabel = '필드 레슨';
+        break;
+      case 'short_game':
+        typeLabel = '숏게임';
+        break;
+      case 'putting':
+        typeLabel = '퍼팅';
+        break;
+      default:
+        typeLabel = lessonType ?? '일반 레슨';
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: _primary.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: _primary.withOpacity(0.15)),
+      ),
+      child: Row(
+        children: [
+          // Date badge
+          Container(
+            width: 52.w,
+            padding: EdgeInsets.symmetric(vertical: 8.h),
+            decoration: BoxDecoration(
+              color: _primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  DateFormat('M/d').format(lessonDate),
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.bold,
+                    color: _primary,
+                  ),
+                ),
+                Text(
+                  dayLabel,
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: _primary.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 12.w),
+          // Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$timeStr  |  ${duration}분',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  '$proName  ·  $typeLabel',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                if (location != null && location.isNotEmpty) ...[
+                  SizedBox(height: 2.h),
+                  Text(
+                    location,
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: Colors.grey[500],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          // Status badge
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            decoration: BoxDecoration(
+              color: _primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6.r),
+            ),
+            child: Text(
+              '예정',
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w600,
+                color: _primary,
+              ),
+            ),
           ),
         ],
       ),
@@ -214,7 +488,9 @@ class StudentDashboardPage extends ConsumerWidget {
   // 4. My packages section
   // ──────────────────────────────────────────────
 
-  Widget _buildMyPackagesSection() {
+  Widget _buildMyPackagesSection(WidgetRef ref) {
+    final packagesAsync = ref.watch(_myActivePackagesProvider);
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(20.w),
@@ -247,11 +523,132 @@ class StudentDashboardPage extends ConsumerWidget {
             ],
           ),
           SizedBox(height: 20.h),
-          _buildEmptyState(
-            icon: Icons.inventory_2_outlined,
-            message: '활성 패키지가 없습니다',
-            subMessage: '레슨프로에게 패키지를 문의해 보세요',
+          packagesAsync.when(
+            data: (packages) {
+              if (packages.isEmpty) {
+                return _buildEmptyState(
+                  icon: Icons.inventory_2_outlined,
+                  message: '활성 패키지가 없습니다',
+                  subMessage: '레슨프로에게 패키지를 문의해 보세요',
+                );
+              }
+              return Column(
+                children: packages
+                    .map((pkg) => _buildPackageItem(pkg))
+                    .toList(),
+              );
+            },
+            loading: () => Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.h),
+                child: SizedBox(
+                  width: 24.w,
+                  height: 24.w,
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: _primary,
+                  ),
+                ),
+              ),
+            ),
+            error: (_, __) => _buildEmptyState(
+              icon: Icons.inventory_2_outlined,
+              message: '활성 패키지가 없습니다',
+              subMessage: '레슨프로에게 패키지를 문의해 보세요',
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPackageItem(PackageEntity pkg) {
+    final progress = pkg.totalCount > 0
+        ? pkg.usedCount / pkg.totalCount
+        : 0.0;
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: Colors.orange.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: Colors.orange.withOpacity(0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  pkg.packageName,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                decoration: BoxDecoration(
+                  color: _primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Text(
+                  pkg.statusLabel,
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w600,
+                    color: _primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 10.h),
+          // Progress bar
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4.r),
+                      child: LinearProgressIndicator(
+                        value: progress.clamp(0.0, 1.0),
+                        minHeight: 8.h,
+                        backgroundColor: Colors.grey[200],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          progress >= 0.8 ? Colors.red : _primary,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 6.h),
+                    Text(
+                      '${pkg.usedCount}/${pkg.totalCount}회 사용  |  잔여 ${pkg.remainingCount}회',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (pkg.endDate != null) ...[
+            SizedBox(height: 4.h),
+            Text(
+              '만료일: ${DateFormat('yyyy.MM.dd').format(pkg.endDate!)}',
+              style: TextStyle(
+                fontSize: 11.sp,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
         ],
       ),
     );

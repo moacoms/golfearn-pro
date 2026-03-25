@@ -277,6 +277,17 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<void> resetPassword({required String email}) async {
+    try {
+      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+    } on AuthException catch (e) {
+      throw Exception(_getAuthErrorMessage(e.message));
+    } catch (e) {
+      throw Exception('비밀번호 재설정 이메일 발송 중 오류가 발생했습니다: $e');
+    }
+  }
+
   String _getAuthErrorMessage(String errorMessage) {
     switch (errorMessage) {
       case 'Invalid login credentials':

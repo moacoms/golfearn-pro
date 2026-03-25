@@ -100,12 +100,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 
                 // 비밀번호 찾기 링크
                 TextButton(
-                  onPressed: () {
-                    // TODO: 비밀번호 재설정 기능
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('비밀번호 찾기 기능은 준비 중입니다.')),
-                    );
-                  },
+                  onPressed: () => _showResetPasswordDialog(),
                   child: Text(
                     '비밀번호를 잊으셨나요?',
                     style: TextStyle(
@@ -210,6 +205,140 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       return '비밀번호는 6자 이상이어야 합니다';
     }
     return null;
+  }
+
+  void _showResetPasswordDialog() {
+    final resetEmailController = TextEditingController();
+    final resetFormKey = GlobalKey<FormState>();
+    bool isSending = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              title: Text(
+                '비밀번호 재설정',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: Form(
+                key: resetFormKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '가입하신 이메일 주소를 입력하시면\n비밀번호 재설정 링크를 보내드립니다.',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    AuthFormField(
+                      controller: resetEmailController,
+                      label: '이메일',
+                      hintText: 'example@golfearn.com',
+                      keyboardType: TextInputType.emailAddress,
+                      enabled: !isSending,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return '이메일을 입력해주세요';
+                        }
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                            .hasMatch(value)) {
+                          return '올바른 이메일 형식을 입력해주세요';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSending
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
+                  child: Text(
+                    '취소',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: isSending
+                      ? null
+                      : () async {
+                          if (!resetFormKey.currentState!.validate()) return;
+
+                          setDialogState(() => isSending = true);
+
+                          try {
+                            await ref
+                                .read(authControllerProvider.notifier)
+                                .resetPassword(
+                                  email: resetEmailController.text.trim(),
+                                );
+
+                            if (mounted) {
+                              Navigator.of(dialogContext).pop();
+                              ScaffoldMessenger.of(this.context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    '비밀번호 재설정 링크가 이메일로 발송되었습니다.',
+                                  ),
+                                  backgroundColor: const Color(0xFF10B981),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            setDialogState(() => isSending = false);
+                            if (mounted) {
+                              ScaffoldMessenger.of(this.context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    '발송 실패: ${e.toString().replaceAll('Exception: ', '')}',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                  child: isSending
+                      ? SizedBox(
+                          width: 16.w,
+                          height: 16.w,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF10B981),
+                          ),
+                        )
+                      : Text(
+                          '발송',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: const Color(0xFF10B981),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _handleLogin() async {

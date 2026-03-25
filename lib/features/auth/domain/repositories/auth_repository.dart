@@ -42,4 +42,7 @@ abstract class AuthRepository {
     int? experience,
     String? sportType,
   });
+
+  /// 비밀번호 재설정 이메일 발송
+  Future<void> resetPassword({required String email});
 }
