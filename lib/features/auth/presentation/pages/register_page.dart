@@ -35,13 +35,38 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   String? _emailError;
   bool _checkingEmail = false;
 
+  String? _phoneError;
+
   @override
   void initState() {
     super.initState();
-    // 이메일 포커스 해제 시 중복 체크
+    // 이메일 포커스 해제 시 유효성 + 중복 체크
     _emailFocus.addListener(() {
       if (!_emailFocus.hasFocus && _emailController.text.trim().isNotEmpty) {
-        _checkEmailExists(_emailController.text.trim());
+        final error = _validateEmail(_emailController.text.trim());
+        if (error != null) {
+          setState(() => _emailError = error);
+        } else {
+          _checkEmailExists(_emailController.text.trim());
+        }
+      }
+    });
+    // 전화번호 포커스 해제 시 유효성 + 중복 체크
+    _phoneFocus.addListener(() {
+      if (!_phoneFocus.hasFocus && _phoneController.text.trim().isNotEmpty) {
+        final error = _validatePhone(_phoneController.text.trim());
+        if (error != null) {
+          setState(() => _phoneError = error);
+        } else {
+          setState(() => _phoneError = null);
+          _checkPhoneExists(_phoneController.text.trim());
+        }
+      }
+    });
+    // 이름 포커스 해제 시 유효성 체크
+    _nameFocus.addListener(() {
+      if (!_nameFocus.hasFocus && _fullNameController.text.trim().isNotEmpty) {
+        setState(() {}); // rebuild to show validation if needed
       }
     });
   }
@@ -63,7 +88,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   Future<void> _checkEmailExists(String email) async {
     if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(email)) {
-      return; // 형식이 틀리면 체크하지 않음
+      return;
     }
 
     setState(() {
@@ -72,16 +97,43 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     });
 
     try {
-      // 잘못된 비밀번호로 로그인 시도하여 이메일 존재 여부 확인
-      // 존재하는 이메일: "Invalid login credentials" 에러
-      // 존재하지 않는 이메일: "Invalid login credentials" 에러 (동일하게 반환)
-      // 대안: profiles 테이블에서 직접 확인은 email 컬럼이 없으므로 불가
-      // 가입 시 자연스럽게 처리되도록 여기서는 기본 검증만 수행
-      setState(() => _emailError = null);
+      // Supabase signUp으로 이메일 존재 여부 확인
+      final response = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: 'check_only_dummy_password_12345',
+      );
+
+      if (response.user != null) {
+        final identities = response.user!.identities;
+        if (identities == null || identities.isEmpty) {
+          setState(() => _emailError = '이미 가입된 이메일입니다.');
+        } else {
+          setState(() => _emailError = null);
+        }
+      }
     } catch (e) {
       // 에러 발생 시 무시
     } finally {
       setState(() => _checkingEmail = false);
+    }
+  }
+
+  Future<void> _checkPhoneExists(String phone) async {
+    final digitsOnly = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digitsOnly.length < 10) return;
+
+    try {
+      final result = await Supabase.instance.client
+          .from('profiles')
+          .select('id')
+          .eq('pro_phone', digitsOnly)
+          .maybeSingle();
+
+      if (result != null) {
+        setState(() => _phoneError = '이미 등록된 전화번호입니다.');
+      }
+    } catch (e) {
+      // 무시
     }
   }
 
@@ -187,6 +239,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   keyboardType: TextInputType.phone,
                   validator: _validatePhone,
                   focusNode: _phoneFocus,
+                  errorText: _phoneError,
                 ),
                 SizedBox(height: 20.h),
 
@@ -485,11 +538,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // 이메일 중복 에러가 있으면 가입 차단
-    if (_emailError != null) {
+    // 이메일/전화번호 중복 에러가 있으면 가입 차단
+    if (_emailError != null || _phoneError != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_emailError!),
+          content: Text(_emailError ?? _phoneError ?? '입력 정보를 확인해주세요'),
           backgroundColor: Colors.red,
         ),
       );
