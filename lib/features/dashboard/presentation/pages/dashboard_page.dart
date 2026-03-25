@@ -796,6 +796,14 @@ class DashboardPage extends ConsumerWidget {
                 onTap: () => context.go('/income'),
               ),
             ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: _buildActionButton(
+                icon: Icons.auto_awesome,
+                label: 'AI 분석',
+                onTap: () => context.go('/analysis'),
+              ),
+            ),
           ],
         ),
       ],
