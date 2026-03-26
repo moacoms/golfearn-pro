@@ -95,7 +95,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (e, stackTrace) {
       print('로그인 중 오류 발생: $e');
       print('스택 트레이스: $stackTrace');
-      throw Exception('로그인 중 오류가 발생했습니다: $e');
+      throw Exception('로그인에 실패했습니다.');
     }
   }
 
@@ -108,10 +108,13 @@ class AuthRepositoryImpl implements AuthRepository {
     bool isLessonPro = false,
   }) async {
     try {
-      // 1단계: signUp - metadata 없이 순수 가입만
+      // 1단계: signUp - full_name만 metadata로 전달 (트리거 호환)
       final response = await _supabaseService.signUp(
         email: email,
         password: password,
+        data: {
+          if (fullName != null) 'full_name': fullName,
+        },
       );
 
       if (response.user == null) {
@@ -119,51 +122,42 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       // 이미 등록된 이메일인지 확인
-      if (response.session == null) {
-        final identities = response.user!.identities;
-        if (identities == null || identities.isEmpty) {
-          throw AuthException('User already registered');
+      // Supabase는 이미 존재하는 이메일에 대해:
+      // - identities가 빈 배열 → 이미 가입된 이메일
+      // - session이 null → 이메일 인증 필요
+      final identities = response.user!.identities;
+      if (identities == null || identities.isEmpty) {
+        // 이미 가입된 이메일 — 혹시 세션이 생겼다면 로그아웃
+        if (response.session != null) {
+          await _supabaseService.signOut();
         }
+        throw AuthException('User already registered');
+      }
+
+      if (response.session == null) {
         throw Exception('이메일 인증이 필요합니다. 이메일을 확인해주세요.');
       }
 
-      // 2단계: 프로필 생성/업데이트 - 트리거와 별개로 직접 처리
+      // 2단계: 프로필 생성/업데이트 - upsert로 트리거 충돌 방지
       try {
-        // 트리거가 이미 프로필을 만들었는지 확인
-        final existing = await _supabaseService.getProfile(response.user!.id);
+        // 트리거가 프로필을 생성할 시간을 확보
+        await Future.delayed(const Duration(milliseconds: 500));
 
-        if (existing != null) {
-          // 트리거가 만든 프로필 업데이트
-          final profile = await _supabaseService.client
-              .from('profiles')
-              .update({
-                'full_name': fullName,
-                'pro_phone': phoneNumber,
-                'is_lesson_pro': isLessonPro,
-                'is_student': !isLessonPro,
-                'updated_at': DateTime.now().toIso8601String(),
-              })
-              .eq('id', response.user!.id)
-              .select()
-              .single();
-          final entity = UserModel.fromJson(profile).toEntity();
-          return entity.copyWith(email: email);
-        } else {
-          // 트리거가 안 만들었으면 직접 생성
-          final profile = await _supabaseService.client
-              .from('profiles')
-              .insert({
-                'id': response.user!.id,
-                'full_name': fullName,
-                'pro_phone': phoneNumber,
-                'is_lesson_pro': isLessonPro,
-                'is_student': !isLessonPro,
-              })
-              .select()
-              .single();
-          final entity = UserModel.fromJson(profile).toEntity();
-          return entity.copyWith(email: email);
-        }
+        // upsert: 트리거가 이미 만들었으면 update, 안 만들었으면 insert
+        final profile = await _supabaseService.client
+            .from('profiles')
+            .upsert({
+              'id': response.user!.id,
+              'full_name': fullName,
+              'pro_phone': phoneNumber,
+              'is_lesson_pro': isLessonPro,
+              'is_student': !isLessonPro,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .select()
+            .single();
+        final entity = UserModel.fromJson(profile).toEntity();
+        return entity.copyWith(email: email);
       } catch (e) {
         print('프로필 처리 실패: $e');
         // 프로필 처리 실패해도 기본 정보로 진행
@@ -177,12 +171,23 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
     } on AuthException catch (e) {
+      print('signUp AuthException: ${e.message} (statusCode: ${e.statusCode})');
+      // 422 = 이미 등록된 이메일 또는 유효하지 않은 입력
+      if (e.statusCode == '422' ||
+          e.message.contains('already') ||
+          e.message.contains('registered')) {
+        throw Exception('이미 가입된 이메일입니다.');
+      }
       throw Exception(_getAuthErrorMessage(e.message));
     } catch (e) {
-      if (e.toString().contains('Database error')) {
-        throw Exception('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      print('signUp 에러: $e');
+      if (e.toString().contains('already') || e.toString().contains('이미 가입된')) {
+        rethrow;
       }
-      throw Exception('회원가입 중 오류가 발생했습니다: $e');
+      if (e.toString().contains('Database error')) {
+        throw Exception('잠시 후 다시 시도해주세요.');
+      }
+      throw Exception('회원가입에 실패했습니다.');
     }
   }
 
@@ -284,20 +289,20 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AuthException catch (e) {
       throw Exception(_getAuthErrorMessage(e.message));
     } catch (e) {
-      throw Exception('비밀번호 재설정 이메일 발송 중 오류가 발생했습니다: $e');
+      throw Exception('이메일 발송에 실패했습니다.');
     }
   }
 
   String _getAuthErrorMessage(String errorMessage) {
     switch (errorMessage) {
       case 'Invalid login credentials':
-        return '이메일 또는 비밀번호가 올바르지 않습니다.';
+        return '이메일 또는 비밀번호를 확인해주세요.';
       case 'Email not confirmed':
-        return '이메일 인증이 완료되지 않았습니다.';
+        return '이메일 인증을 완료해주세요.';
       case 'User already registered':
         return '이미 가입된 이메일입니다.';
       case 'Signup requires a valid password':
-        return '유효한 비밀번호를 입력해주세요.';
+        return '비밀번호를 확인해주세요.';
       default:
         return errorMessage;
     }

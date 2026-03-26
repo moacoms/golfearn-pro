@@ -16,9 +16,12 @@ class SchedulePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isLessonPro = ref.watch(isLessonProProvider);
     final selectedDate = ref.watch(selectedDateProvider);
     final weekStart = ref.watch(selectedWeekStartProvider);
-    final dailyAsync = ref.watch(dailySchedulesProvider);
+    final dailyAsync = isLessonPro
+        ? ref.watch(dailySchedulesProvider)
+        : ref.watch(studentDailySchedulesProvider);
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -26,7 +29,7 @@ class SchedulePage extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         title: Text(
-          '스케줄',
+          isLessonPro ? '스케줄' : '내 레슨',
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
@@ -42,11 +45,13 @@ class SchedulePage extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddScheduleDialog(context, ref),
-        backgroundColor: const Color(0xFF10B981),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      floatingActionButton: isLessonPro
+          ? FloatingActionButton(
+              onPressed: () => _showAddScheduleDialog(context, ref),
+              backgroundColor: const Color(0xFF10B981),
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
       body: Column(
         children: [
           // 주간 달력
@@ -179,7 +184,7 @@ class SchedulePage extends ConsumerWidget {
                   padding: EdgeInsets.all(16.w),
                   itemCount: schedules.length,
                   itemBuilder: (context, index) {
-                    return _buildScheduleCard(context, ref, schedules[index]);
+                    return _buildScheduleCard(context, ref, schedules[index], isLessonPro: isLessonPro);
                   },
                 );
               },
@@ -192,7 +197,7 @@ class SchedulePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildScheduleCard(BuildContext context, WidgetRef ref, ScheduleEntity schedule) {
+  Widget _buildScheduleCard(BuildContext context, WidgetRef ref, ScheduleEntity schedule, {bool isLessonPro = true}) {
     final statusColor = _getStatusColor(schedule.status);
 
     return Card(
@@ -203,7 +208,7 @@ class SchedulePage extends ConsumerWidget {
         side: BorderSide(color: Colors.grey[200]!),
       ),
       child: InkWell(
-        onTap: () => _showScheduleActions(context, ref, schedule),
+        onTap: isLessonPro ? () => _showScheduleActions(context, ref, schedule) : null,
         borderRadius: BorderRadius.circular(12.r),
         child: Padding(
           padding: EdgeInsets.all(16.w),

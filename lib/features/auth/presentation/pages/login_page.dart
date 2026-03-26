@@ -307,9 +307,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               ScaffoldMessenger.of(this.context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    '발송 실패: ${e.toString().replaceAll('Exception: ', '')}',
+                                    e.toString().replaceAll('Exception: ', ''),
                                   ),
                                   backgroundColor: Colors.red,
+                                  duration: const Duration(seconds: 2),
                                 ),
                               );
                             }
@@ -355,12 +356,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         context.go('/home');
       }
     } catch (e) {
-      print('로그인 에러: $e');
       if (mounted) {
+        final msg = e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('로그인 실패: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(msg),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
           ),
         );
       }

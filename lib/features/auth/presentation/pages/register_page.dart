@@ -97,22 +97,23 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     });
 
     try {
-      // Supabase signUp으로 이메일 존재 여부 확인
-      final response = await Supabase.instance.client.auth.signUp(
-        email: email,
-        password: 'check_only_dummy_password_12345',
-      );
+      // RPC 함수로 이메일 존재 여부 확인 (안전한 방식)
+      final result = await Supabase.instance.client
+          .rpc('check_email_exists', params: {'email_input': email});
 
-      if (response.user != null) {
-        final identities = response.user!.identities;
-        if (identities == null || identities.isEmpty) {
-          setState(() => _emailError = '이미 가입된 이메일입니다.');
-        } else {
-          setState(() => _emailError = null);
-        }
+      print('이메일 체크 결과: $result (type: ${result.runtimeType})');
+
+      // RPC 결과가 bool, String, int 등 다양할 수 있으므로 안전하게 처리
+      final exists = result == true || result == 'true' || result == 1;
+      if (exists) {
+        setState(() => _emailError = '이미 가입된 이메일입니다.');
+      } else {
+        setState(() => _emailError = null);
       }
     } catch (e) {
-      // 에러 발생 시 무시
+      print('이메일 체크 에러: $e');
+      // RPC 함수 에러 시 무시 (제출 시점에 체크)
+      setState(() => _emailError = null);
     } finally {
       setState(() => _checkingEmail = false);
     }
@@ -227,20 +228,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       textInputAction: TextInputAction.next,
                       onFieldSubmitted: (_) => _phoneFocus.requestFocus(),
                       errorText: _emailError,
-                      suffixIcon: _checkingEmail
-                          ? ExcludeFocus(
-                              child: Padding(
-                                padding: EdgeInsets.all(12.w),
-                                child: SizedBox(
-                                  width: 20.w,
-                                  height: 20.w,
-                                  child: const CircularProgressIndicator(strokeWidth: 2),
-                                ),
-                              ),
-                            )
-                          : _emailError != null
-                              ? ExcludeFocus(child: Icon(Icons.error, color: Colors.red, size: 20.w))
-                              : null,
                     ),
                   ),
                   SizedBox(height: 20.h),
@@ -580,11 +567,24 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final email = _emailController.text.trim();
     final phone = _phoneController.text.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // 이메일 중복 체크
+    // 이메일 중복 체크 (제출 시점에 한번 더)
     try {
-      // Supabase에 동일 이메일로 로그인 시도하여 존재 여부 확인
-      // signInWithPassword는 실패하지만 에러 메시지로 구분 가능
-      // 대신 profiles 테이블에서 전화번호 중복 확인
+      final emailExists = await Supabase.instance.client
+          .rpc('check_email_exists', params: {'email_input': email});
+      print('제출 시 이메일 체크: $emailExists (type: ${emailExists.runtimeType})');
+
+      if (emailExists == true || emailExists == 'true' || emailExists == 1) {
+        if (mounted) {
+          setState(() => _emailError = '이미 가입된 이메일입니다.');
+        }
+        return;
+      }
+    } catch (e) {
+      print('이메일 체크 실패: $e');
+    }
+
+    // 전화번호 중복 체크
+    try {
       final phoneCheck = await Supabase.instance.client
           .from('profiles')
           .select('id')
@@ -593,18 +593,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
       if (phoneCheck != null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('이미 등록된 전화번호입니다.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          setState(() => _phoneError = '이미 등록된 전화번호입니다.');
         }
         return;
       }
     } catch (e) {
-      // 체크 실패 시 무시하고 진행
-      print('중복 체크 실패: $e');
+      print('전화번호 체크 실패: $e');
     }
 
     try {
@@ -617,42 +611,46 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             isLessonPro: _isLessonPro,
           );
 
-      // 세션이 있는지 확인 (이메일 인증이 필요한 경우 세션이 없을 수 있음)
+      // signUp 성공 후 상태 확인 (약간의 딜레이로 provider 갱신 대기)
+      await Future.delayed(const Duration(milliseconds: 200));
       final currentAuthState = ref.read(authControllerProvider);
-      if (currentAuthState.user == null) {
-        if (mounted) {
+
+      if (mounted) {
+        if (currentAuthState.user != null) {
+          context.go('/home');
+        } else {
+          // 이메일 인증 필요한 경우
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('회원가입이 완료되었습니다. 이메일을 확인해주세요.'),
+              content: Text('회원가입 완료! 이메일을 확인해주세요.'),
               backgroundColor: Color(0xFF10B981),
-              duration: Duration(seconds: 3),
+              duration: Duration(seconds: 2),
             ),
           );
           context.go('/login');
         }
-        return;
-      }
-
-      if (mounted) {
-        context.go('/home');
       }
     } catch (e) {
       if (mounted) {
         final errorMsg = e.toString();
-        String displayMsg;
-        if (errorMsg.contains('Database error')) {
-          displayMsg = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-        } else if (errorMsg.contains('already registered') || errorMsg.contains('이미 가입된')) {
-          displayMsg = '이미 가입된 이메일입니다. 로그인 해주세요.';
+        if (errorMsg.contains('already registered') || errorMsg.contains('이미 가입된')) {
+          // 이메일 필드에 인라인 에러 표시
+          setState(() => _emailError = '이미 가입된 이메일입니다.');
         } else {
-          displayMsg = errorMsg.replaceAll('Exception: ', '');
+          String displayMsg;
+          if (errorMsg.contains('Database error')) {
+            displayMsg = '잠시 후 다시 시도해주세요.';
+          } else {
+            displayMsg = errorMsg.replaceAll('Exception: ', '');
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(displayMsg),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 2),
+            ),
+          );
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(displayMsg),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     }
   }

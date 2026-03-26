@@ -58,6 +58,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
+    final isLessonPro = ref.watch(isLessonProProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFB),
@@ -81,14 +82,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
               children: [
                 _buildProfileCard(user),
-                SizedBox(height: 24.h),
-                _buildSectionLabel('앱 설정'),
-                SizedBox(height: 8.h),
-                _buildAppSettingsCard(),
-                SizedBox(height: 24.h),
-                _buildSectionLabel('데이터'),
-                SizedBox(height: 8.h),
-                _buildDataCard(),
+                if (isLessonPro) ...[
+                  SizedBox(height: 24.h),
+                  _buildSectionLabel('앱 설정'),
+                  SizedBox(height: 8.h),
+                  _buildAppSettingsCard(),
+                  SizedBox(height: 24.h),
+                  _buildSectionLabel('데이터'),
+                  SizedBox(height: 8.h),
+                  _buildDataCard(),
+                ],
                 SizedBox(height: 24.h),
                 _buildSectionLabel('계정'),
                 SizedBox(height: 8.h),
