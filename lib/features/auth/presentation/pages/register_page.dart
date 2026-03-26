@@ -124,17 +124,22 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     if (digitsOnly.length < 10) return;
 
     try {
+      // 숫자만, 하이픈 포함, 원본 입력값 모두 체크
       final result = await Supabase.instance.client
           .from('profiles')
           .select('id')
-          .eq('pro_phone', digitsOnly)
+          .or('pro_phone.eq.$digitsOnly,pro_phone.eq.$phone')
           .maybeSingle();
+
+      print('전화번호 체크: $digitsOnly / $phone → $result');
 
       if (result != null) {
         setState(() => _phoneError = '이미 등록된 전화번호입니다.');
+      } else {
+        setState(() => _phoneError = null);
       }
     } catch (e) {
-      // 무시
+      print('전화번호 체크 에러: $e');
     }
   }
 
@@ -585,10 +590,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
     // 전화번호 중복 체크
     try {
+      final rawPhone = _phoneController.text.trim();
       final phoneCheck = await Supabase.instance.client
           .from('profiles')
           .select('id')
-          .eq('pro_phone', phone)
+          .or('pro_phone.eq.$phone,pro_phone.eq.$rawPhone')
           .maybeSingle();
 
       if (phoneCheck != null) {
