@@ -12,15 +12,13 @@ class LessonNoteRepositoryImpl {
     try {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonNotes)
-          .select('*')
+          .select('*, lesson_students!inner(student_name)')
           .eq('pro_id', proId)
-          .order('lesson_date', ascending: false)
           .order('created_at', ascending: false);
 
       final list = List<Map<String, dynamic>>.from(response);
       return list.map((json) => LessonNoteModel.fromJson(json).toEntity()).toList();
     } catch (e) {
-      // 테이블이 없거나 조회 실패 시 빈 리스트 반환
       print('레슨 노트 조회 실패: $e');
       return [];
     }
@@ -30,10 +28,10 @@ class LessonNoteRepositoryImpl {
     try {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonNotes)
-          .select('*')
+          .select('*, lesson_students!inner(student_name)')
           .eq('pro_id', proId)
           .eq('student_id', studentId)
-          .order('lesson_date', ascending: false);
+          .order('created_at', ascending: false);
 
       final list = List<Map<String, dynamic>>.from(response);
       return list.map((json) => LessonNoteModel.fromJson(json).toEntity()).toList();
@@ -46,25 +44,25 @@ class LessonNoteRepositoryImpl {
     required String proId,
     required String studentId,
     String? scheduleId,
-    required DateTime lessonDate,
-    String? title,
-    String? content,
-    String? improvement,
+    String? manualNote,
     String? homework,
+    String? nextFocus,
+    List<String>? keyPoints,
+    List<String>? improvements,
+    int? practiceTimeMinutes,
   }) async {
     try {
-      final data = {
+      final data = <String, dynamic>{
         'pro_id': proId,
         'student_id': studentId,
         if (scheduleId != null) 'schedule_id': scheduleId,
-        'lesson_date': lessonDate.toIso8601String().split('T').first,
-        'title': title,
-        'content': content,
-        'improvement': improvement,
-        'homework': homework,
+        if (manualNote != null) 'manual_note': manualNote,
+        if (homework != null) 'homework': homework,
+        if (nextFocus != null) 'next_focus': nextFocus,
+        if (keyPoints != null) 'key_points': keyPoints,
+        if (improvements != null) 'improvements': improvements,
+        if (practiceTimeMinutes != null) 'practice_time_minutes': practiceTimeMinutes,
       };
-
-      data.removeWhere((key, value) => value == null);
 
       print('레슨 노트 저장 데이터: $data');
 

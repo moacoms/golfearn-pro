@@ -61,7 +61,6 @@ final studentLessonNotesProvider = FutureProvider<List<LessonNoteEntity>>((ref) 
       .from('lesson_notes')
       .select('*')
       .inFilter('student_id', studentIds)
-      .order('lesson_date', ascending: false)
       .order('created_at', ascending: false);
 
   final list = List<Map<String, dynamic>>.from(response);

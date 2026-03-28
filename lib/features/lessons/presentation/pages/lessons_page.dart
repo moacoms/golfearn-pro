@@ -161,16 +161,16 @@ class LessonsPage extends ConsumerWidget {
                     ),
                 ],
               ),
-              if (note.content != null && note.content!.isNotEmpty) ...[
+              if (note.manualNote != null && note.manualNote!.isNotEmpty) ...[
                 SizedBox(height: 12.h),
                 Text(
-                  note.content!,
+                  note.manualNote!,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 14.sp, color: Colors.grey[700], height: 1.4),
                 ),
               ],
-              if (note.improvement != null && note.improvement!.isNotEmpty) ...[
+              if (note.improvements != null && note.improvements!.isNotEmpty) ...[
                 SizedBox(height: 8.h),
                 Row(
                   children: [
@@ -178,7 +178,7 @@ class LessonsPage extends ConsumerWidget {
                     SizedBox(width: 4.w),
                     Expanded(
                       child: Text(
-                        '개선: ${note.improvement!}',
+                        '개선: ${note.improvements!.join(', ')}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(fontSize: 12.sp, color: Colors.green[700]),
@@ -225,7 +225,7 @@ class LessonsPage extends ConsumerWidget {
                 '${note.studentName ?? "레슨프로"} | ${_formatDate(note.lessonDate)}',
                 style: TextStyle(fontSize: 13.sp, color: Colors.grey[600]),
               ),
-              if (note.content != null && note.content!.isNotEmpty) ...[
+              if (note.manualNote != null && note.manualNote!.isNotEmpty) ...[
                 SizedBox(height: 16.h),
                 Text(
                   '레슨 내용',
@@ -237,11 +237,11 @@ class LessonsPage extends ConsumerWidget {
                 ),
                 SizedBox(height: 6.h),
                 Text(
-                  note.content!,
+                  note.manualNote!,
                   style: TextStyle(fontSize: 14.sp, color: Colors.grey[800], height: 1.5),
                 ),
               ],
-              if (note.improvement != null && note.improvement!.isNotEmpty) ...[
+              if (note.improvements != null && note.improvements!.isNotEmpty) ...[
                 SizedBox(height: 16.h),
                 Text(
                   '개선사항',
@@ -253,7 +253,7 @@ class LessonsPage extends ConsumerWidget {
                 ),
                 SizedBox(height: 6.h),
                 Text(
-                  note.improvement!,
+                  note.improvements!.join('\n'),
                   style: TextStyle(fontSize: 14.sp, color: Colors.grey[800], height: 1.5),
                 ),
               ],

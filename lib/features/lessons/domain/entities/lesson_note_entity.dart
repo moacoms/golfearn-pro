@@ -3,12 +3,13 @@ class LessonNoteEntity {
   final String proId;
   final String studentId;
   final String? scheduleId;
-  final DateTime lessonDate;
-  final String? title;
-  final String? content;
-  final String? improvement;
+  final String? manualNote;
   final String? homework;
-  final String? studentName;
+  final String? nextFocus;
+  final List<String>? keyPoints;
+  final List<String>? improvements;
+  final int? practiceTimeMinutes;
+  final String? studentName; // join용
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -17,26 +18,40 @@ class LessonNoteEntity {
     required this.proId,
     required this.studentId,
     this.scheduleId,
-    required this.lessonDate,
-    this.title,
-    this.content,
-    this.improvement,
+    this.manualNote,
     this.homework,
+    this.nextFocus,
+    this.keyPoints,
+    this.improvements,
+    this.practiceTimeMinutes,
     this.studentName,
     this.createdAt,
     this.updatedAt,
   });
+
+  /// 레슨 날짜 (createdAt 기반)
+  DateTime get lessonDate => createdAt ?? DateTime.now();
+
+  /// 제목 대용 (manualNote 앞부분)
+  String get title {
+    if (manualNote != null && manualNote!.isNotEmpty) {
+      final firstLine = manualNote!.split('\n').first;
+      return firstLine.length > 30 ? '${firstLine.substring(0, 30)}...' : firstLine;
+    }
+    return '레슨 노트';
+  }
 
   LessonNoteEntity copyWith({
     String? id,
     String? proId,
     String? studentId,
     String? scheduleId,
-    DateTime? lessonDate,
-    String? title,
-    String? content,
-    String? improvement,
+    String? manualNote,
     String? homework,
+    String? nextFocus,
+    List<String>? keyPoints,
+    List<String>? improvements,
+    int? practiceTimeMinutes,
     String? studentName,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -46,11 +61,12 @@ class LessonNoteEntity {
       proId: proId ?? this.proId,
       studentId: studentId ?? this.studentId,
       scheduleId: scheduleId ?? this.scheduleId,
-      lessonDate: lessonDate ?? this.lessonDate,
-      title: title ?? this.title,
-      content: content ?? this.content,
-      improvement: improvement ?? this.improvement,
+      manualNote: manualNote ?? this.manualNote,
       homework: homework ?? this.homework,
+      nextFocus: nextFocus ?? this.nextFocus,
+      keyPoints: keyPoints ?? this.keyPoints,
+      improvements: improvements ?? this.improvements,
+      practiceTimeMinutes: practiceTimeMinutes ?? this.practiceTimeMinutes,
       studentName: studentName ?? this.studentName,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

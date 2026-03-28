@@ -18,13 +18,13 @@ class LessonNoteFormPage extends ConsumerStatefulWidget {
 
 class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _titleController;
-  late final TextEditingController _contentController;
-  late final TextEditingController _improvementController;
+  late final TextEditingController _noteController;
   late final TextEditingController _homeworkController;
+  late final TextEditingController _nextFocusController;
+  late final TextEditingController _keyPointsController;
+  late final TextEditingController _improvementsController;
 
   String? _selectedStudentId;
-  DateTime _lessonDate = DateTime.now();
   bool _isLoading = false;
 
   bool get isEditing => widget.note != null;
@@ -33,30 +33,33 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
   void initState() {
     super.initState();
     final n = widget.note;
-    _titleController = TextEditingController(text: n?.title ?? '');
-    _contentController = TextEditingController(text: n?.content ?? '');
-    _improvementController = TextEditingController(text: n?.improvement ?? '');
+    _noteController = TextEditingController(text: n?.manualNote ?? '');
     _homeworkController = TextEditingController(text: n?.homework ?? '');
+    _nextFocusController = TextEditingController(text: n?.nextFocus ?? '');
+    _keyPointsController = TextEditingController(
+      text: n?.keyPoints?.join('\n') ?? '',
+    );
+    _improvementsController = TextEditingController(
+      text: n?.improvements?.join('\n') ?? '',
+    );
     if (n != null) {
       _selectedStudentId = n.studentId;
-      _lessonDate = n.lessonDate;
     }
   }
 
   @override
   void dispose() {
-    _titleController.dispose();
-    _contentController.dispose();
-    _improvementController.dispose();
+    _noteController.dispose();
     _homeworkController.dispose();
+    _nextFocusController.dispose();
+    _keyPointsController.dispose();
+    _improvementsController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final studentsAsync = ref.watch(studentsProvider);
-    final sportType = ref.watch(currentSportTypeProvider);
-    final hints = SportConstants.noteHints(sportType);
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -105,78 +108,64 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
                 loading: () => const CircularProgressIndicator(),
                 error: (_, __) => const Text('학생 목록 로드 실패'),
               ),
-              SizedBox(height: 12.h),
-
-              // 레슨 날짜
-              GestureDetector(
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: _lessonDate,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime.now().add(const Duration(days: 30)),
-                    builder: (context, child) {
-                      return Theme(
-                        data: Theme.of(context).copyWith(
-                          colorScheme: const ColorScheme.light(primary: Color(0xFF10B981)),
-                        ),
-                        child: child!,
-                      );
-                    },
-                  );
-                  if (date != null) setState(() => _lessonDate = date);
-                },
-                child: InputDecorator(
-                  decoration: _inputDecoration('레슨 날짜').copyWith(
-                    suffixIcon: Icon(Icons.calendar_today, size: 20.w, color: Colors.grey[500]),
-                  ),
-                  child: Text(
-                    '${_lessonDate.year}년 ${_lessonDate.month}월 ${_lessonDate.day}일',
-                    style: TextStyle(fontSize: 14.sp),
-                  ),
-                ),
-              ),
-              SizedBox(height: 12.h),
-
-              // 제목
-              TextFormField(
-                controller: _titleController,
-                decoration: _inputDecoration('제목').copyWith(hintText: hints['title']),
-              ),
               SizedBox(height: 16.h),
 
               // 레슨 내용
               _buildSectionTitle('레슨 내용'),
               SizedBox(height: 8.h),
               TextFormField(
-                controller: _contentController,
+                controller: _noteController,
                 maxLines: 6,
                 decoration: _inputDecoration('').copyWith(
-                  hintText: hints['content'],
+                  hintText: '오늘 레슨 내용을 기록하세요',
                 ),
               ),
               SizedBox(height: 16.h),
 
-              // 개선 사항
+              // 개선 사항 (줄바꿈으로 여러 항목)
               _buildSectionTitle('개선 사항'),
               SizedBox(height: 8.h),
               TextFormField(
-                controller: _improvementController,
+                controller: _improvementsController,
                 maxLines: 3,
                 decoration: _inputDecoration('').copyWith(
-                  hintText: hints['improvement'],
+                  hintText: '개선할 점을 줄바꿈으로 구분하여 입력',
                 ),
               ),
               SizedBox(height: 16.h),
 
-              // 과제
+              // 핵심 포인트 (줄바꿈으로 여러 항목)
+              _buildSectionTitle('핵심 포인트'),
+              SizedBox(height: 8.h),
+              TextFormField(
+                controller: _keyPointsController,
+                maxLines: 3,
+                decoration: _inputDecoration('').copyWith(
+                  hintText: '핵심 포인트를 줄바꿈으로 구분하여 입력',
+                ),
+              ),
+              SizedBox(height: 16.h),
+
+              // 과제 / 숙제
               _buildSectionTitle('과제 / 숙제'),
               SizedBox(height: 8.h),
               TextFormField(
                 controller: _homeworkController,
                 maxLines: 3,
                 decoration: _inputDecoration('').copyWith(
-                  hintText: hints['homework'],
+                  hintText: '다음 레슨까지 연습할 내용',
+                ),
+              ),
+              SizedBox(height: 16.h),
+
+              // 다음 레슨 포커스
+              _buildSectionTitle('다음 레슨 포커스'),
+              SizedBox(height: 8.h),
+              TextFormField(
+                controller: _nextFocusController,
+                maxLines: 2,
+                decoration: _inputDecoration('').copyWith(
+                  hintText: '다음 레슨에서 집중할 내용',
                 ),
               ),
               SizedBox(height: 32.h),
@@ -215,6 +204,16 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
     );
   }
 
+  /// 텍스트를 줄바꿈으로 분리하여 리스트로 변환
+  List<String>? _textToList(String text) {
+    if (text.trim().isEmpty) return null;
+    return text
+        .split('\n')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+  }
+
   Future<void> _saveNote() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedStudentId == null) {
@@ -234,21 +233,21 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
 
       if (isEditing) {
         await repo.updateLessonNote(widget.note!.id, {
-          'title': _titleController.text.trim().isEmpty ? null : _titleController.text.trim(),
-          'content': _contentController.text.trim().isEmpty ? null : _contentController.text.trim(),
-          'improvement': _improvementController.text.trim().isEmpty ? null : _improvementController.text.trim(),
+          'manual_note': _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
           'homework': _homeworkController.text.trim().isEmpty ? null : _homeworkController.text.trim(),
-          'lesson_date': _lessonDate.toIso8601String().split('T').first,
+          'next_focus': _nextFocusController.text.trim().isEmpty ? null : _nextFocusController.text.trim(),
+          'key_points': _textToList(_keyPointsController.text),
+          'improvements': _textToList(_improvementsController.text),
         });
       } else {
         await repo.createLessonNote(
           proId: user.id,
           studentId: _selectedStudentId!,
-          lessonDate: _lessonDate,
-          title: _titleController.text.trim().isEmpty ? null : _titleController.text.trim(),
-          content: _contentController.text.trim().isEmpty ? null : _contentController.text.trim(),
-          improvement: _improvementController.text.trim().isEmpty ? null : _improvementController.text.trim(),
+          manualNote: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
           homework: _homeworkController.text.trim().isEmpty ? null : _homeworkController.text.trim(),
+          nextFocus: _nextFocusController.text.trim().isEmpty ? null : _nextFocusController.text.trim(),
+          keyPoints: _textToList(_keyPointsController.text),
+          improvements: _textToList(_improvementsController.text),
         );
       }
 
@@ -266,7 +265,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('저장 실패: ${e.toString().replaceAll('Exception: ', '')}'), backgroundColor: Colors.red),
         );
       }
     } finally {

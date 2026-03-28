@@ -5,11 +5,12 @@ class LessonNoteModel {
   final String proId;
   final String studentId;
   final String? scheduleId;
-  final DateTime lessonDate;
-  final String? title;
-  final String? content;
-  final String? improvement;
+  final String? manualNote;
   final String? homework;
+  final String? nextFocus;
+  final List<String>? keyPoints;
+  final List<String>? improvements;
+  final int? practiceTimeMinutes;
   final String? studentName;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -19,19 +20,21 @@ class LessonNoteModel {
     required this.proId,
     required this.studentId,
     this.scheduleId,
-    required this.lessonDate,
-    this.title,
-    this.content,
-    this.improvement,
+    this.manualNote,
     this.homework,
+    this.nextFocus,
+    this.keyPoints,
+    this.improvements,
+    this.practiceTimeMinutes,
     this.studentName,
     this.createdAt,
     this.updatedAt,
   });
 
   factory LessonNoteModel.fromJson(Map<String, dynamic> json) {
-    String? name = json['student_name'] as String?;
-    if (name == null && json['lesson_students'] != null) {
+    // 학생 이름: join된 lesson_students에서 가져오기
+    String? name;
+    if (json['lesson_students'] != null && json['lesson_students'] is Map) {
       name = json['lesson_students']['student_name'] as String?;
     }
 
@@ -40,11 +43,16 @@ class LessonNoteModel {
       proId: json['pro_id'] as String,
       studentId: json['student_id'] as String,
       scheduleId: json['schedule_id'] as String?,
-      lessonDate: DateTime.parse(json['lesson_date'] as String),
-      title: json['title'] as String?,
-      content: json['content'] as String?,
-      improvement: json['improvement'] as String?,
+      manualNote: json['manual_note'] as String?,
       homework: json['homework'] as String?,
+      nextFocus: json['next_focus'] as String?,
+      keyPoints: json['key_points'] != null
+          ? List<String>.from(json['key_points'])
+          : null,
+      improvements: json['improvements'] != null
+          ? List<String>.from(json['improvements'])
+          : null,
+      practiceTimeMinutes: json['practice_time_minutes'] as int?,
       studentName: name,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
@@ -55,30 +63,18 @@ class LessonNoteModel {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'pro_id': proId,
-      'student_id': studentId,
-      if (scheduleId != null) 'schedule_id': scheduleId,
-      'lesson_date': lessonDate.toIso8601String().split('T').first,
-      'title': title,
-      'content': content,
-      'improvement': improvement,
-      'homework': homework,
-    };
-  }
-
   LessonNoteEntity toEntity() {
     return LessonNoteEntity(
       id: id,
       proId: proId,
       studentId: studentId,
       scheduleId: scheduleId,
-      lessonDate: lessonDate,
-      title: title,
-      content: content,
-      improvement: improvement,
+      manualNote: manualNote,
       homework: homework,
+      nextFocus: nextFocus,
+      keyPoints: keyPoints,
+      improvements: improvements,
+      practiceTimeMinutes: practiceTimeMinutes,
       studentName: studentName,
       createdAt: createdAt,
       updatedAt: updatedAt,

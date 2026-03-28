@@ -588,23 +588,25 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           .from('lesson_notes')
           .select('*, lesson_students!inner(student_name)')
           .eq('pro_id', userId)
-          .order('lesson_date', ascending: false);
+          .order('created_at', ascending: false);
       final rows = List<Map<String, dynamic>>.from(data);
 
       buffer.writeln('=== 레슨 노트 ===');
-      buffer.writeln('날짜,학생명,제목,내용,개선사항,숙제');
+      buffer.writeln('날짜,학생명,레슨내용,개선사항,숙제,다음포커스');
       for (final r in rows) {
         final studentInfo = r['lesson_students'];
         final studentName = studentInfo is Map
             ? (studentInfo['student_name'] ?? '')
             : '';
+        final improvements = r['improvements'];
+        final improvementsStr = improvements is List ? improvements.join(', ') : '';
         buffer.writeln([
-          _csvEscape(r['lesson_date'] ?? ''),
+          _csvEscape(r['created_at'] ?? ''),
           _csvEscape(studentName),
-          _csvEscape(r['title'] ?? ''),
-          _csvEscape(r['content'] ?? ''),
-          _csvEscape(r['improvement'] ?? ''),
+          _csvEscape(r['manual_note'] ?? ''),
+          _csvEscape(improvementsStr),
           _csvEscape(r['homework'] ?? ''),
+          _csvEscape(r['next_focus'] ?? ''),
         ].join(','));
       }
       buffer.writeln();
