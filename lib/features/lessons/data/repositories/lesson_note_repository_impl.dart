@@ -66,6 +66,8 @@ class LessonNoteRepositoryImpl {
 
       data.removeWhere((key, value) => value == null);
 
+      print('레슨 노트 저장 데이터: $data');
+
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonNotes)
           .insert(data)
@@ -74,6 +76,7 @@ class LessonNoteRepositoryImpl {
 
       return LessonNoteModel.fromJson(response).toEntity();
     } catch (e) {
+      print('레슨 노트 작성 실패 상세: $e');
       throw Exception('레슨 노트 작성 실패: $e');
     }
   }

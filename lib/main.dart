@@ -1,4 +1,5 @@
-import 'dart:ui' as ui;
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -8,6 +9,25 @@ import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 전역 에러 핸들러 — 모든 에러를 콘솔에 출력
+  FlutterError.onError = (details) {
+    print('┌── Flutter Error ──');
+    print('│ ${details.exceptionAsString()}');
+    if (details.stack != null) {
+      print('│ ${details.stack.toString().split('\n').take(5).join('\n│ ')}');
+    }
+    print('└───────────────────');
+  };
+
+  // 비동기 에러도 콘솔에 출력
+  PlatformDispatcher.instance.onError = (error, stack) {
+    print('┌── Async Error ──');
+    print('│ $error');
+    print('│ ${stack.toString().split('\n').take(5).join('\n│ ')}');
+    print('└──────────────────');
+    return true;
+  };
 
   // 한글 폰트 사전 로드 (CanvasKit IME 조합 깨짐 방지)
   await _loadKoreanFont();
