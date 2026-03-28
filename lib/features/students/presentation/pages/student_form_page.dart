@@ -25,6 +25,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
   late final TextEditingController _memoController;
   late final TextEditingController _goalController;
   late final TextEditingController _scoreController;
+  late final TextEditingController _lessonCountController;
 
   String? _selectedLevel;
   String? _selectedGender;
@@ -46,6 +47,11 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
     _scoreController = TextEditingController(
       text: s?.averageScore != null ? s!.averageScore.toString() : '',
     );
+    _lessonCountController = TextEditingController(
+      text: s?.totalLessonCount != null && s!.totalLessonCount > 0
+          ? s.totalLessonCount.toString()
+          : '',
+    );
     _selectedLevel = s?.currentLevel;
     _selectedGender = s?.gender;
     _birthDate = s?.birthDate;
@@ -60,6 +66,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
     _memoController.dispose();
     _goalController.dispose();
     _scoreController.dispose();
+    _lessonCountController.dispose();
     super.dispose();
   }
 
@@ -165,6 +172,14 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
                 label: '생년월일',
                 value: _birthDate,
                 onChanged: (date) => setState(() => _birthDate = date),
+              ),
+
+              SizedBox(height: 12.h),
+              _buildTextField(
+                controller: _lessonCountController,
+                label: '총 레슨 횟수',
+                hint: '기존 레슨 횟수를 입력하세요',
+                keyboardType: TextInputType.number,
               ),
 
               SizedBox(height: 24.h),
@@ -305,52 +320,59 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
     required DateTime? value,
     required ValueChanged<DateTime?> onChanged,
   }) {
-    return GestureDetector(
-      onTap: () async {
-        final date = await showDatePicker(
-          context: context,
-          initialDate: value ?? DateTime.now(),
-          firstDate: DateTime(1950),
-          lastDate: DateTime.now(),
-          builder: (context, child) {
-            return Theme(
-              data: Theme.of(context).copyWith(
-                colorScheme: const ColorScheme.light(
-                  primary: Color(0xFF10B981),
-                ),
-              ),
-              child: child!,
-            );
-          },
-        );
-        if (date != null) onChanged(date);
-      },
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.r),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.r),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-          suffixIcon: Icon(Icons.calendar_today, size: 20.w, color: Colors.grey[500]),
+    final controller = TextEditingController(
+      text: value != null
+          ? '${value.year}${value.month.toString().padLeft(2, '0')}${value.day.toString().padLeft(2, '0')}'
+          : '',
+    );
+
+    return TextFormField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      maxLength: 8,
+      decoration: InputDecoration(
+        labelText: '$label (예: 19840315)',
+        hintText: 'YYYYMMDD',
+        filled: true,
+        fillColor: Colors.white,
+        counterText: '',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: Colors.grey[300]!),
         ),
-        child: Text(
-          value != null
-              ? '${value.year}년 ${value.month}월 ${value.day}일'
-              : '선택하세요',
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: value != null ? Colors.black : Colors.grey[500],
-          ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: Colors.grey[300]!),
         ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        suffixIcon: Icon(Icons.cake_outlined, size: 20.w, color: Colors.grey[500]),
       ),
+      style: TextStyle(fontSize: 14.sp),
+      validator: (v) {
+        if (v == null || v.isEmpty) return null; // 선택사항
+        if (v.length != 8) return '8자리로 입력해주세요 (예: 19840315)';
+        final year = int.tryParse(v.substring(0, 4));
+        final month = int.tryParse(v.substring(4, 6));
+        final day = int.tryParse(v.substring(6, 8));
+        if (year == null || month == null || day == null) return '올바른 날짜를 입력해주세요';
+        if (year < 1930 || year > DateTime.now().year) return '올바른 연도를 입력해주세요';
+        if (month < 1 || month > 12) return '올바른 월을 입력해주세요';
+        if (day < 1 || day > 31) return '올바른 일을 입력해주세요';
+        return null;
+      },
+      onChanged: (v) {
+        if (v.length == 8) {
+          final year = int.tryParse(v.substring(0, 4));
+          final month = int.tryParse(v.substring(4, 6));
+          final day = int.tryParse(v.substring(6, 8));
+          if (year != null && month != null && day != null &&
+              month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+            onChanged(DateTime(year, month, day));
+          }
+        } else if (v.isEmpty) {
+          onChanged(null);
+        }
+      },
     );
   }
 
@@ -367,6 +389,9 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
       final score = _scoreController.text.isNotEmpty
           ? int.tryParse(_scoreController.text)
           : null;
+      final lessonCount = _lessonCountController.text.isNotEmpty
+          ? int.tryParse(_lessonCountController.text)
+          : null;
 
       if (isEditing) {
         await repo.updateStudent(widget.student!.id, {
@@ -380,6 +405,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
           'birth_date': _birthDate?.toIso8601String().split('T').first,
           'gender': _selectedGender,
           'started_golf_at': _startedGolfAt?.toIso8601String().split('T').first,
+          if (lessonCount != null) 'total_lesson_count': lessonCount,
         });
       } else {
         await repo.createStudent(

@@ -378,6 +378,29 @@ class SchedulePage extends ConsumerWidget {
                     },
                   ),
                 ],
+                // 완료/취소/노쇼 상태에서 "예정으로 복원" 액션
+                if (schedule.status != 'scheduled') ...[
+                  ListTile(
+                    leading: const Icon(Icons.restore, color: Color(0xFF10B981)),
+                    title: const Text('예정으로 복원'),
+                    subtitle: schedule.status == 'completed' && schedule.packageId != null
+                        ? const Text('패키지 횟수가 복원됩니다')
+                        : null,
+                    onTap: () async {
+                      Navigator.pop(context);
+                      // 완료 상태였고 패키지가 있으면 횟수 복원
+                      if (schedule.status == 'completed' && schedule.packageId != null) {
+                        await ref.read(packageRepositoryProvider)
+                            .restoreLesson(schedule.packageId!);
+                        ref.invalidate(packagesProvider);
+                      }
+                      await ref.read(scheduleRepositoryProvider)
+                          .updateScheduleStatus(schedule.id, 'scheduled');
+                      ref.invalidate(weeklySchedulesProvider);
+                      ref.invalidate(todaySchedulesProvider);
+                    },
+                  ),
+                ],
                 ListTile(
                   leading: const Icon(Icons.delete, color: Colors.red),
                   title: const Text('삭제'),

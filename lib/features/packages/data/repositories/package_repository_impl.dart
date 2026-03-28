@@ -89,6 +89,40 @@ class PackageRepositoryImpl {
     }
   }
 
+  /// 레슨 1회 복원 (완료 취소 시 호출)
+  Future<PackageEntity?> restoreLesson(String packageId) async {
+    try {
+      final current = await _supabaseService.client
+          .from(DatabaseConstants.lessonPackages)
+          .select()
+          .eq(DatabaseConstants.packageId, packageId)
+          .single();
+
+      final usedCount = (current['used_count'] as int? ?? 1) - 1;
+      final totalCount = current['total_count'] as int? ?? 0;
+      final remainingCount = totalCount - (usedCount < 0 ? 0 : usedCount);
+
+      final updateData = <String, dynamic>{
+        'used_count': usedCount < 0 ? 0 : usedCount,
+        'remaining_count': remainingCount,
+        'status': 'active',
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      final response = await _supabaseService.client
+          .from(DatabaseConstants.lessonPackages)
+          .update(updateData)
+          .eq(DatabaseConstants.packageId, packageId)
+          .select('*')
+          .single();
+
+      return PackageModel.fromJson(response).toEntity();
+    } catch (e) {
+      print('레슨 복원 실패: $e');
+      return null;
+    }
+  }
+
   /// 레슨 1회 차감 (레슨 완료 시 호출)
   Future<PackageEntity?> deductLesson(String packageId) async {
     try {
