@@ -668,28 +668,68 @@ class DashboardPage extends ConsumerWidget {
           return const SizedBox.shrink();
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.notification_important,
-                    size: 20.w, color: Colors.red),
-                SizedBox(width: 8.w),
-                Text(
-                  '패키지 만료 알림',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
+        return Container(
+          margin: EdgeInsets.only(bottom: 24.h),
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFF7ED), Color(0xFFFEF3C7)],
             ),
-            SizedBox(height: 12.h),
-            ...alertPackages.map((pkg) => _buildPackageAlertItem(pkg)),
-            SizedBox(height: 24.h),
-          ],
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: AppTheme.accentGold.withOpacity(0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.accentGold.withOpacity(0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(6.w),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentGold.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Icon(Icons.notification_important_rounded,
+                        size: 18.w, color: AppTheme.accentGold),
+                  ),
+                  SizedBox(width: 10.w),
+                  Text(
+                    '패키지 만료 알림',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF92400E),
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentGold,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      '${alertPackages.length}건',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              ...alertPackages.map((pkg) => _buildPackageAlertItem(pkg)),
+            ],
+          ),
         );
       },
       loading: () => const SizedBox.shrink(),

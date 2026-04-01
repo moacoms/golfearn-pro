@@ -9,6 +9,7 @@ import '../../../students/domain/entities/student_entity.dart';
 import '../../domain/entities/schedule_entity.dart';
 import '../../../packages/domain/entities/package_entity.dart';
 import '../../../packages/presentation/providers/package_provider.dart';
+import '../../../income/presentation/providers/income_provider.dart';
 import '../providers/schedule_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 
@@ -339,21 +340,70 @@ class SchedulePage extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.check_circle, color: AppTheme.primaryColor),
                     title: const Text('레슨 완료'),
-                    subtitle: const Text('패키지 횟수가 자동으로 차감됩니다'),
+                    subtitle: const Text('패키지 차감 + 수입 기록 + 진도 자동 업데이트'),
                     onTap: () async {
                       Navigator.pop(context);
+                      final user = ref.read(currentUserProvider);
+
+                      // 1. 레슨 상태 완료 처리
                       await ref.read(scheduleRepositoryProvider)
                           .updateScheduleStatus(schedule.id, 'completed');
 
-                      // 패키지가 연결되어 있으면 횟수 차감
+                      // 2. 패키지 횟수 차감
                       if (schedule.packageId != null) {
                         await ref.read(packageRepositoryProvider)
                             .deductLesson(schedule.packageId!);
                         ref.invalidate(packagesProvider);
                       }
 
+                      // 3. [자동화] 수입 자동 기록
+                      if (user != null && schedule.packageId != null) {
+                        try {
+                          final packages = await ref.read(packageRepositoryProvider)
+                              .getActivePackages(user.id, schedule.studentId);
+                          final pkg = packages.where((p) => p.id == schedule.packageId).firstOrNull;
+                          if (pkg != null && pkg.totalCount > 0) {
+                            final perLessonAmount = (pkg.price / pkg.totalCount).round();
+                            if (perLessonAmount > 0) {
+                              await ref.read(incomeRepositoryProvider).createIncomeRecord(
+                                proId: user.id,
+                                studentId: schedule.studentId,
+                                packageId: schedule.packageId,
+                                scheduleId: schedule.id,
+                                category: 'lesson',
+                                amount: perLessonAmount,
+                                incomeDate: schedule.lessonDate,
+                                description: '${schedule.studentName ?? "학생"} ${schedule.lessonTypeLabel}',
+                                paymentMethod: 'transfer',
+                              );
+                              ref.invalidate(monthlyIncomeRecordsProvider);
+                              ref.invalidate(monthlyTotalIncomeProvider);
+                            }
+                          }
+                        } catch (_) {} // 수입 기록 실패해도 레슨 완료는 유지
+                      }
+
+                      // 4. [자동화] 학생 진도 자동 업데이트
+                      try {
+                        final student = await ref.read(studentRepositoryProvider)
+                            .getStudent(schedule.studentId);
+                        await ref.read(studentRepositoryProvider).updateStudent(
+                          schedule.studentId,
+                          {
+                            'total_lesson_count': student.totalLessonCount + 1,
+                            'last_lesson_at': schedule.lessonDate.toIso8601String().split('T').first,
+                          },
+                        );
+                        ref.invalidate(studentsProvider);
+                      } catch (_) {}
+
                       ref.invalidate(weeklySchedulesProvider);
                       ref.invalidate(todaySchedulesProvider);
+
+                      // 5. [자동화] 다음 레슨 제안
+                      if (context.mounted) {
+                        _showNextLessonSuggestion(context, ref, schedule);
+                      }
                     },
                   ),
                   ListTile(
@@ -384,16 +434,30 @@ class SchedulePage extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.restore, color: AppTheme.primaryColor),
                     title: const Text('예정으로 복원'),
-                    subtitle: schedule.status == 'completed' && schedule.packageId != null
-                        ? const Text('패키지 횟수가 복원됩니다')
+                    subtitle: schedule.status == 'completed'
+                        ? const Text('패키지/수입/진도가 복원됩니다')
                         : null,
                     onTap: () async {
                       Navigator.pop(context);
-                      // 완료 상태였고 패키지가 있으면 횟수 복원
-                      if (schedule.status == 'completed' && schedule.packageId != null) {
-                        await ref.read(packageRepositoryProvider)
-                            .restoreLesson(schedule.packageId!);
-                        ref.invalidate(packagesProvider);
+                      if (schedule.status == 'completed') {
+                        // 패키지 횟수 복원
+                        if (schedule.packageId != null) {
+                          await ref.read(packageRepositoryProvider)
+                              .restoreLesson(schedule.packageId!);
+                          ref.invalidate(packagesProvider);
+                        }
+                        // 학생 진도 복원
+                        try {
+                          final student = await ref.read(studentRepositoryProvider)
+                              .getStudent(schedule.studentId);
+                          if (student.totalLessonCount > 0) {
+                            await ref.read(studentRepositoryProvider).updateStudent(
+                              schedule.studentId,
+                              {'total_lesson_count': student.totalLessonCount - 1},
+                            );
+                            ref.invalidate(studentsProvider);
+                          }
+                        } catch (_) {}
                       }
                       await ref.read(scheduleRepositoryProvider)
                           .updateScheduleStatus(schedule.id, 'scheduled');
@@ -419,6 +483,111 @@ class SchedulePage extends ConsumerWidget {
         );
       },
     );
+  }
+
+  void _showNextLessonSuggestion(BuildContext context, WidgetRef ref, ScheduleEntity schedule) {
+    // 같은 요일, 같은 시간으로 다음 주 제안
+    final nextDate = schedule.lessonDate.add(const Duration(days: 7));
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        title: Row(
+          children: [
+            Icon(Icons.celebration_rounded, color: AppTheme.accentGold, size: 24.w),
+            SizedBox(width: 8.w),
+            const Text('레슨 완료!'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${schedule.studentName ?? "학생"}님의 레슨이 완료되었습니다.',
+              style: TextStyle(fontSize: 14.sp),
+            ),
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today, size: 18.w, color: AppTheme.primaryColor),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: Text(
+                      '다음 레슨: ${nextDate.month}/${nextDate.day} (${_weekdayLabel(nextDate.weekday)}) ${schedule.lessonTime}',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('닫기'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final user = ref.read(currentUserProvider);
+              if (user == null) return;
+              try {
+                await ref.read(scheduleRepositoryProvider).createSchedule(
+                  proId: user.id,
+                  studentId: schedule.studentId,
+                  packageId: schedule.packageId,
+                  lessonDate: nextDate,
+                  lessonTime: schedule.lessonTime,
+                  durationMinutes: schedule.durationMinutes,
+                  lessonType: schedule.lessonType ?? 'regular',
+                  location: schedule.location,
+                );
+                ref.invalidate(weeklySchedulesProvider);
+                ref.invalidate(todaySchedulesProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${nextDate.month}/${nextDate.day} 레슨이 예약되었습니다'),
+                      backgroundColor: AppTheme.primaryColor,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('예약 실패: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+            ),
+            child: const Text('다음 레슨 예약'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _weekdayLabel(int weekday) {
+    const labels = ['', '월', '화', '수', '목', '금', '토', '일'];
+    return labels[weekday];
   }
 
   Future<void> _showAddScheduleDialog(BuildContext context, WidgetRef ref) async {
