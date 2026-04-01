@@ -464,7 +464,7 @@ class SchedulePage extends ConsumerWidget {
 
     // 반복 설정
     bool isRecurring = false;
-    String repeatType = 'weekly'; // 'weekly' or 'biweekly'
+    String repeatType = 'weekly'; // 'daily', 'weekly', 'biweekly', 'monthly'
     DateTime? repeatEndDate;
 
     showModalBottomSheet(
@@ -658,8 +658,10 @@ class SchedulePage extends ConsumerWidget {
                             DropdownButtonFormField<String>(
                               value: repeatType,
                               items: const [
+                                DropdownMenuItem(value: 'daily', child: Text('매일')),
                                 DropdownMenuItem(value: 'weekly', child: Text('매주')),
                                 DropdownMenuItem(value: 'biweekly', child: Text('격주')),
+                                DropdownMenuItem(value: 'monthly', child: Text('매월')),
                               ],
                               onChanged: (v) => setState(() => repeatType = v!),
                               decoration: InputDecoration(
@@ -722,12 +724,16 @@ class SchedulePage extends ConsumerWidget {
 
                                   if (isRecurring && repeatEndDate != null) {
                                     // 반복 레슨 생성
-                                    final intervalDays = repeatType == 'weekly' ? 7 : 14;
                                     final List<DateTime> dates = [];
                                     DateTime current = selectedDate;
                                     while (!current.isAfter(repeatEndDate!)) {
                                       dates.add(current);
-                                      current = current.add(Duration(days: intervalDays));
+                                      if (repeatType == 'monthly') {
+                                        current = DateTime(current.year, current.month + 1, current.day);
+                                      } else {
+                                        final intervalDays = repeatType == 'daily' ? 1 : repeatType == 'weekly' ? 7 : 14;
+                                        current = current.add(Duration(days: intervalDays));
+                                      }
                                     }
 
                                     for (final date in dates) {

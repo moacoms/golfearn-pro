@@ -52,6 +52,7 @@ class StudentRepositoryImpl {
     String? gender,
     DateTime? startedGolfAt,
     int? averageScore,
+    String? groupName,
   }) async {
     try {
       final data = {
@@ -66,6 +67,7 @@ class StudentRepositoryImpl {
         'gender': gender,
         'started_golf_at': startedGolfAt?.toIso8601String().split('T').first,
         'average_score': averageScore,
+        'group_name': groupName,
         'is_active': true,
         'total_lesson_count': 0,
       };
@@ -113,6 +115,26 @@ class StudentRepositoryImpl {
           .eq(DatabaseConstants.studentId, studentId);
     } catch (e) {
       throw Exception('학생 삭제 실패: $e');
+    }
+  }
+
+  Future<List<StudentEntity>> getFamilyMembers(String familyGroupId, {String? excludeStudentId}) async {
+    try {
+      var query = _supabaseService.client
+          .from(DatabaseConstants.lessonStudents)
+          .select()
+          .eq('family_group_id', familyGroupId)
+          .eq(DatabaseConstants.studentIsActive, true);
+
+      final response = await query.order('student_name');
+      final list = List<Map<String, dynamic>>.from(response);
+      var result = list.map((json) => StudentModel.fromJson(json).toEntity()).toList();
+      if (excludeStudentId != null) {
+        result = result.where((s) => s.id != excludeStudentId).toList();
+      }
+      return result;
+    } catch (e) {
+      return [];
     }
   }
 

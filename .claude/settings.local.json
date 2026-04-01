@@ -3,7 +3,20 @@
     "allow": [
       "Bash(del C:UsershdopeIdeaProjectsgolfearn-probuild.yaml)",
       "Bash(C:/flutter_windows_3.41.4-stable/bin/flutter clean)",
-      "Bash(C:/flutter_windows_3.41.4-stable/bin/dart run build_runner build)"
+      "Bash(C:/flutter_windows_3.41.4-stable/bin/dart run build_runner build)",
+      "Bash(pkill -f \"flutter run\")",
+      "Bash(gh auth:*)",
+      "Bash(vercel deploy:*)",
+      "Bash(vercel ls:*)",
+      "Bash(brew install:*)",
+      "Bash(gh api:*)",
+      "WebSearch",
+      "WebFetch(domain:claude.ai)",
+      "Bash(file /Users/hdopen/IdeaProjects/golfearn-pro/web/icons/*.png)",
+      "Bash(pip3 install:*)",
+      "Bash(python3:*)",
+      "Bash(lsof -ti:5000)",
+      "Bash(xargs kill:*)"
     ],
     "deny": [],
     "ask": []

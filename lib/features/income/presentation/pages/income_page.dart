@@ -144,12 +144,55 @@ class IncomePage extends ConsumerWidget {
                     ),
                   );
                 }
+                // 일자별 그룹핑
+                final grouped = <String, List<IncomeEntity>>{};
+                for (final r in records) {
+                  final key = '${r.incomeDate.year}.${r.incomeDate.month.toString().padLeft(2, '0')}.${r.incomeDate.day.toString().padLeft(2, '0')}';
+                  grouped.putIfAbsent(key, () => []).add(r);
+                }
+                final dateKeys = grouped.keys.toList();
+
                 return RefreshIndicator(
                   onRefresh: () async => ref.invalidate(monthlyIncomeRecordsProvider),
                   child: ListView.builder(
                     padding: EdgeInsets.all(16.w),
-                    itemCount: records.length,
-                    itemBuilder: (context, index) => _buildIncomeCard(context, ref, records[index]),
+                    itemCount: dateKeys.length,
+                    itemBuilder: (context, index) {
+                      final dateKey = dateKeys[index];
+                      final dayRecords = grouped[dateKey]!;
+                      final dayTotal = dayRecords.fold<int>(0, (sum, r) => sum + r.amount);
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 일자 헤더 + 소계
+                          Padding(
+                            padding: EdgeInsets.only(top: index > 0 ? 12.h : 0, bottom: 8.h),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  dateKey,
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                                Text(
+                                  _formatCurrency(dayTotal),
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF10B981),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ...dayRecords.map((r) => _buildIncomeCard(context, ref, r)),
+                        ],
+                      );
+                    },
                   ),
                 );
               },

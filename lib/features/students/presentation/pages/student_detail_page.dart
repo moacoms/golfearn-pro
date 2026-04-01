@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../../income/domain/entities/income_entity.dart';
+import '../../../income/presentation/providers/income_provider.dart';
 import '../../domain/entities/student_entity.dart';
 import '../providers/student_provider.dart';
 import 'student_form_page.dart';
@@ -98,6 +100,21 @@ class StudentDetailPage extends ConsumerWidget {
                 ),
               ]),
             ],
+
+            // 그룹 & 가족 정보
+            if (student.groupName != null || student.familyGroupId != null) ...[
+              SizedBox(height: 16.h),
+              _buildInfoSection('그룹/가족 정보', [
+                if (student.groupName != null)
+                  _buildInfoRow('그룹', student.groupName!),
+                if (student.familyGroupId != null)
+                  _buildFamilySection(context, ref, student),
+              ]),
+            ],
+
+            // 결제 내역
+            SizedBox(height: 16.h),
+            _buildPaymentHistory(ref, student.id),
           ],
         ),
       ),
@@ -208,6 +225,163 @@ class StudentDetailPage extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildFamilySection(BuildContext context, WidgetRef ref, StudentEntity student) {
+    final familyAsync = ref.watch(familyMembersProvider(student.familyGroupId!));
+    return familyAsync.when(
+      data: (members) {
+        final others = members.where((m) => m.id != student.id).toList();
+        if (others.isEmpty) return const SizedBox.shrink();
+        return Column(
+          children: others.map((m) => InkWell(
+            onTap: () => context.push('/students/${m.id}'),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+              child: Row(
+                children: [
+                  Icon(Icons.family_restroom, size: 18.w, color: Colors.orange),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      m.studentName,
+                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, size: 18.w, color: Colors.grey[400]),
+                ],
+              ),
+            ),
+          )).toList(),
+        );
+      },
+      loading: () => Padding(
+        padding: EdgeInsets.all(16.w),
+        child: const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildPaymentHistory(WidgetRef ref, String studentId) {
+    final incomeAsync = ref.watch(studentIncomeRecordsProvider(studentId));
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
+            child: Text(
+              '결제 내역',
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ),
+          incomeAsync.when(
+            data: (records) {
+              if (records.isEmpty) {
+                return Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: Text(
+                    '결제 내역이 없습니다',
+                    style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
+                  ),
+                );
+              }
+              final total = records.fold<int>(0, (sum, r) => sum + r.amount);
+              return Column(
+                children: [
+                  // 총 결제 금액
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: 16.w),
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('총 결제 금액', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600)),
+                        Text(
+                          _formatCurrency(total),
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF10B981),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  // 개별 내역
+                  ...records.map((r) => Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                r.description ?? r.categoryLabel,
+                                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
+                              ),
+                              Text(
+                                '${r.incomeDate.year}.${r.incomeDate.month.toString().padLeft(2, '0')}.${r.incomeDate.day.toString().padLeft(2, '0')} | ${r.paymentMethodLabel}',
+                                style: TextStyle(fontSize: 12.sp, color: Colors.grey[500]),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          _formatCurrency(r.amount),
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF10B981),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+                  SizedBox(height: 12.h),
+                ],
+              );
+            },
+            loading: () => Padding(
+              padding: EdgeInsets.all(16.w),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, __) => Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Text('결제 내역을 불러올 수 없습니다', style: TextStyle(fontSize: 14.sp, color: Colors.red)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatCurrency(int amount) {
+    final str = amount.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) buffer.write(',');
+      buffer.write(str[i]);
+    }
+    return '${buffer}원';
   }
 
   String _formatDate(DateTime? date) {

@@ -33,6 +33,13 @@ Future<List<IncomeEntity>> monthlyIncomeRecords(Ref ref) async {
   return repo.getIncomeRecords(user.id, startDate: start, endDate: end);
 }
 
+/// 학생별 결제 내역
+@riverpod
+Future<List<IncomeEntity>> studentIncomeRecords(Ref ref, String studentId) async {
+  final repo = ref.watch(incomeRepositoryProvider);
+  return repo.getStudentIncomeRecords(studentId);
+}
+
 /// 이번 달 총 수입
 @riverpod
 Future<int> monthlyTotalIncome(Ref ref) async {

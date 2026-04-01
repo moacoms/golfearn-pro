@@ -16,6 +16,8 @@ class StudentModel {
   final int? averageScore;
   final int totalLessonCount;
   final DateTime? lastLessonAt;
+  final String? groupName;
+  final String? familyGroupId;
   final bool isActive;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -36,6 +38,8 @@ class StudentModel {
     this.averageScore,
     this.totalLessonCount = 0,
     this.lastLessonAt,
+    this.groupName,
+    this.familyGroupId,
     this.isActive = true,
     this.createdAt,
     this.updatedAt,
@@ -64,6 +68,8 @@ class StudentModel {
       lastLessonAt: json['last_lesson_at'] != null
           ? DateTime.parse(json['last_lesson_at'] as String)
           : null,
+      groupName: json['group_name'] as String?,
+      familyGroupId: json['family_group_id'] as String?,
       isActive: json['is_active'] as bool? ?? true,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
@@ -89,6 +95,8 @@ class StudentModel {
       'started_golf_at': startedGolfAt?.toIso8601String().split('T').first,
       'average_score': averageScore,
       'total_lesson_count': totalLessonCount,
+      if (groupName != null) 'group_name': groupName,
+      if (familyGroupId != null) 'family_group_id': familyGroupId,
       'is_active': isActive,
     };
   }
@@ -110,6 +118,8 @@ class StudentModel {
       averageScore: averageScore,
       totalLessonCount: totalLessonCount,
       lastLessonAt: lastLessonAt,
+      groupName: groupName,
+      familyGroupId: familyGroupId,
       isActive: isActive,
       createdAt: createdAt,
       updatedAt: updatedAt,

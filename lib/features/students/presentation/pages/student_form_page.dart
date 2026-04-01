@@ -26,11 +26,13 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
   late final TextEditingController _goalController;
   late final TextEditingController _scoreController;
   late final TextEditingController _lessonCountController;
+  late final TextEditingController _groupNameController;
 
   String? _selectedLevel;
   String? _selectedGender;
   DateTime? _birthDate;
   DateTime? _startedGolfAt;
+  String? _selectedFamilyStudentId;
   bool _isLoading = false;
 
   bool get isEditing => widget.student != null;
@@ -52,6 +54,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
           ? s.totalLessonCount.toString()
           : '',
     );
+    _groupNameController = TextEditingController(text: s?.groupName ?? '');
     _selectedLevel = s?.currentLevel;
     _selectedGender = s?.gender;
     _birthDate = s?.birthDate;
@@ -67,6 +70,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
     _goalController.dispose();
     _scoreController.dispose();
     _lessonCountController.dispose();
+    _groupNameController.dispose();
     super.dispose();
   }
 
@@ -122,6 +126,16 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
                 hint: 'email@example.com',
                 keyboardType: TextInputType.emailAddress,
               ),
+
+              SizedBox(height: 12.h),
+              _buildTextField(
+                controller: _groupNameController,
+                label: '그룹',
+                hint: '예: A반, 오전반, VIP',
+              ),
+              SizedBox(height: 12.h),
+              // 가족 연결
+              _buildFamilySelector(),
 
               SizedBox(height: 24.h),
 
@@ -376,6 +390,47 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
     );
   }
 
+  Widget _buildFamilySelector() {
+    final studentsAsync = ref.watch(studentsProvider);
+    return studentsAsync.when(
+      data: (students) {
+        // 편집 중이면 자기 자신 제외
+        final others = isEditing
+            ? students.where((s) => s.id != widget.student!.id).toList()
+            : students;
+        if (others.isEmpty) return const SizedBox.shrink();
+        return DropdownButtonFormField<String>(
+          value: _selectedFamilyStudentId,
+          hint: const Text('가족 연결 (선택사항)'),
+          items: [
+            const DropdownMenuItem(value: null, child: Text('없음')),
+            ...others.map((s) => DropdownMenuItem(
+              value: s.id,
+              child: Text('${s.studentName}${s.groupName != null ? ' (${s.groupName})' : ''}'),
+            )),
+          ],
+          onChanged: (v) => setState(() => _selectedFamilyStudentId = v),
+          decoration: InputDecoration(
+            labelText: '가족 연결',
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
   Future<void> _saveStudent() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -393,6 +448,25 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
           ? int.tryParse(_lessonCountController.text)
           : null;
 
+      // 가족 연결 처리: 선택한 학생의 family_group_id를 가져오거나 새로 생성
+      String? familyGroupId;
+      if (_selectedFamilyStudentId != null) {
+        final familyStudent = await repo.getStudent(_selectedFamilyStudentId!);
+        if (familyStudent.familyGroupId != null) {
+          familyGroupId = familyStudent.familyGroupId;
+        } else {
+          // 새 UUID 생성하여 양쪽에 설정
+          familyGroupId = DateTime.now().millisecondsSinceEpoch.toRadixString(36) +
+              _selectedFamilyStudentId!.substring(0, 8);
+          await repo.updateStudent(_selectedFamilyStudentId!, {
+            'family_group_id': familyGroupId,
+          });
+        }
+      }
+
+      final groupName = _groupNameController.text.trim().isEmpty
+          ? null : _groupNameController.text.trim();
+
       if (isEditing) {
         await repo.updateStudent(widget.student!.id, {
           'student_name': _nameController.text.trim(),
@@ -405,6 +479,8 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
           'birth_date': _birthDate?.toIso8601String().split('T').first,
           'gender': _selectedGender,
           'started_golf_at': _startedGolfAt?.toIso8601String().split('T').first,
+          'group_name': groupName,
+          if (familyGroupId != null) 'family_group_id': familyGroupId,
           if (lessonCount != null) 'total_lesson_count': lessonCount,
         });
       } else {
@@ -420,7 +496,21 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
           birthDate: _birthDate,
           gender: _selectedGender,
           startedGolfAt: _startedGolfAt,
+          groupName: groupName,
         );
+
+        // 새 학생에게도 familyGroupId 설정 (가족 연결한 경우)
+        if (familyGroupId != null) {
+          // 방금 생성한 학생 조회 후 업데이트
+          final allStudents = await repo.getStudents(user.id);
+          final newStudent = allStudents.firstWhere(
+            (s) => s.studentName == _nameController.text.trim(),
+            orElse: () => allStudents.last,
+          );
+          await repo.updateStudent(newStudent.id, {
+            'family_group_id': familyGroupId,
+          });
+        }
       }
 
       // 목록 새로고침

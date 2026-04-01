@@ -14,6 +14,8 @@ class StudentEntity {
   final int? averageScore;
   final int totalLessonCount;
   final DateTime? lastLessonAt;
+  final String? groupName;
+  final String? familyGroupId;
   final bool isActive;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -34,6 +36,8 @@ class StudentEntity {
     this.averageScore,
     this.totalLessonCount = 0,
     this.lastLessonAt,
+    this.groupName,
+    this.familyGroupId,
     this.isActive = true,
     this.createdAt,
     this.updatedAt,
@@ -55,6 +59,8 @@ class StudentEntity {
     int? averageScore,
     int? totalLessonCount,
     DateTime? lastLessonAt,
+    String? groupName,
+    String? familyGroupId,
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -75,6 +81,8 @@ class StudentEntity {
       averageScore: averageScore ?? this.averageScore,
       totalLessonCount: totalLessonCount ?? this.totalLessonCount,
       lastLessonAt: lastLessonAt ?? this.lastLessonAt,
+      groupName: groupName ?? this.groupName,
+      familyGroupId: familyGroupId ?? this.familyGroupId,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

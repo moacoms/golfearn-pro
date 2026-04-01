@@ -22,6 +22,15 @@ Future<List<StudentEntity>> students(Ref ref) async {
   return repo.getStudents(user.id);
 }
 
+/// 전체 학생 목록 (비활성 포함) 프로바이더
+@riverpod
+Future<List<StudentEntity>> allStudents(Ref ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return [];
+  final repo = ref.watch(studentRepositoryProvider);
+  return repo.getStudents(user.id, activeOnly: false);
+}
+
 /// 학생 상세 프로바이더
 @riverpod
 Future<StudentEntity> studentDetail(Ref ref, String studentId) async {
@@ -47,18 +56,63 @@ class StudentSearchQuery extends _$StudentSearchQuery {
   void update(String query) => state = query;
 }
 
+/// 학생 상태 필터 ('all', 'active', 'inactive')
+@riverpod
+class StudentStatusFilter extends _$StudentStatusFilter {
+  @override
+  String build() => 'active';
+
+  void update(String filter) => state = filter;
+}
+
+/// 학생 그룹 필터
+@riverpod
+class StudentGroupFilter extends _$StudentGroupFilter {
+  @override
+  String? build() => null; // null = 전체
+
+  void update(String? group) => state = group;
+}
+
+/// 가족 구성원 프로바이더
+@riverpod
+Future<List<StudentEntity>> familyMembers(Ref ref, String familyGroupId) async {
+  final repo = ref.watch(studentRepositoryProvider);
+  return repo.getFamilyMembers(familyGroupId);
+}
+
 /// 필터된 학생 목록
 @riverpod
 AsyncValue<List<StudentEntity>> filteredStudents(Ref ref) {
-  final studentsAsync = ref.watch(studentsProvider);
+  final statusFilter = ref.watch(studentStatusFilterProvider);
+  final studentsAsync = statusFilter == 'active'
+      ? ref.watch(studentsProvider)
+      : ref.watch(allStudentsProvider);
   final query = ref.watch(studentSearchQueryProvider).toLowerCase();
 
+  final groupFilter = ref.watch(studentGroupFilterProvider);
+
   return studentsAsync.whenData((students) {
-    if (query.isEmpty) return students;
-    return students.where((s) {
-      return s.studentName.toLowerCase().contains(query) ||
-          (s.studentPhone?.contains(query) ?? false) ||
-          (s.studentEmail?.toLowerCase().contains(query) ?? false);
+    var filtered = students.where((s) {
+      // 상태 필터
+      if (statusFilter == 'active' && !s.isActive) return false;
+      if (statusFilter == 'inactive' && s.isActive) return false;
+      // 그룹 필터
+      if (groupFilter != null && s.groupName != groupFilter) return false;
+      return true;
     }).toList();
+
+    // 검색 필터
+    if (query.isNotEmpty) {
+      filtered = filtered.where((s) {
+        return s.studentName.toLowerCase().contains(query) ||
+            (s.studentPhone?.contains(query) ?? false) ||
+            (s.studentEmail?.toLowerCase().contains(query) ?? false);
+      }).toList();
+    }
+
+    // 가나다순 정렬
+    filtered.sort((a, b) => a.studentName.compareTo(b.studentName));
+    return filtered;
   });
 }

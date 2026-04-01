@@ -72,6 +72,21 @@ class IncomeRepositoryImpl {
     }
   }
 
+  Future<List<IncomeEntity>> getStudentIncomeRecords(String studentId) async {
+    try {
+      final response = await _supabaseService.client
+          .from(DatabaseConstants.proIncomeRecords)
+          .select()
+          .eq('student_id', studentId)
+          .order('income_date', ascending: false);
+      final list = List<Map<String, dynamic>>.from(response);
+      return list.map((json) => IncomeModel.fromJson(json).toEntity()).toList();
+    } catch (e) {
+      print('학생 수입 기록 조회 실패: $e');
+      return [];
+    }
+  }
+
   Future<void> deleteIncomeRecord(String recordId) async {
     try {
       await _supabaseService.client

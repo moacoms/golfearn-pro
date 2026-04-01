@@ -66,6 +66,59 @@ class StudentsListPage extends ConsumerWidget {
             ),
           ),
 
+          // 상태 필터 + 그룹 필터
+          Container(
+            color: Colors.white,
+            padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 12.h),
+            child: Consumer(
+              builder: (context, ref, _) {
+                final currentFilter = ref.watch(studentStatusFilterProvider);
+                final currentGroup = ref.watch(studentGroupFilterProvider);
+                final allStudentsAsync = ref.watch(studentsProvider);
+
+                // 그룹 목록 추출
+                final groupNames = <String>{};
+                allStudentsAsync.whenData((students) {
+                  for (final s in students) {
+                    if (s.groupName != null && s.groupName!.isNotEmpty) {
+                      groupNames.add(s.groupName!);
+                    }
+                  }
+                });
+
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        _buildFilterChip(ref, '레슨 중', 'active', currentFilter),
+                        SizedBox(width: 8.w),
+                        _buildFilterChip(ref, '레슨 종료', 'inactive', currentFilter),
+                        SizedBox(width: 8.w),
+                        _buildFilterChip(ref, '전체', 'all', currentFilter),
+                      ],
+                    ),
+                    if (groupNames.isNotEmpty) ...[
+                      SizedBox(height: 8.h),
+                      SizedBox(
+                        height: 32.h,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            _buildGroupChip(ref, '전체 그룹', null, currentGroup),
+                            ...groupNames.map((g) => Padding(
+                              padding: EdgeInsets.only(left: 8.w),
+                              child: _buildGroupChip(ref, g, g, currentGroup),
+                            )),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              },
+            ),
+          ),
+
           // 학생 목록
           Expanded(
             child: studentsAsync.when(
@@ -152,12 +205,14 @@ class StudentsListPage extends ConsumerWidget {
   }
 
   Widget _buildStudentCard(BuildContext context, StudentEntity student) {
-    return Card(
+    return Opacity(
+      opacity: student.isActive ? 1.0 : 0.5,
+      child: Card(
       margin: EdgeInsets.only(bottom: 12.h),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.r),
-        side: BorderSide(color: Colors.grey[200]!),
+        side: BorderSide(color: student.isActive ? Colors.grey[200]! : Colors.grey[300]!),
       ),
       child: InkWell(
         onTap: () => context.push('/students/${student.id}'),
@@ -241,6 +296,24 @@ class StudentsListPage extends ConsumerWidget {
                             ),
                           ),
                         ],
+                        if (student.groupName != null) ...[
+                          SizedBox(width: 6.w),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: Colors.purple.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                            child: Text(
+                              student.groupName!,
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.purple,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     SizedBox(height: 4.h),
@@ -268,6 +341,51 @@ class StudentsListPage extends ConsumerWidget {
               ),
               Icon(Icons.chevron_right, color: Colors.grey[400]),
             ],
+          ),
+        ),
+      ),
+    ),
+    );
+  }
+
+  Widget _buildFilterChip(WidgetRef ref, String label, String value, String current) {
+    final isSelected = current == value;
+    return GestureDetector(
+      onTap: () => ref.read(studentStatusFilterProvider.notifier).update(value),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF10B981) : Colors.grey[100],
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : Colors.grey[600],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGroupChip(WidgetRef ref, String label, String? value, String? current) {
+    final isSelected = current == value;
+    return GestureDetector(
+      onTap: () => ref.read(studentGroupFilterProvider.notifier).update(value),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue : Colors.grey[200],
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : Colors.grey[700],
           ),
         ),
       ),
