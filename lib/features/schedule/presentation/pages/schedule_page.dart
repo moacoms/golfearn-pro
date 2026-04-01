@@ -10,6 +10,7 @@ import '../../domain/entities/schedule_entity.dart';
 import '../../../packages/domain/entities/package_entity.dart';
 import '../../../packages/presentation/providers/package_provider.dart';
 import '../providers/schedule_provider.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class SchedulePage extends ConsumerWidget {
   const SchedulePage({super.key});
@@ -48,7 +49,7 @@ class SchedulePage extends ConsumerWidget {
       floatingActionButton: isLessonPro
           ? FloatingActionButton(
               onPressed: () => _showAddScheduleDialog(context, ref),
-              backgroundColor: const Color(0xFF10B981),
+              backgroundColor: AppTheme.primaryColor,
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
@@ -130,9 +131,9 @@ class SchedulePage extends ConsumerWidget {
                           padding: EdgeInsets.symmetric(vertical: 8.h),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? const Color(0xFF10B981)
+                                ? AppTheme.primaryColor
                                 : isToday
-                                    ? const Color(0xFF10B981).withOpacity(0.1)
+                                    ? AppTheme.primaryColor.withOpacity(0.1)
                                     : Colors.transparent,
                             borderRadius: BorderRadius.circular(8.r),
                           ),
@@ -147,7 +148,7 @@ class SchedulePage extends ConsumerWidget {
                                 color: isSelected
                                     ? Colors.white
                                     : isToday
-                                        ? const Color(0xFF10B981)
+                                        ? AppTheme.primaryColor
                                         : Colors.black,
                               ),
                             ),
@@ -224,7 +225,7 @@ class SchedulePage extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF10B981),
+                        color: AppTheme.primaryColor,
                       ),
                     ),
                     Text(
@@ -306,7 +307,7 @@ class SchedulePage extends ConsumerWidget {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'scheduled': return Colors.blue;
-      case 'completed': return const Color(0xFF10B981);
+      case 'completed': return AppTheme.primaryColor;
       case 'cancelled': return Colors.grey;
       case 'no_show': return Colors.red;
       default: return Colors.grey;
@@ -336,7 +337,7 @@ class SchedulePage extends ConsumerWidget {
                 SizedBox(height: 16.h),
                 if (schedule.status == 'scheduled') ...[
                   ListTile(
-                    leading: const Icon(Icons.check_circle, color: Color(0xFF10B981)),
+                    leading: const Icon(Icons.check_circle, color: AppTheme.primaryColor),
                     title: const Text('레슨 완료'),
                     subtitle: const Text('패키지 횟수가 자동으로 차감됩니다'),
                     onTap: () async {
@@ -381,7 +382,7 @@ class SchedulePage extends ConsumerWidget {
                 // 완료/취소/노쇼 상태에서 "예정으로 복원" 액션
                 if (schedule.status != 'scheduled') ...[
                   ListTile(
-                    leading: const Icon(Icons.restore, color: Color(0xFF10B981)),
+                    leading: const Icon(Icons.restore, color: AppTheme.primaryColor),
                     title: const Text('예정으로 복원'),
                     subtitle: schedule.status == 'completed' && schedule.packageId != null
                         ? const Text('패키지 횟수가 복원됩니다')
@@ -643,7 +644,7 @@ class SchedulePage extends ConsumerWidget {
                               ),
                               Switch(
                                 value: isRecurring,
-                                activeColor: const Color(0xFF10B981),
+                                activeColor: AppTheme.primaryColor,
                                 onChanged: (v) => setState(() {
                                   isRecurring = v;
                                   if (!v) {
@@ -758,7 +759,7 @@ class SchedulePage extends ConsumerWidget {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
                                           content: Text('반복 레슨 ${dates.length}개가 추가되었습니다'),
-                                          backgroundColor: const Color(0xFF10B981),
+                                          backgroundColor: AppTheme.primaryColor,
                                         ),
                                       );
                                     }
@@ -784,7 +785,7 @@ class SchedulePage extends ConsumerWidget {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(
                                           content: Text('레슨이 추가되었습니다'),
-                                          backgroundColor: Color(0xFF10B981),
+                                          backgroundColor: AppTheme.primaryColor,
                                         ),
                                       );
                                     }
@@ -798,7 +799,7 @@ class SchedulePage extends ConsumerWidget {
                                 }
                               },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
+                          backgroundColor: AppTheme.primaryColor,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12.r),

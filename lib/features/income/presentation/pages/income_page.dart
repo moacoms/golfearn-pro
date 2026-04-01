@@ -6,6 +6,7 @@ import '../../../students/presentation/providers/student_provider.dart';
 import '../../../students/domain/entities/student_entity.dart';
 import '../../domain/entities/income_entity.dart';
 import '../providers/income_provider.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class IncomePage extends ConsumerWidget {
   const IncomePage({super.key});
@@ -27,7 +28,7 @@ class IncomePage extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddIncomeDialog(context, ref),
-        backgroundColor: const Color(0xFF10B981),
+        backgroundColor: AppTheme.primaryColor,
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: Column(
@@ -72,7 +73,7 @@ class IncomePage extends ConsumerWidget {
                       width: double.infinity,
                       padding: EdgeInsets.all(20.w),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981),
+                        color: AppTheme.primaryColor,
                         borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: Column(
@@ -183,7 +184,7 @@ class IncomePage extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 14.sp,
                                     fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF10B981),
+                                    color: AppTheme.primaryColor,
                                   ),
                                 ),
                               ],
@@ -293,7 +294,7 @@ class IncomePage extends ConsumerWidget {
                   icon: Icons.money,
                   label: '현금',
                   amount: cashTotal,
-                  color: const Color(0xFF10B981),
+                  color: AppTheme.primaryColor,
                 ),
               ),
               SizedBox(width: 8.w),
@@ -393,7 +394,7 @@ class IncomePage extends ConsumerWidget {
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF10B981),
+            color: AppTheme.primaryColor,
           ),
         ),
         onLongPress: () {
@@ -615,7 +616,7 @@ class IncomePage extends ConsumerWidget {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text('수입이 기록되었습니다'),
-                                  backgroundColor: Color(0xFF10B981),
+                                  backgroundColor: AppTheme.primaryColor,
                                 ),
                               );
                             }
@@ -628,7 +629,7 @@ class IncomePage extends ConsumerWidget {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
+                          backgroundColor: AppTheme.primaryColor,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                         ),

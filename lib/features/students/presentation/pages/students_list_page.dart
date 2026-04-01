@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/database_constants.dart';
 import '../../domain/entities/student_entity.dart';
 import '../providers/student_provider.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class StudentsListPage extends ConsumerWidget {
   const StudentsListPage({super.key});
@@ -32,7 +33,7 @@ class StudentsListPage extends ConsumerWidget {
             onPressed: () => context.push('/students/new'),
             icon: Icon(
               Icons.person_add,
-              color: const Color(0xFF10B981),
+              color: AppTheme.primaryColor,
               size: 24.w,
             ),
           ),
@@ -191,7 +192,7 @@ class StudentsListPage extends ConsumerWidget {
               icon: const Icon(Icons.person_add),
               label: const Text('첫 학생 등록하기'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
+                backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                 shape: RoundedRectangleBorder(
@@ -224,13 +225,13 @@ class StudentsListPage extends ConsumerWidget {
               // 아바타
               CircleAvatar(
                 radius: 24.r,
-                backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
+                backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                 child: Text(
                   student.studentName.isNotEmpty ? student.studentName[0] : '?',
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF10B981),
+                    color: AppTheme.primaryColor,
                   ),
                 ),
               ),
@@ -355,7 +356,7 @@ class StudentsListPage extends ConsumerWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF10B981) : Colors.grey[100],
+          color: isSelected ? AppTheme.primaryColor : Colors.grey[100],
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: Text(

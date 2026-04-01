@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/theme/app_theme.dart';
 
 /// 레슨프로 목록 프로바이더
 final lessonProsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
@@ -31,7 +32,7 @@ final connectedProIdsProvider = FutureProvider<Set<String>>((ref) async {
 class FindProPage extends ConsumerWidget {
   const FindProPage({super.key});
 
-  static const _primary = Color(0xFF10B981);
+  static const _primary = AppTheme.primaryColor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

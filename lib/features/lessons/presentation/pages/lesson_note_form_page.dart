@@ -6,6 +6,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../students/presentation/providers/student_provider.dart';
 import '../../domain/entities/lesson_note_entity.dart';
 import '../providers/lesson_note_provider.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class LessonNoteFormPage extends ConsumerStatefulWidget {
   final LessonNoteEntity? note;
@@ -78,7 +79,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
-                color: _isLoading ? Colors.grey : const Color(0xFF10B981),
+                color: _isLoading ? Colors.grey : AppTheme.primaryColor,
               ),
             ),
           ),
@@ -198,7 +199,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.r),
-        borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
+        borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
       ),
       contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
     );
@@ -257,7 +258,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(isEditing ? '노트가 수정되었습니다' : '노트가 저장되었습니다'),
-            backgroundColor: const Color(0xFF10B981),
+            backgroundColor: AppTheme.primaryColor,
           ),
         );
         Navigator.pop(context);

@@ -7,6 +7,7 @@ import '../../../income/presentation/providers/income_provider.dart';
 import '../../domain/entities/student_entity.dart';
 import '../providers/student_provider.dart';
 import 'student_form_page.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class StudentDetailPage extends ConsumerWidget {
   final String studentId;
@@ -53,7 +54,7 @@ class StudentDetailPage extends ConsumerWidget {
                 ),
               );
             },
-            icon: const Icon(Icons.edit, color: Color(0xFF10B981)),
+            icon: const Icon(Icons.edit, color: AppTheme.primaryColor),
           ),
           IconButton(
             onPressed: () => _showDeleteDialog(context, ref, student),
@@ -134,13 +135,13 @@ class StudentDetailPage extends ConsumerWidget {
         children: [
           CircleAvatar(
             radius: 40.r,
-            backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
+            backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
             child: Text(
               student.studentName.isNotEmpty ? student.studentName[0] : '?',
               style: TextStyle(
                 fontSize: 32.sp,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF10B981),
+                color: AppTheme.primaryColor,
               ),
             ),
           ),
@@ -158,7 +159,7 @@ class StudentDetailPage extends ConsumerWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withOpacity(0.1),
+                color: AppTheme.primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
@@ -166,7 +167,7 @@ class StudentDetailPage extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF10B981),
+                  color: AppTheme.primaryColor,
                 ),
               ),
             ),
@@ -306,7 +307,7 @@ class StudentDetailPage extends ConsumerWidget {
                     margin: EdgeInsets.symmetric(horizontal: 16.w),
                     padding: EdgeInsets.all(12.w),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withOpacity(0.08),
+                      color: AppTheme.primaryColor.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Row(
@@ -318,7 +319,7 @@ class StudentDetailPage extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF10B981),
+                            color: AppTheme.primaryColor,
                           ),
                         ),
                       ],
@@ -350,7 +351,7 @@ class StudentDetailPage extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF10B981),
+                            color: AppTheme.primaryColor,
                           ),
                         ),
                       ],
@@ -412,7 +413,7 @@ class StudentDetailPage extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('학생이 삭제되었습니다'),
-                      backgroundColor: Color(0xFF10B981),
+                      backgroundColor: AppTheme.primaryColor,
                     ),
                   );
                 }

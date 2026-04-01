@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/constants/sport_constants.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../students/presentation/providers/student_provider.dart';
 import '../../../schedule/presentation/providers/schedule_provider.dart';
@@ -18,32 +19,7 @@ class DashboardPage extends ConsumerWidget {
     final currentUser = ref.watch(currentUserProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '안녕하세요!',
-              style: TextStyle(
-                fontSize: 16.sp,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Text(
-              '${currentUser?.fullName ?? '레슨프로'}님',
-              style: TextStyle(
-                fontSize: 20.sp,
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
+      backgroundColor: AppTheme.backgroundColor,
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(todaySchedulesProvider);
@@ -54,10 +30,16 @@ class DashboardPage extends ConsumerWidget {
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.all(16.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 프리미엄 그라데이션 헤더
+              _buildGradientHeader(currentUser),
+              Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               _buildTodaySchedule(ref),
               SizedBox(height: 16.h),
               _buildUpcomingLessons(ref),
@@ -68,8 +50,76 @@ class DashboardPage extends ConsumerWidget {
               SizedBox(height: 24.h),
               _buildPackageAlerts(ref),
               _buildQuickActions(context),
+              SizedBox(height: 80.h), // 플로팅 네비 공간
+                  ],
+                ),
+              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradientHeader(dynamic currentUser) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(24.w, 56.h, 24.w, 28.h),
+      decoration: const BoxDecoration(
+        gradient: AppTheme.primaryGradient,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '안녕하세요!',
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          color: Colors.white.withOpacity(0.8),
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        '${currentUser?.fullName ?? '레슨프로'}님',
+                        style: TextStyle(
+                          fontSize: 24.sp,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 48.w,
+                  height: 48.w,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  child: Icon(
+                    Icons.sports_golf_rounded,
+                    color: Colors.white,
+                    size: 24.w,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -85,15 +135,9 @@ class DashboardPage extends ConsumerWidget {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF10B981),
+        gradient: AppTheme.primaryGradient,
         borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF10B981).withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: AppTheme.elevatedShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +271,7 @@ class DashboardPage extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.schedule, size: 20.w, color: const Color(0xFF10B981)),
+                  Icon(Icons.schedule, size: 20.w, color: AppTheme.primaryColor),
                   SizedBox(width: 8.w),
                   Text(
                     '다가오는 레슨',
@@ -257,7 +301,7 @@ class DashboardPage extends ConsumerWidget {
         statusColor = Colors.blue;
         break;
       case 'completed':
-        statusColor = const Color(0xFF10B981);
+        statusColor = AppTheme.primaryColor;
         break;
       case 'cancelled':
         statusColor = Colors.red;
@@ -419,13 +463,7 @@ class DashboardPage extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,20 +505,14 @@ class DashboardPage extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.bar_chart, size: 20.w, color: const Color(0xFF10B981)),
+              Icon(Icons.bar_chart, size: 20.w, color: AppTheme.primaryColor),
               SizedBox(width: 8.w),
               Text(
                 '이번 주 레슨 현황',
@@ -577,8 +609,8 @@ class DashboardPage extends ConsumerWidget {
                           BarChartRodData(
                             toY: dayCounts[i].toDouble(),
                             color: isToday
-                                ? const Color(0xFF10B981)
-                                : const Color(0xFF10B981).withOpacity(0.4),
+                                ? AppTheme.primaryColor
+                                : AppTheme.primaryColor.withOpacity(0.4),
                             width: 20.w,
                             borderRadius: BorderRadius.vertical(
                               top: Radius.circular(4.r),
@@ -595,7 +627,7 @@ class DashboardPage extends ConsumerWidget {
                   width: 24.w,
                   height: 24.w,
                   child: const CircularProgressIndicator(
-                    color: Color(0xFF10B981),
+                    color: AppTheme.primaryColor,
                     strokeWidth: 2,
                   ),
                 ),
@@ -826,7 +858,7 @@ class DashboardPage extends ConsumerWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, size: 28.w, color: const Color(0xFF10B981)),
+            Icon(icon, size: 28.w, color: AppTheme.primaryColor),
             SizedBox(height: 8.h),
             Text(
               label,

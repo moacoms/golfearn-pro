@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/services/claude_service.dart';
 import '../../../students/presentation/providers/student_provider.dart';
 import '../../../students/domain/entities/student_entity.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class AnalysisPage extends ConsumerStatefulWidget {
   const AnalysisPage({super.key});
@@ -283,7 +284,7 @@ ${_descriptionController.text}
                 height: 16.w,
                 child: const CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFF10B981),
+                  color: AppTheme.primaryColor,
                 ),
               ),
               SizedBox(width: 12.w),
@@ -348,8 +349,8 @@ ${_descriptionController.text}
       child: ElevatedButton(
         onPressed: _isAnalyzing ? null : _requestAnalysis,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF10B981),
-          disabledBackgroundColor: const Color(0xFF10B981).withOpacity(0.5),
+          backgroundColor: AppTheme.primaryColor,
+          disabledBackgroundColor: AppTheme.primaryColor.withOpacity(0.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),
           ),
@@ -420,7 +421,7 @@ ${_descriptionController.text}
             width: 40.w,
             height: 40.w,
             child: const CircularProgressIndicator(
-              color: Color(0xFF10B981),
+              color: AppTheme.primaryColor,
               strokeWidth: 3,
             ),
           ),
@@ -466,7 +467,7 @@ ${_descriptionController.text}
           Row(
             children: [
               Icon(Icons.auto_awesome,
-                  size: 20.w, color: const Color(0xFF10B981)),
+                  size: 20.w, color: AppTheme.primaryColor),
               SizedBox(width: 8.w),
               Text(
                 'AI 분석 결과',
@@ -482,7 +483,7 @@ ${_descriptionController.text}
                   padding:
                       EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withOpacity(0.1),
+                    color: AppTheme.primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6.r),
                   ),
                   child: Text(
@@ -490,7 +491,7 @@ ${_descriptionController.text}
                     style: TextStyle(
                       fontSize: 11.sp,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF10B981),
+                      color: AppTheme.primaryColor,
                     ),
                   ),
                 ),

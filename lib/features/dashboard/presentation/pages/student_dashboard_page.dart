@@ -8,6 +8,7 @@ import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../packages/data/models/package_model.dart';
 import '../../../packages/domain/entities/package_entity.dart';
+import '../../../../core/theme/app_theme.dart';
 
 // ──────────────────────────────────────────────
 // Student-side providers (no code generation needed)
@@ -87,7 +88,7 @@ final _myUpcomingLessonsProvider =
 class StudentDashboardPage extends ConsumerWidget {
   const StudentDashboardPage({super.key});
 
-  static const _primary = Color(0xFF10B981);
+  static const _primary = AppTheme.primaryColor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -904,7 +905,7 @@ class StudentDashboardPage extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('레슨프로로 전환되었습니다!'),
-                      backgroundColor: Color(0xFF10B981),
+                      backgroundColor: AppTheme.primaryColor,
                     ),
                   );
                   context.go('/home');

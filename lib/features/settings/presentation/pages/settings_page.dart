@@ -12,6 +12,7 @@ import '../../../../core/constants/sport_constants.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../auth/domain/entities/user_entity.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -129,13 +130,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           // Avatar
           CircleAvatar(
             radius: 40.r,
-            backgroundColor: const Color(0xFF10B981).withOpacity(0.12),
+            backgroundColor: AppTheme.primaryColor.withOpacity(0.12),
             child: Text(
               initial,
               style: TextStyle(
                 fontSize: 32.sp,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF10B981),
+                color: AppTheme.primaryColor,
               ),
             ),
           ),
@@ -180,8 +181,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
               ),
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF10B981),
-                side: const BorderSide(color: Color(0xFF10B981)),
+                foregroundColor: AppTheme.primaryColor,
+                side: const BorderSide(color: AppTheme.primaryColor),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.r),
                 ),
@@ -230,7 +231,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             style: TextStyle(
               fontSize: 14.sp,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF10B981),
+              color: AppTheme.primaryColor,
             ),
             items: const [
               DropdownMenuItem(value: 30, child: Text('30분')),
@@ -257,7 +258,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF10B981),
+                color: AppTheme.primaryColor,
               ),
               decoration: InputDecoration(
                 hintText: '0',
@@ -352,7 +353,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               // Select All
               CheckboxListTile(
                 value: selectAll,
-                activeColor: const Color(0xFF10B981),
+                activeColor: AppTheme.primaryColor,
                 dense: true,
                 contentPadding: EdgeInsets.zero,
                 title: Text(
@@ -446,7 +447,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.r),
                               ),
-                              backgroundColor: const Color(0xFF10B981),
+                              backgroundColor: AppTheme.primaryColor,
                             ),
                           );
                         }
@@ -467,7 +468,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
+                backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -505,7 +506,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }) {
     return CheckboxListTile(
       value: value,
-      activeColor: const Color(0xFF10B981),
+      activeColor: AppTheme.primaryColor,
       dense: true,
       contentPadding: EdgeInsets.zero,
       title: Text(
@@ -824,13 +825,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               width: 36.w,
               height: 36.w,
               decoration: BoxDecoration(
-                color: (iconColor ?? const Color(0xFF10B981)).withOpacity(0.1),
+                color: (iconColor ?? AppTheme.primaryColor).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Icon(
                 icon,
                 size: 20.sp,
-                color: iconColor ?? const Color(0xFF10B981),
+                color: iconColor ?? AppTheme.primaryColor,
               ),
             ),
             SizedBox(width: 12.w),
@@ -893,7 +894,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.r),
                     borderSide: const BorderSide(
-                      color: Color(0xFF10B981),
+                      color: AppTheme.primaryColor,
                       width: 2,
                     ),
                   ),
@@ -922,7 +923,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.r),
                     borderSide: const BorderSide(
-                      color: Color(0xFF10B981),
+                      color: AppTheme.primaryColor,
                       width: 2,
                     ),
                   ),
@@ -967,7 +968,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.r),
                       ),
-                      backgroundColor: const Color(0xFF10B981),
+                      backgroundColor: AppTheme.primaryColor,
                     ),
                   );
                 }
@@ -987,7 +988,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
+              backgroundColor: AppTheme.primaryColor,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),

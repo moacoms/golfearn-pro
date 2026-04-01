@@ -7,6 +7,7 @@ import '../../../students/domain/entities/student_entity.dart';
 import '../../domain/entities/lesson_note_entity.dart';
 import '../providers/lesson_note_provider.dart';
 import 'lesson_note_form_page.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class LessonsPage extends ConsumerWidget {
   const LessonsPage({super.key});
@@ -35,7 +36,7 @@ class LessonsPage extends ConsumerWidget {
       floatingActionButton: isLessonPro
           ? FloatingActionButton(
               onPressed: () => _showNewNote(context, ref),
-              backgroundColor: const Color(0xFF10B981),
+              backgroundColor: AppTheme.primaryColor,
               child: const Icon(Icons.note_add, color: Colors.white),
             )
           : null,
@@ -124,8 +125,8 @@ class LessonsPage extends ConsumerWidget {
                 children: [
                   CircleAvatar(
                     radius: 18.r,
-                    backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
-                    child: Icon(Icons.note, size: 18.w, color: const Color(0xFF10B981)),
+                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                    child: Icon(Icons.note, size: 18.w, color: AppTheme.primaryColor),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
@@ -232,7 +233,7 @@ class LessonsPage extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF10B981),
+                    color: AppTheme.primaryColor,
                   ),
                 ),
                 SizedBox(height: 6.h),
@@ -283,7 +284,7 @@ class LessonsPage extends ConsumerWidget {
               '닫기',
               style: TextStyle(
                 fontSize: 14.sp,
-                color: const Color(0xFF10B981),
+                color: AppTheme.primaryColor,
                 fontWeight: FontWeight.w600,
               ),
             ),

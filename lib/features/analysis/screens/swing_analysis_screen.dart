@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/claude_service.dart';
+import '../../../core/theme/app_theme.dart';
 
 class SwingAnalysisScreen extends ConsumerStatefulWidget {
   const SwingAnalysisScreen({Key? key}) : super(key: key);
@@ -57,7 +58,7 @@ class _SwingAnalysisScreenState extends ConsumerState<SwingAnalysisScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('AI 스윙 분석'),
-        backgroundColor: const Color(0xFF10B981),
+        backgroundColor: AppTheme.primaryColor,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -103,7 +104,7 @@ class _SwingAnalysisScreenState extends ConsumerState<SwingAnalysisScreen> {
             ElevatedButton(
               onPressed: _isAnalyzing ? null : _testAnalysis,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
+                backgroundColor: AppTheme.primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: _isAnalyzing

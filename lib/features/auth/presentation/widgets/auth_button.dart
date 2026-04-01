@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class AuthButton extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -22,9 +23,9 @@ class AuthButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bgColor = backgroundColor ?? 
-        (isOutlined ? Colors.transparent : const Color(0xFF10B981));
+        (isOutlined ? Colors.transparent : AppTheme.primaryColor);
     final txtColor = textColor ?? 
-        (isOutlined ? const Color(0xFF10B981) : Colors.white);
+        (isOutlined ? AppTheme.primaryColor : Colors.white);
 
     return SizedBox(
       height: 56.h,
@@ -35,7 +36,7 @@ class AuthButton extends StatelessWidget {
           foregroundColor: txtColor,
           elevation: 0,
           side: isOutlined 
-              ? const BorderSide(color: Color(0xFF10B981))
+              ? const BorderSide(color: AppTheme.primaryColor)
               : null,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),
@@ -52,7 +53,7 @@ class AuthButton extends StatelessWidget {
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    isOutlined ? const Color(0xFF10B981) : Colors.white,
+                    isOutlined ? AppTheme.primaryColor : Colors.white,
                   ),
                 ),
               )

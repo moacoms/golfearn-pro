@@ -6,6 +6,7 @@ import '../../../students/presentation/providers/student_provider.dart';
 import '../../../students/domain/entities/student_entity.dart';
 import '../../domain/entities/package_entity.dart';
 import '../providers/package_provider.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class PackagesPage extends ConsumerWidget {
   const PackagesPage({super.key});
@@ -26,7 +27,7 @@ class PackagesPage extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddPackageDialog(context, ref),
-        backgroundColor: const Color(0xFF10B981),
+        backgroundColor: AppTheme.primaryColor,
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: packagesAsync.when(
@@ -69,7 +70,7 @@ class PackagesPage extends ConsumerWidget {
 
   Widget _buildPackageCard(BuildContext context, WidgetRef ref, PackageEntity pkg) {
     final isActive = pkg.status == 'active';
-    final progressColor = isActive ? const Color(0xFF10B981) : Colors.grey;
+    final progressColor = isActive ? AppTheme.primaryColor : Colors.grey;
 
     return Card(
       margin: EdgeInsets.only(bottom: 12.h),
@@ -146,7 +147,7 @@ class PackagesPage extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 13.sp,
                               fontWeight: FontWeight.bold,
-                              color: pkg.remainingCount > 0 ? const Color(0xFF10B981) : Colors.red,
+                              color: pkg.remainingCount > 0 ? AppTheme.primaryColor : Colors.red,
                             ),
                           ),
                         ],
@@ -236,7 +237,7 @@ class PackagesPage extends ConsumerWidget {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'active': return const Color(0xFF10B981);
+      case 'active': return AppTheme.primaryColor;
       case 'completed': return Colors.blue;
       case 'expired': return Colors.orange;
       case 'cancelled': return Colors.grey;
@@ -246,7 +247,7 @@ class PackagesPage extends ConsumerWidget {
 
   Color _getPaymentColor(String status) {
     switch (status) {
-      case 'paid': return const Color(0xFF10B981);
+      case 'paid': return AppTheme.primaryColor;
       case 'partial': return Colors.orange;
       case 'pending': return Colors.red;
       default: return Colors.grey;
@@ -448,7 +449,7 @@ class PackagesPage extends ConsumerWidget {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text('패키지가 등록되었습니다'),
-                                        backgroundColor: Color(0xFF10B981),
+                                        backgroundColor: AppTheme.primaryColor,
                                       ),
                                     );
                                   }
@@ -461,7 +462,7 @@ class PackagesPage extends ConsumerWidget {
                                 }
                               },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
+                          backgroundColor: AppTheme.primaryColor,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                         ),

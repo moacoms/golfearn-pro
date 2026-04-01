@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -71,7 +72,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF10B981),
+      backgroundColor: AppTheme.primaryColor,
       body: Center(
         child: AnimatedBuilder(
           animation: _animationController,
@@ -101,7 +102,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                       child: Icon(
                         Icons.golf_course,
                         size: 60.w,
-                        color: const Color(0xFF10B981),
+                        color: AppTheme.primaryColor,
                       ),
                     ),
                     SizedBox(height: 40.h),

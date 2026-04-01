@@ -7,6 +7,7 @@ import '../../../../core/constants/sport_constants.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/student_entity.dart';
 import '../providers/student_provider.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class StudentFormPage extends ConsumerStatefulWidget {
   final StudentEntity? student; // null이면 신규 등록
@@ -217,7 +218,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _saveStudent,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981),
+                    backgroundColor: AppTheme.primaryColor,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.r),
@@ -289,7 +290,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
+          borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
         ),
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       ),
@@ -322,7 +323,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
+          borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
         ),
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       ),
@@ -521,7 +522,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(isEditing ? '학생 정보가 수정되었습니다' : '학생이 등록되었습니다'),
-            backgroundColor: const Color(0xFF10B981),
+            backgroundColor: AppTheme.primaryColor,
           ),
         );
         context.pop();

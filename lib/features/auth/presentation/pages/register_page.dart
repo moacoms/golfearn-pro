@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../providers/auth_controller.dart';
 import '../widgets/auth_form_field.dart';
 import '../widgets/auth_button.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -356,11 +357,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
                     color: !_isLessonPro 
-                        ? const Color(0xFF10B981).withOpacity(0.1)
+                        ? AppTheme.primaryColor.withOpacity(0.1)
                         : Colors.grey[50],
                     border: Border.all(
                       color: !_isLessonPro 
-                          ? const Color(0xFF10B981)
+                          ? AppTheme.primaryColor
                           : Colors.grey[300]!,
                       width: 2,
                     ),
@@ -372,7 +373,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         Icons.school,
                         size: 32.w,
                         color: !_isLessonPro 
-                            ? const Color(0xFF10B981)
+                            ? AppTheme.primaryColor
                             : Colors.grey[600],
                       ),
                       SizedBox(height: 8.h),
@@ -382,7 +383,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
                           color: !_isLessonPro 
-                              ? const Color(0xFF10B981)
+                              ? AppTheme.primaryColor
                               : Colors.grey[600],
                         ),
                       ),
@@ -408,11 +409,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
                     color: _isLessonPro 
-                        ? const Color(0xFF10B981).withOpacity(0.1)
+                        ? AppTheme.primaryColor.withOpacity(0.1)
                         : Colors.grey[50],
                     border: Border.all(
                       color: _isLessonPro 
-                          ? const Color(0xFF10B981)
+                          ? AppTheme.primaryColor
                           : Colors.grey[300]!,
                       width: 2,
                     ),
@@ -424,7 +425,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         Icons.sports,
                         size: 32.w,
                         color: _isLessonPro
-                            ? const Color(0xFF10B981)
+                            ? AppTheme.primaryColor
                             : Colors.grey[600],
                       ),
                       SizedBox(height: 8.h),
@@ -434,7 +435,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
                           color: _isLessonPro 
-                              ? const Color(0xFF10B981)
+                              ? AppTheme.primaryColor
                               : Colors.grey[600],
                         ),
                       ),
@@ -475,7 +476,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             '로그인',
             style: TextStyle(
               fontSize: 14.sp,
-              color: const Color(0xFF10B981),
+              color: AppTheme.primaryColor,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -629,7 +630,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('회원가입 완료! 이메일을 확인해주세요.'),
-              backgroundColor: Color(0xFF10B981),
+              backgroundColor: AppTheme.primaryColor,
               duration: Duration(seconds: 2),
             ),
           );

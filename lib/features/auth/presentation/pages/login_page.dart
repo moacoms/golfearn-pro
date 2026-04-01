@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/auth_controller.dart';
 import '../widgets/auth_form_field.dart';
 import '../widgets/auth_button.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -129,7 +130,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           width: 80.w,
           height: 80.w,
           decoration: BoxDecoration(
-            color: const Color(0xFF10B981),
+            color: AppTheme.primaryColor,
             borderRadius: BorderRadius.circular(20.r),
           ),
           child: Icon(
@@ -178,7 +179,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             '회원가입',
             style: TextStyle(
               fontSize: 14.sp,
-              color: const Color(0xFF10B981),
+              color: AppTheme.primaryColor,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -297,7 +298,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   content: Text(
                                     '비밀번호 재설정 링크가 이메일로 발송되었습니다.',
                                   ),
-                                  backgroundColor: const Color(0xFF10B981),
+                                  backgroundColor: AppTheme.primaryColor,
                                 ),
                               );
                             }
@@ -322,14 +323,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           height: 16.w,
                           child: const CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Color(0xFF10B981),
+                            color: AppTheme.primaryColor,
                           ),
                         )
                       : Text(
                           '발송',
                           style: TextStyle(
                             fontSize: 14.sp,
-                            color: const Color(0xFF10B981),
+                            color: AppTheme.primaryColor,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
