@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/sport_constants.dart';
+import '../../../../core/services/claude_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../students/presentation/providers/student_provider.dart';
 import '../../domain/entities/lesson_note_entity.dart';
@@ -27,6 +28,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
 
   String? _selectedStudentId;
   bool _isLoading = false;
+  bool _isAiGenerating = false;
 
   bool get isEditing => widget.note != null;
 
@@ -111,6 +113,10 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
               ),
               SizedBox(height: 16.h),
 
+              // AI 자동 생성 버튼
+              _buildAiGenerateButton(),
+              SizedBox(height: 16.h),
+
               // 레슨 내용
               _buildSectionTitle('레슨 내용'),
               SizedBox(height: 8.h),
@@ -175,6 +181,130 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildAiGenerateButton() {
+    return GestureDetector(
+      onTap: _isAiGenerating || _selectedStudentId == null ? null : _generateWithAi,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          gradient: _selectedStudentId != null
+              ? AppTheme.primaryGradient
+              : const LinearGradient(colors: [Color(0xFF9CA3AF), Color(0xFFD1D5DB)]),
+          borderRadius: BorderRadius.circular(14.r),
+          boxShadow: _selectedStudentId != null ? AppTheme.elevatedShadow : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_isAiGenerating) ...[
+              SizedBox(
+                width: 20.w, height: 20.w,
+                child: const CircularProgressIndicator(
+                  color: Colors.white, strokeWidth: 2,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Text(
+                'AI가 노트를 작성 중...',
+                style: TextStyle(
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ] else ...[
+              Icon(Icons.auto_awesome_rounded, size: 22.w, color: AppTheme.accentGold),
+              SizedBox(width: 10.w),
+              Text(
+                'AI 레슨 노트 자동 생성',
+                style: TextStyle(
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _generateWithAi() async {
+    if (_selectedStudentId == null) return;
+
+    setState(() => _isAiGenerating = true);
+
+    try {
+      // 학생 정보 가져오기
+      final student = await ref.read(studentRepositoryProvider)
+          .getStudent(_selectedStudentId!);
+
+      // 이전 레슨 노트 가져오기 (최근 3개)
+      final user = ref.read(currentUserProvider);
+      String? previousNotes;
+      if (user != null) {
+        try {
+          final notes = await ref.read(lessonNoteRepositoryProvider)
+              .getStudentNotes(user.id, _selectedStudentId!);
+          if (notes.isNotEmpty) {
+            final recent = notes.take(3).map((n) =>
+              '- ${n.manualNote ?? ""} / 과제: ${n.homework ?? "없음"}'
+            ).join('\n');
+            previousNotes = recent;
+          }
+        } catch (_) {}
+      }
+
+      final claude = ClaudeService();
+      final result = await claude.generateStructuredLessonNote(
+        studentName: student.studentName,
+        studentLevel: student.currentLevel,
+        studentGoal: student.goal,
+        previousNotes: previousNotes,
+        briefInput: _noteController.text.isNotEmpty ? _noteController.text : null,
+      );
+
+      if (mounted) {
+        setState(() {
+          if (result['manual_note'] != null) {
+            _noteController.text = result['manual_note'];
+          }
+          if (result['key_points'] != null) {
+            _keyPointsController.text = (result['key_points'] as List).join('\n');
+          }
+          if (result['improvements'] != null) {
+            _improvementsController.text = (result['improvements'] as List).join('\n');
+          }
+          if (result['homework'] != null) {
+            _homeworkController.text = result['homework'];
+          }
+          if (result['next_focus'] != null) {
+            _nextFocusController.text = result['next_focus'];
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('AI 노트가 생성되었습니다. 수정 후 저장하세요!'),
+            backgroundColor: AppTheme.primaryColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('AI 생성 실패: ${e.toString().replaceAll("Exception: ", "")}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isAiGenerating = false);
+    }
   }
 
   Widget _buildSectionTitle(String title) {
