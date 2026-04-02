@@ -18,13 +18,13 @@ class AuthState {
 
   AuthState copyWith({
     bool? isLoading,
-    String? error,
-    UserEntity? user,
+    String? Function()? error,
+    UserEntity? Function()? user,
   }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
-      user: user ?? this.user,
+      error: error != null ? error() : this.error,
+      user: user != null ? user() : this.user,
     );
   }
 
@@ -53,9 +53,9 @@ class AuthController extends _$AuthController {
     // 인증 상태 변화 감지
     ref.listen(authStateChangesProvider, (previous, next) {
       next.when(
-        data: (user) => state = state.copyWith(user: user, error: null),
+        data: (user) => state = state.copyWith(user: () => user, error: () => null),
         loading: () => state = state.copyWith(isLoading: true),
-        error: (error, _) => state = state.copyWith(error: error.toString()),
+        error: (error, _) => state = state.copyWith(error: () => error.toString()),
       );
     });
 
@@ -69,8 +69,8 @@ class AuthController extends _$AuthController {
     required String email,
     required String password,
   }) async {
-    state = state.copyWith(isLoading: true, error: null);
-    
+    state = state.copyWith(isLoading: true, error: () => null);
+
     try {
       print('AuthController: 로그인 시작 - $email');
       final user = await _authRepository.signInWithEmailAndPassword(
@@ -78,13 +78,13 @@ class AuthController extends _$AuthController {
         password: password,
       );
       print('AuthController: 로그인 성공 - ${user.id}');
-      state = state.copyWith(isLoading: false, user: user);
+      state = state.copyWith(isLoading: false, user: () => user);
     } catch (e, stackTrace) {
       print('AuthController: 로그인 실패 - $e');
       print('AuthController: 스택 트레이스 - $stackTrace');
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: () => e.toString(),
       );
       rethrow;
     }
@@ -98,7 +98,7 @@ class AuthController extends _$AuthController {
     String? phoneNumber,
     bool isLessonPro = false,
   }) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: () => null);
 
     try {
       final user = await _authRepository.signUpWithEmailAndPassword(
@@ -108,11 +108,11 @@ class AuthController extends _$AuthController {
         phoneNumber: phoneNumber,
         isLessonPro: isLessonPro,
       );
-      state = state.copyWith(isLoading: false, user: user);
+      state = state.copyWith(isLoading: false, user: () => user);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: () => e.toString(),
       );
       rethrow;
     }
@@ -120,20 +120,20 @@ class AuthController extends _$AuthController {
 
   /// 로그아웃
   Future<void> signOut() async {
-    state = state.copyWith(isLoading: true, error: null);
-    
+    state = state.copyWith(isLoading: true, error: () => null);
+
     try {
       print('AuthController: 로그아웃 시작');
       await _authRepository.signOut();
       print('AuthController: 로그아웃 완료');
-      state = state.copyWith(isLoading: false, user: null, error: null);
+      state = state.copyWith(isLoading: false, user: () => null, error: () => null);
       // Provider를 무효화하여 캐시 클리어
       ref.invalidateSelf();
     } catch (e) {
       print('AuthController: 로그아웃 실패 - $e');
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: () => e.toString(),
       );
       rethrow;
     }
@@ -146,7 +146,7 @@ class AuthController extends _$AuthController {
     String? avatarUrl,
     String? sportType,
   }) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: () => null);
 
     try {
       final user = await _authRepository.updateProfile(
@@ -155,11 +155,11 @@ class AuthController extends _$AuthController {
         avatarUrl: avatarUrl,
         sportType: sportType,
       );
-      state = state.copyWith(isLoading: false, user: user);
+      state = state.copyWith(isLoading: false, user: () => user);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: () => e.toString(),
       );
       rethrow;
     }
@@ -174,7 +174,7 @@ class AuthController extends _$AuthController {
     int? experience,
     String? sportType,
   }) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: () => null);
 
     try {
       final user = await _authRepository.registerAsLessonPro(
@@ -185,11 +185,11 @@ class AuthController extends _$AuthController {
         experience: experience,
         sportType: sportType,
       );
-      state = state.copyWith(isLoading: false, user: user);
+      state = state.copyWith(isLoading: false, user: () => user);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: () => e.toString(),
       );
       rethrow;
     }
@@ -197,7 +197,7 @@ class AuthController extends _$AuthController {
 
   /// 비밀번호 재설정
   Future<void> resetPassword({required String email}) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: () => null);
 
     try {
       await _authRepository.resetPassword(email: email);
@@ -205,7 +205,7 @@ class AuthController extends _$AuthController {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: () => e.toString(),
       );
       rethrow;
     }
@@ -213,6 +213,6 @@ class AuthController extends _$AuthController {
 
   /// 에러 클리어
   void clearError() {
-    state = state.copyWith(error: null);
+    state = state.copyWith(error: () => null);
   }
 }

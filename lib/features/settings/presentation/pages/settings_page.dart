@@ -556,7 +556,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (selections['schedules'] == true) {
       final data = await client
           .from('lesson_schedules')
-          .select('*, lesson_students!inner(student_name)')
+          .select('*, lesson_students(student_name)')
           .eq('pro_id', userId)
           .order('lesson_date', ascending: false);
       final rows = List<Map<String, dynamic>>.from(data);
@@ -586,7 +586,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (selections['notes'] == true) {
       final data = await client
           .from('lesson_notes')
-          .select('*, lesson_students!inner(student_name)')
+          .select('*, lesson_students(student_name)')
           .eq('pro_id', userId)
           .order('created_at', ascending: false);
       final rows = List<Map<String, dynamic>>.from(data);
@@ -616,7 +616,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (selections['packages'] == true) {
       final data = await client
           .from('lesson_packages')
-          .select('*, lesson_students!inner(student_name)')
+          .select('*, lesson_students(student_name)')
           .eq('pro_id', userId)
           .order('created_at', ascending: false);
       final rows = List<Map<String, dynamic>>.from(data);
@@ -650,18 +650,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           .from('pro_income_records')
           .select()
           .eq('pro_id', userId)
-          .order('income_date', ascending: false);
+          .order('payment_date', ascending: false);
       final rows = List<Map<String, dynamic>>.from(data);
 
       buffer.writeln('=== 수입 기록 ===');
       buffer.writeln('날짜,카테고리,금액,결제방법,설명');
       for (final r in rows) {
         buffer.writeln([
-          _csvEscape(r['income_date'] ?? ''),
-          _csvEscape(_incomeCategoryLabel(r['category'])),
+          _csvEscape(r['payment_date'] ?? ''),
+          _csvEscape(_incomeCategoryLabel(r['income_type'])),
           r['amount'] ?? 0,
           _csvEscape(_paymentMethodLabel(r['payment_method'])),
-          _csvEscape(r['description'] ?? ''),
+          _csvEscape(r['memo'] ?? ''),
         ].join(','));
       }
       buffer.writeln();

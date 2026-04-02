@@ -345,41 +345,46 @@ class SchedulePage extends ConsumerWidget {
                       Navigator.pop(context);
                       final user = ref.read(currentUserProvider);
 
-                      // 1. 레슨 상태 완료 처리
-                      await ref.read(scheduleRepositoryProvider)
-                          .updateScheduleStatus(schedule.id, 'completed');
-
-                      // 2. 패키지 횟수 차감
-                      if (schedule.packageId != null) {
-                        await ref.read(packageRepositoryProvider)
-                            .deductLesson(schedule.packageId!);
-                        ref.invalidate(packagesProvider);
-                      }
-
-                      // 3. [자동화] 수입 자동 기록
+                      // 1. 패키지 정보 미리 조회 (deduct 전에 해야 마지막 레슨도 기록됨)
+                      int perLessonAmount = 0;
                       if (user != null && schedule.packageId != null) {
                         try {
                           final packages = await ref.read(packageRepositoryProvider)
                               .getActivePackages(user.id, schedule.studentId);
                           final pkg = packages.where((p) => p.id == schedule.packageId).firstOrNull;
                           if (pkg != null && pkg.totalCount > 0) {
-                            final perLessonAmount = (pkg.price / pkg.totalCount).round();
-                            if (perLessonAmount > 0) {
-                              await ref.read(incomeRepositoryProvider).createIncomeRecord(
-                                proId: user.id,
-                                studentId: schedule.studentId,
-                                packageId: schedule.packageId,
-                                category: 'lesson',
-                                amount: perLessonAmount,
-                                incomeDate: schedule.lessonDate,
-                                description: '${schedule.studentName ?? "학생"} ${schedule.lessonTypeLabel}',
-                                paymentMethod: 'transfer',
-                              );
-                              ref.invalidate(monthlyIncomeRecordsProvider);
-                              ref.invalidate(monthlyTotalIncomeProvider);
-                            }
+                            perLessonAmount = (pkg.price / pkg.totalCount).round();
                           }
-                        } catch (_) {} // 수입 기록 실패해도 레슨 완료는 유지
+                        } catch (_) {}
+                      }
+
+                      // 2. 레슨 상태 완료 처리
+                      await ref.read(scheduleRepositoryProvider)
+                          .updateScheduleStatus(schedule.id, 'completed');
+
+                      // 3. 패키지 횟수 차감
+                      if (schedule.packageId != null) {
+                        await ref.read(packageRepositoryProvider)
+                            .deductLesson(schedule.packageId!);
+                        ref.invalidate(packagesProvider);
+                      }
+
+                      // 4. [자동화] 수입 자동 기록
+                      if (user != null && perLessonAmount > 0) {
+                        try {
+                          await ref.read(incomeRepositoryProvider).createIncomeRecord(
+                            proId: user.id,
+                            studentId: schedule.studentId,
+                            packageId: schedule.packageId,
+                            category: 'lesson',
+                            amount: perLessonAmount,
+                            incomeDate: schedule.lessonDate,
+                            description: '${schedule.studentName ?? "학생"} ${schedule.lessonTypeLabel}',
+                            paymentMethod: 'transfer',
+                          );
+                          ref.invalidate(monthlyIncomeRecordsProvider);
+                          ref.invalidate(monthlyTotalIncomeProvider);
+                        } catch (_) {}
                       }
 
                       // 4. [자동화] 학생 진도 자동 업데이트
@@ -484,12 +489,12 @@ class SchedulePage extends ConsumerWidget {
     );
   }
 
-  void _showNextLessonSuggestion(BuildContext context, WidgetRef ref, ScheduleEntity schedule) {
+  void _showNextLessonSuggestion(BuildContext outerContext, WidgetRef ref, ScheduleEntity schedule) {
     // 같은 요일, 같은 시간으로 다음 주 제안
     final nextDate = schedule.lessonDate.add(const Duration(days: 7));
 
     showDialog(
-      context: context,
+      context: outerContext,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
         title: Row(
@@ -556,8 +561,8 @@ class SchedulePage extends ConsumerWidget {
                 );
                 ref.invalidate(weeklySchedulesProvider);
                 ref.invalidate(todaySchedulesProvider);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                if (outerContext.mounted) {
+                  ScaffoldMessenger.of(outerContext).showSnackBar(
                     SnackBar(
                       content: Text('${nextDate.month}/${nextDate.day} 레슨이 예약되었습니다'),
                       backgroundColor: AppTheme.primaryColor,
@@ -565,8 +570,8 @@ class SchedulePage extends ConsumerWidget {
                   );
                 }
               } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                if (outerContext.mounted) {
+                  ScaffoldMessenger.of(outerContext).showSnackBar(
                     SnackBar(content: Text('예약 실패: $e'), backgroundColor: Colors.red),
                   );
                 }
@@ -898,7 +903,10 @@ class SchedulePage extends ConsumerWidget {
                                     while (!current.isAfter(repeatEndDate!)) {
                                       dates.add(current);
                                       if (repeatType == 'monthly') {
-                                        current = DateTime(current.year, current.month + 1, current.day);
+                                        final nextMonth = current.month + 1;
+                                        final lastDayOfNextMonth = DateTime(current.year, nextMonth + 1, 0).day;
+                                        final day = selectedDate.day > lastDayOfNextMonth ? lastDayOfNextMonth : selectedDate.day;
+                                        current = DateTime(current.year, nextMonth, day);
                                       } else {
                                         final intervalDays = repeatType == 'daily' ? 1 : repeatType == 'weekly' ? 7 : 14;
                                         current = current.add(Duration(days: intervalDays));
