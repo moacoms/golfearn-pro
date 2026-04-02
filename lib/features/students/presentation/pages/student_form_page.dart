@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/constants/database_constants.dart';
 import '../../../../core/constants/sport_constants.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -457,8 +458,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
           familyGroupId = familyStudent.familyGroupId;
         } else {
           // 새 UUID 생성하여 양쪽에 설정
-          familyGroupId = DateTime.now().millisecondsSinceEpoch.toRadixString(36) +
-              _selectedFamilyStudentId!.substring(0, 8);
+          familyGroupId = const Uuid().v4();
           await repo.updateStudent(_selectedFamilyStudentId!, {
             'family_group_id': familyGroupId,
           });
