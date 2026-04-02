@@ -469,30 +469,30 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
           ? null : _groupNameController.text.trim();
 
       if (isEditing) {
+        final phone = _phoneController.text.trim();
+        final email = _emailController.text.trim();
+        final memo = _memoController.text.trim();
+        final goal = _goalController.text.trim();
+
         final updateData = <String, dynamic>{
           'student_name': _nameController.text.trim(),
+          'student_phone': phone.isEmpty ? null : phone,
+          'student_email': email.isEmpty ? null : email,
+          'student_memo': memo.isEmpty ? null : memo,
+          'current_level': _selectedLevel,
+          'goal': goal.isEmpty ? null : goal,
+          'average_score': score,
+          'birth_date': _birthDate?.toIso8601String().split('T').first,
+          'gender': _selectedGender,
+          'started_golf_at': _startedGolfAt?.toIso8601String().split('T').first,
+          'group_name': groupName,
+          if (familyGroupId != null) 'family_group_id': familyGroupId,
+          if (lessonCount != null) 'total_lesson_count': lessonCount,
         };
-        // 빈 문자열은 보내지 않음 (null 대신)
-        final phone = _phoneController.text.trim();
-        if (phone.isNotEmpty) updateData['student_phone'] = phone;
-        final email = _emailController.text.trim();
-        if (email.isNotEmpty) updateData['student_email'] = email;
-        final memo = _memoController.text.trim();
-        if (memo.isNotEmpty) updateData['student_memo'] = memo;
-        if (_selectedLevel != null) updateData['current_level'] = _selectedLevel;
-        final goal = _goalController.text.trim();
-        if (goal.isNotEmpty) updateData['goal'] = goal;
-        if (score != null) updateData['average_score'] = score;
-        if (_birthDate != null) updateData['birth_date'] = _birthDate!.toIso8601String().split('T').first;
-        if (_selectedGender != null) updateData['gender'] = _selectedGender;
-        if (_startedGolfAt != null) updateData['started_golf_at'] = _startedGolfAt!.toIso8601String().split('T').first;
-        if (groupName != null) updateData['group_name'] = groupName;
-        if (familyGroupId != null) updateData['family_group_id'] = familyGroupId;
-        if (lessonCount != null) updateData['total_lesson_count'] = lessonCount;
 
         await repo.updateStudent(widget.student!.id, updateData);
       } else {
-        await repo.createStudent(
+        final newStudent = await repo.createStudent(
           proId: user.id,
           studentName: _nameController.text.trim(),
           studentPhone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
@@ -509,12 +509,6 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
 
         // 새 학생에게도 familyGroupId 설정 (가족 연결한 경우)
         if (familyGroupId != null) {
-          // 방금 생성한 학생 조회 후 업데이트
-          final allStudents = await repo.getStudents(user.id);
-          final newStudent = allStudents.firstWhere(
-            (s) => s.studentName == _nameController.text.trim(),
-            orElse: () => allStudents.last,
-          );
           await repo.updateStudent(newStudent.id, {
             'family_group_id': familyGroupId,
           });

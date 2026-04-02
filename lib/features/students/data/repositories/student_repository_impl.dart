@@ -89,7 +89,6 @@ class StudentRepositoryImpl {
   Future<StudentEntity> updateStudent(String studentId, Map<String, dynamic> data) async {
     try {
       data['updated_at'] = DateTime.now().toIso8601String();
-      data.removeWhere((key, value) => value == null && key != 'updated_at');
 
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonStudents)

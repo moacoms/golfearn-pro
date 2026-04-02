@@ -3,7 +3,6 @@ class IncomeEntity {
   final String proId;
   final String? studentId;
   final String? packageId;
-  final String? scheduleId;
   final String category; // lesson, package, other
   final int amount;
   final DateTime incomeDate;
@@ -18,7 +17,6 @@ class IncomeEntity {
     required this.proId,
     this.studentId,
     this.packageId,
-    this.scheduleId,
     this.category = 'lesson',
     required this.amount,
     required this.incomeDate,

@@ -47,7 +47,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     // 현재 위치에 따른 선택된 인덱스 업데이트
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final location = GoRouterState.of(context).uri.path;
-      final index = navItems.indexWhere((item) => item.route == location);
+      final index = navItems.indexWhere((item) =>
+          location == item.route || location.startsWith('${item.route}/'));
       if (index != -1 && index != _selectedIndex) {
         setState(() => _selectedIndex = index);
       }
