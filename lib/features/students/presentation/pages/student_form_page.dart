@@ -534,7 +534,11 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
         );
         context.pop();
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('========== 학생 저장 에러 ==========');
+      print('에러: $e');
+      print('스택: $stackTrace');
+      print('===================================');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

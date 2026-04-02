@@ -99,6 +99,7 @@ class StudentRepositoryImpl {
           .single();
       return StudentModel.fromJson(response).toEntity();
     } catch (e) {
+      print('학생 수정 에러 - studentId: $studentId, data: $data, error: $e');
       throw Exception('학생 정보 수정 실패: $e');
     }
   }
