@@ -469,21 +469,28 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
           ? null : _groupNameController.text.trim();
 
       if (isEditing) {
-        await repo.updateStudent(widget.student!.id, {
+        final updateData = <String, dynamic>{
           'student_name': _nameController.text.trim(),
-          'student_phone': _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
-          'student_email': _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
-          'student_memo': _memoController.text.trim().isEmpty ? null : _memoController.text.trim(),
-          'current_level': _selectedLevel,
-          'goal': _goalController.text.trim().isEmpty ? null : _goalController.text.trim(),
-          'average_score': score,
-          'birth_date': _birthDate?.toIso8601String().split('T').first,
-          'gender': _selectedGender,
-          'started_golf_at': _startedGolfAt?.toIso8601String().split('T').first,
-          'group_name': groupName,
-          if (familyGroupId != null) 'family_group_id': familyGroupId,
-          if (lessonCount != null) 'total_lesson_count': lessonCount,
-        });
+        };
+        // 빈 문자열은 보내지 않음 (null 대신)
+        final phone = _phoneController.text.trim();
+        if (phone.isNotEmpty) updateData['student_phone'] = phone;
+        final email = _emailController.text.trim();
+        if (email.isNotEmpty) updateData['student_email'] = email;
+        final memo = _memoController.text.trim();
+        if (memo.isNotEmpty) updateData['student_memo'] = memo;
+        if (_selectedLevel != null) updateData['current_level'] = _selectedLevel;
+        final goal = _goalController.text.trim();
+        if (goal.isNotEmpty) updateData['goal'] = goal;
+        if (score != null) updateData['average_score'] = score;
+        if (_birthDate != null) updateData['birth_date'] = _birthDate!.toIso8601String().split('T').first;
+        if (_selectedGender != null) updateData['gender'] = _selectedGender;
+        if (_startedGolfAt != null) updateData['started_golf_at'] = _startedGolfAt!.toIso8601String().split('T').first;
+        if (groupName != null) updateData['group_name'] = groupName;
+        if (familyGroupId != null) updateData['family_group_id'] = familyGroupId;
+        if (lessonCount != null) updateData['total_lesson_count'] = lessonCount;
+
+        await repo.updateStudent(widget.student!.id, updateData);
       } else {
         await repo.createStudent(
           proId: user.id,

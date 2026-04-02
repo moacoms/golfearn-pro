@@ -50,7 +50,7 @@ class DashboardPage extends ConsumerWidget {
               SizedBox(height: 24.h),
               _buildPackageAlerts(ref),
               _buildQuickActions(context),
-              SizedBox(height: 80.h), // 플로팅 네비 공간
+              SizedBox(height: 16.h),
                   ],
                 ),
               ),

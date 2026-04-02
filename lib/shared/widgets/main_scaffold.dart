@@ -58,7 +58,6 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       body: widget.child,
-      extendBody: true,
       bottomNavigationBar: _buildFloatingBottomNav(navItems, safeIndex),
     );
   }
