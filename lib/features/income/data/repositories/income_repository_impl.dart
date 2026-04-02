@@ -38,7 +38,6 @@ class IncomeRepositoryImpl {
     required String proId,
     String? studentId,
     String? packageId,
-    String? scheduleId,
     String category = 'lesson',
     required int amount,
     required DateTime incomeDate,

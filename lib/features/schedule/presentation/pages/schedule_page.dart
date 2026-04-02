@@ -315,9 +315,9 @@ class SchedulePage extends ConsumerWidget {
     }
   }
 
-  void _showScheduleActions(BuildContext context, WidgetRef ref, ScheduleEntity schedule) {
+  void _showScheduleActions(BuildContext pageContext, WidgetRef ref, ScheduleEntity schedule) {
     showModalBottomSheet(
-      context: context,
+      context: pageContext,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
       ),
@@ -369,7 +369,6 @@ class SchedulePage extends ConsumerWidget {
                                 proId: user.id,
                                 studentId: schedule.studentId,
                                 packageId: schedule.packageId,
-                                scheduleId: schedule.id,
                                 category: 'lesson',
                                 amount: perLessonAmount,
                                 incomeDate: schedule.lessonDate,
@@ -401,8 +400,8 @@ class SchedulePage extends ConsumerWidget {
                       ref.invalidate(todaySchedulesProvider);
 
                       // 5. [자동화] 다음 레슨 제안
-                      if (context.mounted) {
-                        _showNextLessonSuggestion(context, ref, schedule);
+                      if (pageContext.mounted) {
+                        _showNextLessonSuggestion(pageContext, ref, schedule);
                       }
                     },
                   ),
