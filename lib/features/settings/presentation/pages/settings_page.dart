@@ -1,8 +1,7 @@
 import 'dart:convert';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 
 import 'package:flutter/material.dart';
+import '../../../../core/utils/download_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -676,14 +675,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final dateStr =
         '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
     final name = filename ?? 'golfearn_export_$dateStr.csv';
-
-    final bytes = utf8.encode('\uFEFF$csvContent');
-    final blob = html.Blob([bytes], 'text/csv;charset=utf-8');
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    html.AnchorElement(href: url)
-      ..setAttribute('download', name)
-      ..click();
-    html.Url.revokeObjectUrl(url);
+    downloadCsvFile(csvContent, name);
   }
 
   /// CSV 값 이스케이프: 쉼표, 줄바꿈, 큰따옴표가 있으면 큰따옴표로 감쌈

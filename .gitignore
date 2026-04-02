@@ -45,6 +45,11 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Android signing
+android/key.properties
+*.jks
+*.keystore
+
 # Flutter SDK
 flutter_sdk.zip
 *.zip

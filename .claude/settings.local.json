@@ -16,7 +16,9 @@
       "Bash(pip3 install:*)",
       "Bash(python3:*)",
       "Bash(lsof -ti:5000)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(keytool:*)",
+      "Bash(export JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\")"
     ],
     "deny": [],
     "ask": []
