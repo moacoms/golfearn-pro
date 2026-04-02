@@ -15,17 +15,17 @@ class IncomeRepositoryImpl {
     try {
       var query = _supabaseService.client
           .from(DatabaseConstants.proIncomeRecords)
-          .select()
+          .select('*, lesson_students(student_name)')
           .eq('pro_id', proId);
 
       if (startDate != null) {
-        query = query.gte('income_date', startDate.toIso8601String().split('T').first);
+        query = query.gte('payment_date', startDate.toIso8601String().split('T').first);
       }
       if (endDate != null) {
-        query = query.lte('income_date', endDate.toIso8601String().split('T').first);
+        query = query.lte('payment_date', endDate.toIso8601String().split('T').first);
       }
 
-      final response = await query.order('income_date', ascending: false);
+      final response = await query.order('payment_date', ascending: false);
       final list = List<Map<String, dynamic>>.from(response);
       return list.map((json) => IncomeModel.fromJson(json).toEntity()).toList();
     } catch (e) {
@@ -46,24 +46,21 @@ class IncomeRepositoryImpl {
     String paymentMethod = 'cash',
   }) async {
     try {
-      final data = {
+      final data = <String, dynamic>{
         'pro_id': proId,
         if (studentId != null) 'student_id': studentId,
         if (packageId != null) 'package_id': packageId,
-        if (scheduleId != null) 'schedule_id': scheduleId,
-        'category': category,
+        'income_type': category,
         'amount': amount,
-        'income_date': incomeDate.toIso8601String().split('T').first,
-        'description': description,
+        'payment_date': incomeDate.toIso8601String().split('T').first,
         'payment_method': paymentMethod,
       };
-
-      data.removeWhere((key, value) => value == null);
+      if (description != null) data['memo'] = description;
 
       final response = await _supabaseService.client
           .from(DatabaseConstants.proIncomeRecords)
           .insert(data)
-          .select()
+          .select('*, lesson_students(student_name)')
           .single();
 
       return IncomeModel.fromJson(response).toEntity();
@@ -76,9 +73,9 @@ class IncomeRepositoryImpl {
     try {
       final response = await _supabaseService.client
           .from(DatabaseConstants.proIncomeRecords)
-          .select()
+          .select('*, lesson_students(student_name)')
           .eq('student_id', studentId)
-          .order('income_date', ascending: false);
+          .order('payment_date', ascending: false);
       final list = List<Map<String, dynamic>>.from(response);
       return list.map((json) => IncomeModel.fromJson(json).toEntity()).toList();
     } catch (e) {

@@ -5,12 +5,12 @@ class IncomeModel {
   final String proId;
   final String? studentId;
   final String? packageId;
-  final String? scheduleId;
-  final String category;
+  final String category; // DB: income_type
   final int amount;
-  final DateTime incomeDate;
-  final String? description;
+  final DateTime incomeDate; // DB: payment_date
+  final String? description; // DB: memo
   final String paymentMethod;
+  final bool taxIncluded;
   final String? studentName;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -20,20 +20,20 @@ class IncomeModel {
     required this.proId,
     this.studentId,
     this.packageId,
-    this.scheduleId,
     this.category = 'lesson',
     required this.amount,
     required this.incomeDate,
     this.description,
     this.paymentMethod = 'cash',
+    this.taxIncluded = false,
     this.studentName,
     this.createdAt,
     this.updatedAt,
   });
 
   factory IncomeModel.fromJson(Map<String, dynamic> json) {
-    String? name = json['student_name'] as String?;
-    if (name == null && json['lesson_students'] != null) {
+    String? name;
+    if (json['lesson_students'] != null && json['lesson_students'] is Map) {
       name = json['lesson_students']['student_name'] as String?;
     }
 
@@ -42,12 +42,12 @@ class IncomeModel {
       proId: json['pro_id'] as String,
       studentId: json['student_id'] as String?,
       packageId: json['package_id'] as String?,
-      scheduleId: json['schedule_id'] as String?,
-      category: json['category'] as String? ?? 'lesson',
+      category: json['income_type'] as String? ?? 'lesson',
       amount: json['amount'] as int,
-      incomeDate: DateTime.parse(json['income_date'] as String),
-      description: json['description'] as String?,
+      incomeDate: DateTime.parse(json['payment_date'] as String),
+      description: json['memo'] as String?,
       paymentMethod: json['payment_method'] as String? ?? 'cash',
+      taxIncluded: json['tax_included'] as bool? ?? false,
       studentName: name,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
@@ -63,12 +63,12 @@ class IncomeModel {
       'pro_id': proId,
       if (studentId != null) 'student_id': studentId,
       if (packageId != null) 'package_id': packageId,
-      if (scheduleId != null) 'schedule_id': scheduleId,
-      'category': category,
+      'income_type': category,
       'amount': amount,
-      'income_date': incomeDate.toIso8601String().split('T').first,
-      'description': description,
+      'payment_date': incomeDate.toIso8601String().split('T').first,
+      'memo': description,
       'payment_method': paymentMethod,
+      'tax_included': taxIncluded,
     };
   }
 
@@ -78,7 +78,6 @@ class IncomeModel {
       proId: proId,
       studentId: studentId,
       packageId: packageId,
-      scheduleId: scheduleId,
       category: category,
       amount: amount,
       incomeDate: incomeDate,
