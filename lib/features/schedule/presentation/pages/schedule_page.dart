@@ -404,9 +404,21 @@ class SchedulePage extends ConsumerWidget {
                       ref.invalidate(weeklySchedulesProvider);
                       ref.invalidate(todaySchedulesProvider);
 
-                      // 5. [자동화] 다음 레슨 제안
-                      if (pageContext.mounted) {
-                        _showNextLessonSuggestion(pageContext, ref, schedule);
+                      // 5. [자동화] 다음 레슨 제안 (다음 주에 이미 레슨 없을 때만)
+                      if (pageContext.mounted && user != null) {
+                        final nextDate = schedule.lessonDate.add(const Duration(days: 7));
+                        final nextWeekSchedules = await ref.read(scheduleRepositoryProvider)
+                            .getSchedules(
+                              proId: user.id,
+                              startDate: nextDate,
+                              endDate: nextDate.add(const Duration(days: 1)),
+                            );
+                        final alreadyExists = nextWeekSchedules.any((s) =>
+                            s.studentId == schedule.studentId &&
+                            s.lessonTime == schedule.lessonTime);
+                        if (!alreadyExists && pageContext.mounted) {
+                          _showNextLessonSuggestion(pageContext, ref, schedule);
+                        }
                       }
                     },
                   ),
