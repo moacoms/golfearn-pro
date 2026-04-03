@@ -293,7 +293,12 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('========== AI 레슨 노트 생성 에러 ==========');
+      print('studentId: $_selectedStudentId');
+      print('에러: $e');
+      print('스택: $stackTrace');
+      print('============================================');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
