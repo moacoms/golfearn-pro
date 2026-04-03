@@ -569,15 +569,18 @@ class SchedulePage extends ConsumerWidget {
                     ),
                   );
                 }
-              } catch (e, stackTrace) {
-                print('========== 다음 레슨 예약 에러 ==========');
-                print('schedule: ${schedule.id}, nextDate: $nextDate');
-                print('에러: $e');
-                print('스택: $stackTrace');
-                print('=======================================');
+              } catch (e) {
+                final errMsg = e.toString();
+                String userMessage;
+                if (errMsg.contains('23505') || errMsg.contains('duplicate')) {
+                  userMessage = '${nextDate.month}/${nextDate.day} ${schedule.lessonTime}에 이미 레슨이 있습니다';
+                } else {
+                  userMessage = '예약 실패: $errMsg';
+                }
+                print('다음 레슨 예약 에러: $e');
                 if (outerContext.mounted) {
                   ScaffoldMessenger.of(outerContext).showSnackBar(
-                    SnackBar(content: Text('예약 실패: $e'), backgroundColor: Colors.red),
+                    SnackBar(content: Text(userMessage), backgroundColor: Colors.orange),
                   );
                 }
               }
