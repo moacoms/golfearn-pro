@@ -1,5 +1,5 @@
 {
-  "buildCommand": ":",
+  "buildCommand": "echo \"SUPABASE_URL=$SUPABASE_URL\" > build/web/assets/.env && echo \"SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY\" >> build/web/assets/.env && echo \"ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY\" >> build/web/assets/.env",
   "outputDirectory": "build/web",
   "routes": [
     {
