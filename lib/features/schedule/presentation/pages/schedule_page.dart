@@ -569,7 +569,12 @@ class SchedulePage extends ConsumerWidget {
                     ),
                   );
                 }
-              } catch (e) {
+              } catch (e, stackTrace) {
+                print('========== 다음 레슨 예약 에러 ==========');
+                print('schedule: ${schedule.id}, nextDate: $nextDate');
+                print('에러: $e');
+                print('스택: $stackTrace');
+                print('=======================================');
                 if (outerContext.mounted) {
                   ScaffoldMessenger.of(outerContext).showSnackBar(
                     SnackBar(content: Text('예약 실패: $e'), backgroundColor: Colors.red),
