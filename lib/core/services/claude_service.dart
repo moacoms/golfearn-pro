@@ -115,15 +115,33 @@ ${briefInput != null && briefInput.isNotEmpty ? '## 오늘 레슨 키워드 (프
 
       final data = await _callClaude(prompt: prompt, maxTokens: 800);
       final text = data['content'][0]['text'] as String;
-      final jsonStr = text
+      print('AI 원본 응답: $text');
+
+      // JSON 추출 시도
+      String jsonStr = text
           .replaceAll(RegExp(r'```json\s*'), '')
           .replaceAll(RegExp(r'```\s*'), '')
           .trim();
-      return jsonDecode(jsonStr) as Map<String, dynamic>;
-    } catch (e) {
-      if (e.toString().contains('FormatException')) {
-        throw Exception('AI 응답 형식 오류. 다시 시도해주세요.');
+
+      // JSON 객체 부분만 추출 (앞뒤 텍스트 제거)
+      final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(jsonStr);
+      if (jsonMatch != null) {
+        jsonStr = jsonMatch.group(0)!;
       }
+
+      try {
+        return jsonDecode(jsonStr) as Map<String, dynamic>;
+      } catch (_) {
+        // JSON 파싱 실패 시 기본 구조로 반환
+        return {
+          'manual_note': text.length > 200 ? text.substring(0, 200) : text,
+          'key_points': <String>[],
+          'improvements': <String>[],
+          'homework': '',
+          'next_focus': '',
+        };
+      }
+    } catch (e) {
       throw Exception('AI 노트 생성 실패: $e');
     }
   }
