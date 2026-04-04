@@ -11,7 +11,7 @@ class ClaudeService {
   ClaudeService() {
     final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? '';
     _anonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
-    _proxyUrl = '$supabaseUrl/functions/v1/dynamic-function';
+    _proxyUrl = '$supabaseUrl/functions/v1/claude-proxy';
   }
 
   /// 스윙 분석 요청

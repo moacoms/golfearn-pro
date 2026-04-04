@@ -31308,7 +31308,7 @@ b9B(){var s,r=new A.am1(),q=$.Re().gHc().i(0,"SUPABASE_URL")
 if(q==null)q=""
 s=$.Re().gHc().i(0,"SUPABASE_ANON_KEY")
 r.b=s==null?"":s
-r.a=q+"/functions/v1/dynamic-function"
+r.a=q+"/functions/v1/claude-proxy"
 return r},
 am1:function am1(){this.b=this.a=$},
 b2W:function b2W(){},
