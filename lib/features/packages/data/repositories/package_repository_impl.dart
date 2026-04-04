@@ -85,6 +85,10 @@ class PackageRepositoryImpl {
 
       return PackageModel.fromJson(response).toEntity();
     } catch (e) {
+      print('========== 패키지 생성 에러 ==========');
+      print('데이터: $data');
+      print('에러: $e');
+      print('=====================================');
       throw Exception('패키지 생성 실패: $e');
     }
   }
