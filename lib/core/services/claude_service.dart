@@ -102,18 +102,19 @@ ${briefInput != null && briefInput.isNotEmpty ? '## 오늘 레슨 키워드 (프
 5. 전문적이면서도 따뜻하고 격려하는 톤으로 작성하세요
 
 ## 응답 형식
-반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트 없이 JSON만 출력하세요.
+반드시 아래 JSON 형식으로만 응답하세요. 코드블록(```) 없이 순수 JSON만 출력하세요.
+각 항목은 간결하게 1-2문장으로 작성하세요.
 
 {
-  "manual_note": "오늘 레슨 내용 요약 (3-4문장, 구체적으로)",
-  "key_points": ["핵심 포인트 1", "핵심 포인트 2", "핵심 포인트 3"],
-  "improvements": ["개선할 점 1 (구체적 동작 설명)", "개선할 점 2"],
-  "homework": "다음 레슨까지 연습할 과제 (구체적 드릴과 횟수 포함)",
-  "next_focus": "다음 레슨에서 집중할 내용 (이번 레슨과 연결)"
+  "manual_note": "오늘 레슨 내용 요약 (2-3문장)",
+  "key_points": ["핵심 포인트 1", "핵심 포인트 2"],
+  "improvements": ["개선할 점 1", "개선할 점 2"],
+  "homework": "연습 과제 (드릴명과 횟수)",
+  "next_focus": "다음 레슨 포커스 (1문장)"
 }
 ''';
 
-      final data = await _callClaude(prompt: prompt, maxTokens: 800);
+      final data = await _callClaude(prompt: prompt, maxTokens: 1500);
       final text = data['content'][0]['text'] as String;
       print('AI 원본 응답: $text');
 
