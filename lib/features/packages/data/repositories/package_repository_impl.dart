@@ -72,7 +72,7 @@ class PackageRepositoryImpl {
         'payment_status': paymentStatus,
       };
 
-      if (endDate != null) data['end_date'] = endDate.toIso8601String().split('T').first;
+      data['end_date'] = (endDate ?? startDate?.add(const Duration(days: 90)) ?? DateTime.now().add(const Duration(days: 90))).toIso8601String().split('T').first;
       if (paidAmount != null) data['paid_amount'] = paidAmount;
       if (paymentMethod != null) data['payment_method'] = paymentMethod;
 
