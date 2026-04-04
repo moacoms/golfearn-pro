@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ClaudeService {
-  static const String _model = 'claude-3-opus-20240229';
+  static const String _model = 'claude-haiku-4-5-20251001';
 
   late final String _proxyUrl;
   late final String _anonKey;

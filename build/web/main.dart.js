@@ -113519,7 +113519,7 @@ o===$&&A.a()
 n=t.N
 o=A.ad(["Content-Type","application/json","Authorization","Bearer "+o],n,n)
 s=3
-return A.q(A.aiS(l,B.aG.Ha(A.ad(["model","claude-3-opus-20240229","max_tokens",a,"messages",A.b([A.ad(["role","user","content",b],n,n)],t.m1)],n,t.K),null),null,o),$async$yG)
+return A.q(A.aiS(l,B.aG.Ha(A.ad(["model","claude-haiku-4-5-20251001","max_tokens",a,"messages",A.b([A.ad(["role","user","content",b],n,n)],t.m1)],n,t.K),null),null,o),$async$yG)
 case 3:m=d
 l=m.b
 if(l===200){q=B.aG.ts(0,A.lG(A.lC(m.e)).dr(0,m.w),null)
