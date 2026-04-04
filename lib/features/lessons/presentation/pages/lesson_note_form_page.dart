@@ -26,6 +26,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
   late final TextEditingController _keyPointsController;
   late final TextEditingController _improvementsController;
 
+  late final TextEditingController _aiBriefController;
   String? _selectedStudentId;
   bool _isLoading = false;
   bool _isAiGenerating = false;
@@ -45,6 +46,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
     _improvementsController = TextEditingController(
       text: n?.improvements?.join('\n') ?? '',
     );
+    _aiBriefController = TextEditingController();
     if (n != null) {
       _selectedStudentId = n.studentId;
     }
@@ -57,6 +59,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
     _nextFocusController.dispose();
     _keyPointsController.dispose();
     _improvementsController.dispose();
+    _aiBriefController.dispose();
     super.dispose();
   }
 
@@ -113,8 +116,46 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
               ),
               SizedBox(height: 16.h),
 
-              // AI 자동 생성 버튼
-              _buildAiGenerateButton(),
+              // AI 간단 메모 + 생성 버튼
+              Container(
+                padding: EdgeInsets.all(14.w),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.03),
+                  borderRadius: BorderRadius.circular(14.r),
+                  border: Border.all(color: AppTheme.primaryColor.withOpacity(0.1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.auto_awesome_rounded, size: 18.w, color: AppTheme.accentGold),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'AI 노트 생성',
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10.h),
+                    TextFormField(
+                      controller: _aiBriefController,
+                      maxLines: 2,
+                      decoration: _inputDecoration('').copyWith(
+                        hintText: '오늘 레슨 키워드 입력 (예: 드라이버 슬라이스 교정, 그립 변경)',
+                        hintStyle: TextStyle(fontSize: 13.sp, color: Colors.grey[400]),
+                        fillColor: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 10.h),
+                    _buildAiGenerateButton(),
+                  ],
+                ),
+              ),
               SizedBox(height: 16.h),
 
               // 레슨 내용
@@ -260,12 +301,18 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
       }
 
       final claude = ClaudeService();
+      final briefText = _aiBriefController.text.trim();
       final result = await claude.generateStructuredLessonNote(
         studentName: student.studentName,
         studentLevel: student.currentLevel,
         studentGoal: student.goal,
+        averageScore: student.averageScore,
+        totalLessonCount: student.totalLessonCount,
+        golfMonths: student.startedGolfAt != null
+            ? DateTime.now().difference(student.startedGolfAt!).inDays ~/ 30
+            : null,
         previousNotes: previousNotes,
-        briefInput: _noteController.text.isNotEmpty ? _noteController.text : null,
+        briefInput: briefText.isNotEmpty ? briefText : null,
       );
 
       if (mounted) {

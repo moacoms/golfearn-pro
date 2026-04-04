@@ -52,36 +52,65 @@ class ClaudeService {
     required String studentName,
     String? studentLevel,
     String? studentGoal,
-    String? lessonType,
+    int? averageScore,
+    int? totalLessonCount,
+    int? golfMonths,
     String? previousNotes,
     String? briefInput,
   }) async {
     try {
-      final prompt = '''
-당신은 골프 레슨프로의 레슨 노트 작성을 도와주는 AI입니다.
-아래 정보를 바탕으로 레슨 노트를 작성해주세요.
+      // 레벨별 맞춤 지시
+      String levelContext = '';
+      switch (studentLevel) {
+        case '입문':
+          levelContext = '이 학생은 골프를 처음 배우는 입문자입니다. 기본기(그립, 어드레스, 스윙 기초)에 집중하고, 용어를 쉽게 설명하세요. 작은 성취도 크게 격려해주세요.';
+          break;
+        case '초급':
+          levelContext = '이 학생은 기본기를 익힌 초급자입니다. 일관성 있는 스윙 만들기, 아이언 정확도, 기본 어프로치에 집중하세요.';
+          break;
+        case '중급':
+          levelContext = '이 학생은 중급자입니다. 코스 매니지먼트, 다양한 샷(페이드/드로우), 숏게임 정밀도, 멘탈 관리에 집중하세요.';
+          break;
+        case '상급':
+          levelContext = '이 학생은 상급자입니다. 세밀한 기술 조정, 경기 전략, 프리샷 루틴, 특수 상황 대처에 집중하세요.';
+          break;
+        default:
+          levelContext = '';
+      }
 
-## 학생 정보
+      final prompt = '''
+당신은 경험 많은 골프 레슨프로의 레슨 노트 작성 어시스턴트입니다.
+프로가 입력한 키워드와 학생 정보를 바탕으로, 실제 레슨에서 있었을 법한 구체적인 노트를 작성해주세요.
+
+## 학생 프로필
 - 이름: $studentName
 ${studentLevel != null ? '- 레벨: $studentLevel' : ''}
-${studentGoal != null ? '- 목표: $studentGoal' : ''}
-${lessonType != null ? '- 레슨 타입: $lessonType' : ''}
-${previousNotes != null ? '\n## 이전 레슨 기록\n$previousNotes' : ''}
-${briefInput != null && briefInput.isNotEmpty ? '\n## 프로의 간단 메모\n$briefInput' : ''}
+${averageScore != null ? '- 평균 스코어: ${averageScore}타' : ''}
+${totalLessonCount != null ? '- 누적 레슨 횟수: ${totalLessonCount}회' : ''}
+${golfMonths != null ? '- 골프 경력: ${golfMonths}개월' : ''}
+${studentGoal != null ? '- 학생 목표: $studentGoal' : ''}
+
+${levelContext.isNotEmpty ? '## 레벨 맞춤 지시\n$levelContext\n' : ''}
+${previousNotes != null ? '## 최근 레슨 기록 (이 내용과 이어지도록 작성)\n$previousNotes\n' : ''}
+${briefInput != null && briefInput.isNotEmpty ? '## 오늘 레슨 키워드 (프로가 입력)\n$briefInput\n\n이 키워드를 중심으로 구체적인 레슨 노트를 작성하세요.' : '## 참고\n학생의 레벨과 목표에 맞는 일반적인 레슨 노트를 작성하세요.'}
+
+## 작성 규칙
+1. 이전 레슨 기록이 있으면 반드시 연속성을 유지하세요 (이전 숙제 확인, 진전 언급)
+2. 학생 레벨에 맞는 난이도와 용어를 사용하세요
+3. 구체적인 드릴이나 연습 방법을 포함하세요 (예: "하프스윙 50회" 등 숫자 포함)
+4. 과제는 집에서 할 수 있는 실천 가능한 내용으로 작성하세요
+5. 전문적이면서도 따뜻하고 격려하는 톤으로 작성하세요
 
 ## 응답 형식
 반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트 없이 JSON만 출력하세요.
 
 {
-  "manual_note": "오늘 레슨 내용 요약 (2-3문장)",
+  "manual_note": "오늘 레슨 내용 요약 (3-4문장, 구체적으로)",
   "key_points": ["핵심 포인트 1", "핵심 포인트 2", "핵심 포인트 3"],
-  "improvements": ["개선할 점 1", "개선할 점 2"],
-  "homework": "다음 레슨까지 연습할 과제",
-  "next_focus": "다음 레슨에서 집중할 내용"
+  "improvements": ["개선할 점 1 (구체적 동작 설명)", "개선할 점 2"],
+  "homework": "다음 레슨까지 연습할 과제 (구체적 드릴과 횟수 포함)",
+  "next_focus": "다음 레슨에서 집중할 내용 (이번 레슨과 연결)"
 }
-
-전문적이면서도 따뜻하고 격려하는 톤으로 작성해주세요.
-학생의 레벨과 목표에 맞는 구체적인 내용을 포함하세요.
 ''';
 
       final data = await _callClaude(prompt: prompt, maxTokens: 800);
