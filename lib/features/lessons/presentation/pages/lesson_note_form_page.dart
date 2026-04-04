@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/sport_constants.dart';
 import '../../../../core/services/claude_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -225,13 +226,20 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
   }
 
   Widget _buildAiGenerateButton() {
-    return GestureDetector(
-      onTap: _isAiGenerating || _selectedStudentId == null ? null : _generateWithAi,
+    return FutureBuilder<int>(
+      future: _getTodayAiCount(),
+      builder: (context, snapshot) {
+        final usedCount = snapshot.data ?? 0;
+        final remaining = _maxDailyAiUses - usedCount;
+        final isLimitReached = remaining <= 0;
+
+        return GestureDetector(
+      onTap: _isAiGenerating || _selectedStudentId == null || isLimitReached ? null : _generateWithAi,
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          gradient: _selectedStudentId != null
+          gradient: _selectedStudentId != null && !isLimitReached
               ? AppTheme.primaryGradient
               : const LinearGradient(colors: [Color(0xFF9CA3AF), Color(0xFFD1D5DB)]),
           borderRadius: BorderRadius.circular(14.r),
@@ -257,10 +265,13 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
                 ),
               ),
             ] else ...[
-              Icon(Icons.auto_awesome_rounded, size: 22.w, color: AppTheme.accentGold),
+              Icon(Icons.auto_awesome_rounded, size: 22.w,
+                color: isLimitReached ? Colors.grey : AppTheme.accentGold),
               SizedBox(width: 10.w),
               Text(
-                'AI 레슨 노트 자동 생성',
+                isLimitReached
+                    ? '오늘 사용 횟수를 모두 소진했습니다'
+                    : 'AI 자동 생성 ($remaining/$_maxDailyAiUses)',
                 style: TextStyle(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w700,
@@ -272,10 +283,49 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
         ),
       ),
     );
+      },
+    );
+  }
+
+  static const int _maxDailyAiUses = 3;
+
+  Future<int> _getTodayAiCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().split('T').first;
+    final savedDate = prefs.getString('ai_note_date') ?? '';
+    if (savedDate != today) return 0;
+    return prefs.getInt('ai_note_count') ?? 0;
+  }
+
+  Future<void> _incrementAiCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().split('T').first;
+    final savedDate = prefs.getString('ai_note_date') ?? '';
+    if (savedDate != today) {
+      await prefs.setString('ai_note_date', today);
+      await prefs.setInt('ai_note_count', 1);
+    } else {
+      final count = prefs.getInt('ai_note_count') ?? 0;
+      await prefs.setInt('ai_note_count', count + 1);
+    }
   }
 
   Future<void> _generateWithAi() async {
     if (_selectedStudentId == null) return;
+
+    // 하루 사용 횟수 체크
+    final todayCount = await _getTodayAiCount();
+    if (todayCount >= _maxDailyAiUses) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('AI 생성은 하루 최대 ${_maxDailyAiUses}회까지 가능합니다 (오늘 ${todayCount}회 사용)'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
 
     setState(() => _isAiGenerating = true);
 
@@ -333,9 +383,11 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
             _nextFocusController.text = result['next_focus'];
           }
         });
+        await _incrementAiCount();
+        final remaining = _maxDailyAiUses - (todayCount + 1);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('AI 노트가 생성되었습니다. 수정 후 저장하세요!'),
+            content: Text('AI 노트가 생성되었습니다! (오늘 남은 횟수: ${remaining}회)'),
             backgroundColor: AppTheme.primaryColor,
           ),
         );
