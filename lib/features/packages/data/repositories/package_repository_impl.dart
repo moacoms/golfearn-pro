@@ -66,7 +66,6 @@ class PackageRepositoryImpl {
         'package_type': packageType,
         'total_count': totalCount,
         'used_count': 0,
-        'remaining_count': totalCount,
         'price': price,
         'start_date': (startDate ?? DateTime.now()).toIso8601String().split('T').first,
         'status': 'active',
@@ -102,12 +101,9 @@ class PackageRepositoryImpl {
           .single();
 
       final usedCount = (current['used_count'] as int? ?? 1) - 1;
-      final totalCount = current['total_count'] as int? ?? 0;
-      final remainingCount = totalCount - (usedCount < 0 ? 0 : usedCount);
 
       final updateData = <String, dynamic>{
         'used_count': usedCount < 0 ? 0 : usedCount,
-        'remaining_count': remainingCount,
         'status': 'active',
         'updated_at': DateTime.now().toIso8601String(),
       };
@@ -137,16 +133,15 @@ class PackageRepositoryImpl {
           .single();
 
       final usedCount = (current['used_count'] as int? ?? 0) + 1;
-      final remainingCount = (current['remaining_count'] as int? ?? 1) - 1;
+      final totalCount = current['total_count'] as int? ?? 0;
 
-      final updateData = {
+      final updateData = <String, dynamic>{
         'used_count': usedCount,
-        'remaining_count': remainingCount < 0 ? 0 : remainingCount,
         'updated_at': DateTime.now().toIso8601String(),
       };
 
       // 남은 횟수가 0이면 completed로 변경
-      if (remainingCount <= 0) {
+      if (usedCount >= totalCount) {
         updateData['status'] = 'completed';
       }
 
