@@ -79,7 +79,10 @@ class PackagesPage extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12.r),
         side: BorderSide(color: Colors.grey[200]!),
       ),
-      child: Padding(
+      child: InkWell(
+        onTap: () => _showPackageActions(context, ref, pkg),
+        borderRadius: BorderRadius.circular(12.r),
+        child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,6 +233,139 @@ class PackagesPage extends ConsumerWidget {
               ],
             ),
           ],
+        ),
+      ),
+      ),
+    );
+  }
+
+  void _showPackageActions(BuildContext context, WidgetRef ref, PackageEntity pkg) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${pkg.packageName} — ${pkg.studentName ?? "학생"}',
+                  style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 16.h),
+
+                // 결제 상태 변경
+                Text('결제 상태 변경', style: TextStyle(fontSize: 14.sp, color: Colors.grey[600])),
+                SizedBox(height: 8.h),
+                Row(
+                  children: [
+                    _buildStatusButton(context, ref, pkg, 'pending', '미결제', Colors.red),
+                    SizedBox(width: 8.w),
+                    _buildStatusButton(context, ref, pkg, 'partial', '부분결제', Colors.orange),
+                    SizedBox(width: 8.w),
+                    _buildStatusButton(context, ref, pkg, 'paid', '결제완료', AppTheme.primaryColor),
+                  ],
+                ),
+                SizedBox(height: 20.h),
+
+                // 패키지 상태 변경
+                Text('패키지 상태 변경', style: TextStyle(fontSize: 14.sp, color: Colors.grey[600])),
+                SizedBox(height: 8.h),
+                Row(
+                  children: [
+                    _buildPackageStatusButton(context, ref, pkg, 'active', '사용중', AppTheme.primaryColor),
+                    SizedBox(width: 8.w),
+                    _buildPackageStatusButton(context, ref, pkg, 'expired', '만료', Colors.orange),
+                    SizedBox(width: 8.w),
+                    _buildPackageStatusButton(context, ref, pkg, 'cancelled', '취소', Colors.grey),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatusButton(BuildContext context, WidgetRef ref, PackageEntity pkg, String status, String label, Color color) {
+    final isSelected = pkg.paymentStatus == status;
+    return Expanded(
+      child: GestureDetector(
+        onTap: isSelected ? null : () async {
+          Navigator.pop(context);
+          try {
+            await ref.read(packageRepositoryProvider).updatePackageField(pkg.id, {'payment_status': status});
+            ref.invalidate(packagesProvider);
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('변경 실패: $e'), backgroundColor: Colors.red),
+              );
+            }
+          }
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 10.h),
+          decoration: BoxDecoration(
+            color: isSelected ? color : color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(color: color),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : color,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPackageStatusButton(BuildContext context, WidgetRef ref, PackageEntity pkg, String status, String label, Color color) {
+    final isSelected = pkg.status == status;
+    return Expanded(
+      child: GestureDetector(
+        onTap: isSelected ? null : () async {
+          Navigator.pop(context);
+          try {
+            await ref.read(packageRepositoryProvider).updatePackageField(pkg.id, {'status': status});
+            ref.invalidate(packagesProvider);
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('변경 실패: $e'), backgroundColor: Colors.red),
+              );
+            }
+          }
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 10.h),
+          decoration: BoxDecoration(
+            color: isSelected ? color : color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(color: color),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : color,
+              ),
+            ),
+          ),
         ),
       ),
     );

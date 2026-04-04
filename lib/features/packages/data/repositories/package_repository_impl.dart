@@ -159,6 +159,19 @@ class PackageRepositoryImpl {
     }
   }
 
+  /// 패키지 필드 업데이트 (결제 상태, 패키지 상태 등)
+  Future<void> updatePackageField(String packageId, Map<String, dynamic> data) async {
+    try {
+      data['updated_at'] = DateTime.now().toIso8601String();
+      await _supabaseService.client
+          .from(DatabaseConstants.lessonPackages)
+          .update(data)
+          .eq(DatabaseConstants.packageId, packageId);
+    } catch (e) {
+      throw Exception('패키지 업데이트 실패: $e');
+    }
+  }
+
   /// 패키지 삭제 (취소)
   Future<void> cancelPackage(String packageId) async {
     try {
