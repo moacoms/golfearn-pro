@@ -84,25 +84,44 @@ final _myUpcomingLessonsProvider =
 /// 매칭 안 된 프로 목록 (전화번호 기반)
 final _unmatchedProsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final user = ref.watch(currentUserProvider);
-  if (user == null || user.phoneNumber == null) return [];
+  if (user == null) return [];
+
+  // 전화번호 가져오기: UserEntity.phoneNumber (pro_phone에서 읽음)
+  String? userPhone = user.phoneNumber;
+
+  // phoneNumber가 없으면 profiles에서 직접 조회
+  if (userPhone == null || userPhone.isEmpty) {
+    try {
+      final profile = await Supabase.instance.client
+          .from('profiles')
+          .select('pro_phone')
+          .eq('id', user.id)
+          .single();
+      userPhone = profile['pro_phone'] as String?;
+    } catch (_) {}
+  }
+
+  if (userPhone == null || userPhone.isEmpty) return [];
 
   // 전화번호 정규화 (하이픈 제거)
-  final phone = user.phoneNumber!.replaceAll('-', '');
+  final phone = userPhone.replaceAll('-', '');
 
-  // lesson_students에서 같은 전화번호 + user_id가 null인 레코드 조회
-  final response = await Supabase.instance.client
-      .from('lesson_students')
-      .select('id, pro_id, student_name, student_phone, profiles!lesson_students_pro_id_fkey(full_name, pro_phone)')
-      .isFilter('user_id', null)
-      .eq('is_active', true);
+  // lesson_students에서 같은 전화번호로 검색 (두 가지 형식 모두)
+  final phoneWithDash = '${phone.substring(0, 3)}-${phone.substring(3, 7)}-${phone.substring(7)}';
 
-  final list = List<Map<String, dynamic>>.from(response);
+  try {
+    final response = await Supabase.instance.client
+        .from('lesson_students')
+        .select('id, pro_id, student_name, student_phone, profiles!lesson_students_pro_id_fkey(full_name)')
+        .isFilter('user_id', null)
+        .eq('is_active', true)
+        .or('student_phone.eq.$phone,student_phone.eq.$phoneWithDash');
 
-  // 전화번호 매칭 (하이픈 제거 후 비교)
-  return list.where((record) {
-    final studentPhone = (record['student_phone'] as String?)?.replaceAll('-', '') ?? '';
-    return studentPhone == phone && studentPhone.isNotEmpty;
-  }).toList();
+    return List<Map<String, dynamic>>.from(response);
+  } catch (e) {
+    print('매칭 조회 에러: $e');
+    return [];
+  }
 });
 
 /// 연결된 프로 목록
