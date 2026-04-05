@@ -81,6 +81,44 @@ final _myUpcomingLessonsProvider =
   return List<Map<String, dynamic>>.from(response);
 });
 
+/// 매칭 안 된 프로 목록 (전화번호 기반)
+final _unmatchedProsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null || user.phoneNumber == null) return [];
+
+  // 전화번호 정규화 (하이픈 제거)
+  final phone = user.phoneNumber!.replaceAll('-', '');
+
+  // lesson_students에서 같은 전화번호 + user_id가 null인 레코드 조회
+  final response = await Supabase.instance.client
+      .from('lesson_students')
+      .select('id, pro_id, student_name, student_phone, profiles!lesson_students_pro_id_fkey(full_name, pro_phone)')
+      .isFilter('user_id', null)
+      .eq('is_active', true);
+
+  final list = List<Map<String, dynamic>>.from(response);
+
+  // 전화번호 매칭 (하이픈 제거 후 비교)
+  return list.where((record) {
+    final studentPhone = (record['student_phone'] as String?)?.replaceAll('-', '') ?? '';
+    return studentPhone == phone && studentPhone.isNotEmpty;
+  }).toList();
+});
+
+/// 연결된 프로 목록
+final _myProsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return [];
+
+  final response = await Supabase.instance.client
+      .from('lesson_students')
+      .select('id, pro_id, student_name, profiles!lesson_students_pro_id_fkey(full_name, pro_phone)')
+      .eq('user_id', user.id)
+      .eq('is_active', true);
+
+  return List<Map<String, dynamic>>.from(response);
+});
+
 // ──────────────────────────────────────────────
 // StudentDashboardPage
 // ──────────────────────────────────────────────
@@ -105,6 +143,8 @@ class StudentDashboardPage extends ConsumerWidget {
             ref.invalidate(_myTotalLessonCountProvider);
             ref.invalidate(_myActivePackagesProvider);
             ref.invalidate(_myUpcomingLessonsProvider);
+            ref.invalidate(_unmatchedProsProvider);
+            ref.invalidate(_myProsProvider);
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -113,6 +153,10 @@ class StudentDashboardPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildWelcomeHeader(userName),
+                SizedBox(height: 16.h),
+                _buildMatchingAlert(context, ref),
+                SizedBox(height: 16.h),
+                _buildMyProsSection(ref),
                 SizedBox(height: 24.h),
                 _buildQuickInfoCards(ref),
                 SizedBox(height: 24.h),
@@ -657,6 +701,214 @@ class StudentDashboardPage extends ConsumerWidget {
 
   // ──────────────────────────────────────────────
   // 5. Contact my pro section
+  // ──────────────────────────────────────────────
+  // 프로 매칭 알림
+  // ──────────────────────────────────────────────
+
+  Widget _buildMatchingAlert(BuildContext context, WidgetRef ref) {
+    final unmatchedAsync = ref.watch(_unmatchedProsProvider);
+
+    return unmatchedAsync.when(
+      data: (unmatched) {
+        if (unmatched.isEmpty) return const SizedBox.shrink();
+        return Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFF7ED), Color(0xFFFEF3C7)],
+            ),
+            borderRadius: BorderRadius.circular(14.r),
+            border: Border.all(color: AppTheme.accentGold.withOpacity(0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.link_rounded, size: 20.w, color: AppTheme.accentGold),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '레슨프로 연결 요청',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF92400E),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              ...unmatched.map((record) {
+                String proName = '레슨프로';
+                final profiles = record['profiles'];
+                if (profiles != null && profiles is Map) {
+                  proName = (profiles['full_name'] as String?) ?? '레슨프로';
+                }
+                return Container(
+                  margin: EdgeInsets.only(bottom: 8.h),
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20.r,
+                        backgroundColor: _primary.withOpacity(0.1),
+                        child: Icon(Icons.person, color: _primary, size: 22.w),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$proName 프로',
+                              style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              '회원님을 학생으로 등록했습니다',
+                              style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => _acceptMatching(context, ref, record),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primary,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                        ),
+                        child: Text('연결', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600)),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Future<void> _acceptMatching(BuildContext context, WidgetRef ref, Map<String, dynamic> record) async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+
+    try {
+      await Supabase.instance.client
+          .from('lesson_students')
+          .update({'user_id': user.id})
+          .eq('id', record['id']);
+
+      ref.invalidate(_unmatchedProsProvider);
+      ref.invalidate(_myProsProvider);
+      ref.invalidate(_myStudentRecordIdsProvider);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('레슨프로와 연결되었습니다!'),
+            backgroundColor: _primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('연결 실패: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  // ──────────────────────────────────────────────
+  // 내 레슨프로 목록
+  // ──────────────────────────────────────────────
+
+  Widget _buildMyProsSection(WidgetRef ref) {
+    final myProsAsync = ref.watch(_myProsProvider);
+
+    return myProsAsync.when(
+      data: (pros) {
+        if (pros.isEmpty) return const SizedBox.shrink();
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            boxShadow: AppTheme.cardShadow,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.sports_golf_rounded, size: 20.w, color: _primary),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '내 레슨프로',
+                    style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              ...pros.map((record) {
+                String proName = '레슨프로';
+                final profiles = record['profiles'];
+                if (profiles != null && profiles is Map) {
+                  proName = (profiles['full_name'] as String?) ?? '레슨프로';
+                }
+                return Container(
+                  margin: EdgeInsets.only(bottom: 8.h),
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: _primary.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(10.r),
+                    border: Border.all(color: _primary.withOpacity(0.1)),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18.r,
+                        backgroundColor: _primary.withOpacity(0.1),
+                        child: Text(
+                          proName.isNotEmpty ? proName[0] : '?',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: _primary,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Text(
+                          '$proName 프로',
+                          style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Icon(Icons.verified, size: 18.w, color: _primary),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
   // ──────────────────────────────────────────────
 
   Widget _buildContactProSection() {
