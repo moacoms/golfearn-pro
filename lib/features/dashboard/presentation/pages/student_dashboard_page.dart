@@ -105,19 +105,33 @@ final _unmatchedProsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) 
 
   // 전화번호 정규화 (하이픈 제거)
   final phone = userPhone.replaceAll('-', '');
-
-  // lesson_students에서 같은 전화번호로 검색 (두 가지 형식 모두)
-  final phoneWithDash = '${phone.substring(0, 3)}-${phone.substring(3, 7)}-${phone.substring(7)}';
+  print('===== 학생 매칭 시작 =====');
+  print('user.id: ${user.id}');
+  print('userPhone: $userPhone → 정규화: $phone');
 
   try {
-    final response = await Supabase.instance.client
+    // 1단계: user_id가 null이고 is_active인 전체 학생 조회
+    final allResponse = await Supabase.instance.client
         .from('lesson_students')
-        .select('id, pro_id, student_name, student_phone, profiles!lesson_students_pro_id_fkey(full_name)')
-        .isFilter('user_id', null)
-        .eq('is_active', true)
-        .or('student_phone.eq.$phone,student_phone.eq.$phoneWithDash');
+        .select('id, pro_id, student_name, student_phone, user_id, profiles!lesson_students_pro_id_fkey(full_name)')
+        .eq('is_active', true);
 
-    return List<Map<String, dynamic>>.from(response);
+    final allList = List<Map<String, dynamic>>.from(allResponse);
+    print('전체 활성 학생 수: ${allList.length}');
+    for (final r in allList) {
+      print('  - ${r['student_name']}: phone=${r['student_phone']}, user_id=${r['user_id']}');
+    }
+
+    // 2단계: 전화번호 매칭 + user_id가 null인 것만 필터
+    final matched = allList.where((record) {
+      final studentPhone = (record['student_phone'] as String?)?.replaceAll('-', '') ?? '';
+      final userId = record['user_id'];
+      return studentPhone == phone && userId == null;
+    }).toList();
+
+    print('매칭 결과: ${matched.length}건');
+    print('===========================');
+    return matched;
   } catch (e) {
     print('매칭 조회 에러: $e');
     return [];
