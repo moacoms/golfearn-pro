@@ -132,6 +132,25 @@ final studentWeeklySchedulesProvider = FutureProvider<List<ScheduleEntity>>((ref
   }).toList();
 });
 
+/// 학생의 다음 예정 레슨 날짜
+final studentNextLessonDateProvider = FutureProvider<DateTime?>((ref) async {
+  final studentIds = await ref.watch(studentRecordIdsProvider.future);
+  if (studentIds.isEmpty) return null;
+
+  final today = DateTime.now().toIso8601String().split('T').first;
+  final response = await Supabase.instance.client
+      .from('lesson_schedules')
+      .select('lesson_date')
+      .inFilter('student_id', studentIds)
+      .gte('lesson_date', today)
+      .order('lesson_date')
+      .limit(1);
+
+  final list = List<Map<String, dynamic>>.from(response);
+  if (list.isEmpty) return null;
+  return DateTime.parse(list.first['lesson_date'] as String);
+});
+
 /// 학생용 선택된 날짜의 스케줄
 final studentDailySchedulesProvider = Provider<AsyncValue<List<ScheduleEntity>>>((ref) {
   final schedulesAsync = ref.watch(studentWeeklySchedulesProvider);

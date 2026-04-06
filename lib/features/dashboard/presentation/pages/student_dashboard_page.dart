@@ -861,6 +861,60 @@ class StudentDashboardPage extends ConsumerWidget {
     }
   }
 
+  void _showProDetailDialog(BuildContext context, String proName, String proPhone) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        contentPadding: EdgeInsets.all(24.w),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 32.r,
+              backgroundColor: _primary.withOpacity(0.1),
+              child: Text(
+                proName.isNotEmpty ? proName[0] : '?',
+                style: TextStyle(fontSize: 28.sp, fontWeight: FontWeight.bold, color: _primary),
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              '$proName 프로',
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.h),
+            if (proPhone.isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.phone, size: 18.w, color: _primary),
+                    SizedBox(width: 10.w),
+                    Text(
+                      proPhone,
+                      style: TextStyle(fontSize: 14.sp, color: Colors.black87),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('닫기', style: TextStyle(color: _primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ──────────────────────────────────────────────
   // 내 레슨프로 목록
   // ──────────────────────────────────────────────
@@ -899,37 +953,44 @@ class StudentDashboardPage extends ConsumerWidget {
                 if (profiles != null && profiles is Map) {
                   proName = (profiles['full_name'] as String?) ?? '레슨프로';
                 }
-                return Container(
-                  margin: EdgeInsets.only(bottom: 8.h),
-                  padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
-                    color: _primary.withOpacity(0.04),
-                    borderRadius: BorderRadius.circular(10.r),
-                    border: Border.all(color: _primary.withOpacity(0.1)),
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 18.r,
-                        backgroundColor: _primary.withOpacity(0.1),
-                        child: Text(
-                          proName.isNotEmpty ? proName[0] : '?',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: _primary,
+                String proPhone = '';
+                if (profiles != null && profiles is Map) {
+                  proPhone = (profiles['pro_phone'] as String?) ?? '';
+                }
+                return GestureDetector(
+                  onTap: () => _showProDetailDialog(context, proName, proPhone),
+                  child: Container(
+                    margin: EdgeInsets.only(bottom: 8.h),
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: _primary.withOpacity(0.04),
+                      borderRadius: BorderRadius.circular(10.r),
+                      border: Border.all(color: _primary.withOpacity(0.1)),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18.r,
+                          backgroundColor: _primary.withOpacity(0.1),
+                          child: Text(
+                            proName.isNotEmpty ? proName[0] : '?',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              color: _primary,
+                            ),
                           ),
                         ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Text(
-                          '$proName 프로',
-                          style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Text(
+                            '$proName 프로',
+                            style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
+                          ),
                         ),
-                      ),
-                      Icon(Icons.verified, size: 18.w, color: _primary),
-                    ],
+                        Icon(Icons.chevron_right, size: 20.w, color: Colors.grey[400]),
+                      ],
+                    ),
                   ),
                 );
               }),

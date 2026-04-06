@@ -13,17 +13,37 @@ import '../../../income/presentation/providers/income_provider.dart';
 import '../providers/schedule_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 
-class SchedulePage extends ConsumerWidget {
+class SchedulePage extends ConsumerStatefulWidget {
   const SchedulePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SchedulePage> createState() => _SchedulePageState();
+}
+
+class _SchedulePageState extends ConsumerState<SchedulePage> {
+  bool _didJumpToNextLesson = false;
+
+  @override
+  Widget build(BuildContext context) {
     final isLessonPro = ref.watch(isLessonProProvider);
     final selectedDate = ref.watch(selectedDateProvider);
     final weekStart = ref.watch(selectedWeekStartProvider);
     final dailyAsync = isLessonPro
         ? ref.watch(dailySchedulesProvider)
         : ref.watch(studentDailySchedulesProvider);
+
+    // 학생: 첫 로드 시 다음 예정 레슨 날짜로 이동
+    if (!isLessonPro && !_didJumpToNextLesson) {
+      final nextDateAsync = ref.watch(studentNextLessonDateProvider);
+      nextDateAsync.whenData((date) {
+        if (date != null && !_didJumpToNextLesson) {
+          _didJumpToNextLesson = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref.read(selectedDateProvider.notifier).update(date);
+          });
+        }
+      });
+    }
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
