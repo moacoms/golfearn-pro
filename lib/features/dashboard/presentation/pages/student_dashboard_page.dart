@@ -189,7 +189,7 @@ class StudentDashboardPage extends ConsumerWidget {
                 SizedBox(height: 16.h),
                 _buildMatchingAlert(context, ref),
                 SizedBox(height: 16.h),
-                _buildMyProsSection(ref),
+                _buildMyProsSection(context, ref),
                 SizedBox(height: 24.h),
                 _buildQuickInfoCards(ref),
                 SizedBox(height: 24.h),
@@ -919,7 +919,7 @@ class StudentDashboardPage extends ConsumerWidget {
   // 내 레슨프로 목록
   // ──────────────────────────────────────────────
 
-  Widget _buildMyProsSection(WidgetRef ref) {
+  Widget _buildMyProsSection(BuildContext context, WidgetRef ref) {
     final myProsAsync = ref.watch(_myProsProvider);
 
     return myProsAsync.when(
