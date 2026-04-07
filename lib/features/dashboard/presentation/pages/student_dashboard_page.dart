@@ -468,16 +468,21 @@ class StudentDashboardPage extends ConsumerWidget {
 
     final scheduleId = lessonData['id'] as String?;
 
-    return GestureDetector(
-      onTap: scheduleId != null ? () => _showLessonCancelDialog(context, ref, lessonData) : null,
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12.h),
-        padding: EdgeInsets.all(14.w),
-        decoration: BoxDecoration(
-          color: _primary.withOpacity(0.04),
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: Material(
+        color: _primary.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(10.r),
+        child: InkWell(
+          onTap: scheduleId != null ? () => _showLessonCancelDialog(context, ref, lessonData) : null,
           borderRadius: BorderRadius.circular(10.r),
-          border: Border.all(color: _primary.withOpacity(0.15)),
-        ),
+          splashColor: _primary.withOpacity(0.1),
+          child: Container(
+            padding: EdgeInsets.all(14.w),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10.r),
+              border: Border.all(color: _primary.withOpacity(0.15)),
+            ),
         child: Row(
           children: [
             // Date badge
@@ -563,6 +568,8 @@ class StudentDashboardPage extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+      ),
       ),
     );
   }
