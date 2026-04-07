@@ -22,10 +22,7 @@ class SettingsPage extends ConsumerStatefulWidget {
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   static const _kDefaultDurationKey = 'default_lesson_duration';
-  static const _kDefaultPriceKey = 'default_lesson_price';
-
   int _defaultDuration = 60;
-  String _defaultPrice = '';
   bool _isLoadingPrefs = true;
 
   @override
@@ -38,7 +35,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _defaultDuration = prefs.getInt(_kDefaultDurationKey) ?? 60;
-      _defaultPrice = prefs.getString(_kDefaultPriceKey) ?? '';
       _isLoadingPrefs = false;
     });
   }
@@ -47,12 +43,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_kDefaultDurationKey, duration);
     setState(() => _defaultDuration = duration);
-  }
-
-  Future<void> _savePrice(String price) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kDefaultPriceKey, price);
-    setState(() => _defaultPrice = price);
   }
 
   @override
@@ -244,43 +234,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
         ),
         Divider(height: 1, color: const Color(0xFFF3F4F6), indent: 52.w),
-        // Default lesson price
+        // Default lesson price — linked to profile
         _settingsTile(
           icon: Icons.monetization_on_outlined,
           title: '기본 레슨 가격',
-          trailing: SizedBox(
-            width: 120.w,
-            child: TextField(
-              controller: TextEditingController(text: _defaultPrice),
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.primaryColor,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '프로필에서 설정',
+                style: TextStyle(fontSize: 13.sp, color: Colors.grey[500]),
               ),
-              decoration: InputDecoration(
-                hintText: '0',
-                hintStyle: TextStyle(
-                  fontSize: 14.sp,
-                  color: const Color(0xFFD1D5DB),
-                ),
-                suffixText: '원',
-                suffixStyle: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF6B7280),
-                ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-                isDense: true,
-              ),
-              onSubmitted: _savePrice,
-              onTapOutside: (_) {
-                FocusScope.of(context).unfocus();
-              },
-            ),
+              SizedBox(width: 4.w),
+              Icon(Icons.chevron_right, size: 20.w, color: Colors.grey[400]),
+            ],
           ),
+          onTap: () => _showEditProfileDialog(ref.read(currentUserProvider)),
         ),
       ],
     );

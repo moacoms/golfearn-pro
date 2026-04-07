@@ -187,7 +187,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
           Expanded(
             child: dailyAsync.when(
               data: (schedules) {
-                if (schedules.isEmpty) {
+                if (schedules.isEmpty && isLessonPro) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -202,6 +202,43 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                     ),
                   );
                 }
+
+                // 학생: 선택 날짜 레슨 + 다가오는 레슨 리스트
+                if (!isLessonPro) {
+                  final upcomingAsync = ref.watch(studentUpcomingSchedulesProvider);
+                  return ListView(
+                    padding: EdgeInsets.all(16.w),
+                    children: [
+                      if (schedules.isNotEmpty) ...[
+                        Text('선택한 날짜', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.grey[500])),
+                        SizedBox(height: 8.h),
+                        ...schedules.map((s) => _buildScheduleCard(context, ref, s, isLessonPro: false)),
+                        SizedBox(height: 16.h),
+                      ],
+                      Text('다가오는 레슨', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.grey[500])),
+                      SizedBox(height: 8.h),
+                      upcomingAsync.when(
+                        data: (upcoming) {
+                          if (upcoming.isEmpty) {
+                            return Padding(
+                              padding: EdgeInsets.symmetric(vertical: 24.h),
+                              child: Center(child: Text('예정된 레슨이 없습니다', style: TextStyle(fontSize: 14.sp, color: Colors.grey[400]))),
+                            );
+                          }
+                          return Column(
+                            children: upcoming.map((s) => _buildScheduleCard(context, ref, s, isLessonPro: false, showDate: true)).toList(),
+                          );
+                        },
+                        loading: () => Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24.h),
+                          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        ),
+                        error: (_, __) => const SizedBox.shrink(),
+                      ),
+                    ],
+                  );
+                }
+
                 return ListView.builder(
                   padding: EdgeInsets.all(16.w),
                   itemCount: schedules.length,
@@ -219,8 +256,9 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
     );
   }
 
-  Widget _buildScheduleCard(BuildContext context, WidgetRef ref, ScheduleEntity schedule, {bool isLessonPro = true}) {
+  Widget _buildScheduleCard(BuildContext context, WidgetRef ref, ScheduleEntity schedule, {bool isLessonPro = true, bool showDate = false}) {
     final statusColor = _getStatusColor(schedule.status);
+    final weekdays = ['', '월', '화', '수', '목', '금', '토', '일'];
 
     return Card(
       margin: EdgeInsets.only(bottom: 12.h),
@@ -236,15 +274,26 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
           padding: EdgeInsets.all(16.w),
           child: Row(
             children: [
-              // 시간 표시
+              // 날짜 + 시간 표시
               SizedBox(
-                width: 60.w,
+                width: showDate ? 70.w : 60.w,
                 child: Column(
                   children: [
+                    if (showDate) ...[
+                      Text(
+                        '${schedule.lessonDate.month}/${schedule.lessonDate.day}',
+                        style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                      ),
+                      Text(
+                        weekdays[schedule.lessonDate.weekday],
+                        style: TextStyle(fontSize: 11.sp, color: Colors.grey[500]),
+                      ),
+                      SizedBox(height: 2.h),
+                    ],
                     Text(
                       schedule.lessonTime,
                       style: TextStyle(
-                        fontSize: 16.sp,
+                        fontSize: showDate ? 14.sp : 16.sp,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.primaryColor,
                       ),

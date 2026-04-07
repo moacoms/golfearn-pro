@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../students/presentation/providers/student_provider.dart';
 import '../../../students/domain/entities/student_entity.dart';
@@ -424,11 +425,28 @@ class PackagesPage extends ConsumerWidget {
     }
   }
 
-  void _showPackageForm(BuildContext context, WidgetRef ref, List<StudentEntity> students) {
+  void _showPackageForm(BuildContext context, WidgetRef ref, List<StudentEntity> students) async {
+    // 프로필에서 기본 레슨비 조회
+    String defaultPrice = '';
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId != null) {
+        final profile = await Supabase.instance.client
+            .from('profiles')
+            .select('pro_monthly_fee')
+            .eq('id', userId)
+            .single();
+        final fee = profile['pro_monthly_fee'] as num?;
+        if (fee != null) defaultPrice = fee.toInt().toString();
+      }
+    } catch (_) {}
+
+    if (!context.mounted) return;
+
     String? selectedStudentId;
     final nameController = TextEditingController(text: '레슨 10회권');
     final countController = TextEditingController(text: '10');
-    final priceController = TextEditingController();
+    final priceController = TextEditingController(text: defaultPrice);
     String paymentStatus = 'pending';
     String? paymentMethod;
 

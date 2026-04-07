@@ -151,6 +151,42 @@ final studentNextLessonDateProvider = FutureProvider<DateTime?>((ref) async {
   return DateTime.parse(list.first['lesson_date'] as String);
 });
 
+/// 학생의 다가오는 레슨 목록 (오늘 이후, 최대 10건)
+final studentUpcomingSchedulesProvider = FutureProvider<List<ScheduleEntity>>((ref) async {
+  final studentIds = await ref.watch(studentRecordIdsProvider.future);
+  if (studentIds.isEmpty) return [];
+
+  final today = DateTime.now().toIso8601String().split('T').first;
+  final response = await Supabase.instance.client
+      .from('lesson_schedules')
+      .select('*')
+      .inFilter('student_id', studentIds)
+      .eq('status', 'scheduled')
+      .gte('lesson_date', today)
+      .order('lesson_date')
+      .order('lesson_time')
+      .limit(10);
+
+  final list = List<Map<String, dynamic>>.from(response);
+  if (list.isEmpty) return [];
+
+  final proIds = list.map((e) => e['pro_id'] as String).toSet().toList();
+  final profilesResp = await Supabase.instance.client
+      .from('profiles')
+      .select('id, full_name')
+      .inFilter('id', proIds);
+  final proNames = <String, String>{};
+  for (final p in List<Map<String, dynamic>>.from(profilesResp)) {
+    proNames[p['id'] as String] = (p['full_name'] as String?) ?? '레슨프로';
+  }
+
+  return list.map((json) {
+    final entity = ScheduleModel.fromJson(json).toEntity();
+    final proName = proNames[json['pro_id'] as String] ?? '레슨프로';
+    return entity.copyWith(studentName: proName);
+  }).toList();
+});
+
 /// 학생용 선택된 날짜의 스케줄
 final studentDailySchedulesProvider = Provider<AsyncValue<List<ScheduleEntity>>>((ref) {
   final schedulesAsync = ref.watch(studentWeeklySchedulesProvider);
