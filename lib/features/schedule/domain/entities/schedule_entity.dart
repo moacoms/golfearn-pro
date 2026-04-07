@@ -10,6 +10,7 @@ class ScheduleEntity {
   final String? location;
   final String? lessonType; // regular, playing, short_game, putting
   final String? memo;
+  final String? recurringGroupId;
   final String? studentName; // join으로 가져올 때
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -26,6 +27,7 @@ class ScheduleEntity {
     this.location,
     this.lessonType,
     this.memo,
+    this.recurringGroupId,
     this.studentName,
     this.createdAt,
     this.updatedAt,
@@ -43,6 +45,7 @@ class ScheduleEntity {
     String? location,
     String? lessonType,
     String? memo,
+    String? recurringGroupId,
     String? studentName,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -59,6 +62,7 @@ class ScheduleEntity {
       location: location ?? this.location,
       lessonType: lessonType ?? this.lessonType,
       memo: memo ?? this.memo,
+      recurringGroupId: recurringGroupId ?? this.recurringGroupId,
       studentName: studentName ?? this.studentName,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

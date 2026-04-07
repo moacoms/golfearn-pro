@@ -505,7 +505,7 @@ class _FindProPageState extends ConsumerState<FindProPage> {
               if (cert.isNotEmpty)
                 _detailRow(Icons.verified_outlined, '자격증', cert),
               if (fee != null)
-                _detailRow(Icons.payments_outlined, '레슨비', '${fee.toInt()}만원'),
+                _detailRow(Icons.payments_outlined, '레슨비', _formatPrice(fee.toInt())),
               if (phone.isNotEmpty)
                 _detailRow(Icons.phone_outlined, '연락처', phone),
 
@@ -589,6 +589,16 @@ class _FindProPageState extends ConsumerState<FindProPage> {
         ),
       ),
     );
+  }
+
+  String _formatPrice(int price) {
+    final str = price.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) buffer.write(',');
+      buffer.write(str[i]);
+    }
+    return '${buffer}원';
   }
 
   Widget _detailRow(IconData icon, String label, String value) {

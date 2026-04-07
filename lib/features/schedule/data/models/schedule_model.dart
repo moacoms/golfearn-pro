@@ -12,6 +12,7 @@ class ScheduleModel {
   final String? location;
   final String? lessonType;
   final String? memo;
+  final String? recurringGroupId;
   final String? studentName;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -28,6 +29,7 @@ class ScheduleModel {
     this.location,
     this.lessonType,
     this.memo,
+    this.recurringGroupId,
     this.studentName,
     this.createdAt,
     this.updatedAt,
@@ -51,6 +53,7 @@ class ScheduleModel {
       location: json['location'] as String?,
       lessonType: json['lesson_type'] as String?,
       memo: json['memo'] as String?,
+      recurringGroupId: json['recurring_group_id'] as String?,
       studentName: name,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
@@ -73,6 +76,7 @@ class ScheduleModel {
       'location': location,
       'lesson_type': lessonType,
       'memo': memo,
+      if (recurringGroupId != null) 'recurring_group_id': recurringGroupId,
     };
   }
 
@@ -89,6 +93,7 @@ class ScheduleModel {
       location: location,
       lessonType: lessonType,
       memo: memo,
+      recurringGroupId: recurringGroupId,
       studentName: studentName,
       createdAt: createdAt,
       updatedAt: updatedAt,

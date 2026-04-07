@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/constants/database_constants.dart';
 import '../../../../core/constants/sport_constants.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -553,7 +554,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                 ],
                 ListTile(
                   leading: const Icon(Icons.delete, color: Colors.red),
-                  title: const Text('삭제'),
+                  title: const Text('이 레슨만 삭제'),
                   onTap: () async {
                     Navigator.pop(context);
                     await ref.read(scheduleRepositoryProvider)
@@ -562,6 +563,45 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                     ref.invalidate(todaySchedulesProvider);
                   },
                 ),
+                if (schedule.recurringGroupId != null)
+                  ListTile(
+                    leading: const Icon(Icons.delete_sweep, color: Colors.red),
+                    title: const Text('반복 레슨 전체 삭제'),
+                    subtitle: const Text('예정된 반복 레슨을 모두 삭제합니다'),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final confirmed = await showDialog<bool>(
+                        context: pageContext,
+                        builder: (ctx) => AlertDialog(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                          title: const Text('반복 레슨 전체 삭제'),
+                          content: const Text('이 반복 레슨에 속한 예정된 레슨을 모두 삭제합니다.\n이미 완료된 레슨은 유지됩니다.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text('취소'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                              child: const Text('전체 삭제'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true) {
+                        final count = await ref.read(scheduleRepositoryProvider)
+                            .deleteByRecurringGroup(schedule.recurringGroupId!);
+                        ref.invalidate(weeklySchedulesProvider);
+                        ref.invalidate(todaySchedulesProvider);
+                        if (pageContext.mounted) {
+                          ScaffoldMessenger.of(pageContext).showSnackBar(
+                            SnackBar(content: Text('반복 레슨 $count개가 삭제되었습니다'), backgroundColor: AppTheme.primaryColor),
+                          );
+                        }
+                      }
+                    },
+                  ),
               ],
             ),
           ),
@@ -987,6 +1027,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
 
                                   if (isRecurring && repeatEndDate != null) {
                                     // 반복 레슨 생성
+                                    final groupId = const Uuid().v4();
                                     final List<DateTime> dates = [];
                                     DateTime current = selectedDate;
                                     while (!current.isAfter(repeatEndDate!)) {
@@ -1013,6 +1054,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                                         lessonType: lessonType,
                                         location: location,
                                         memo: memo,
+                                        recurringGroupId: groupId,
                                       );
                                     }
 

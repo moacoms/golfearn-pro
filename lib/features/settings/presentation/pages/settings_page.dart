@@ -994,7 +994,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             ),
                             SizedBox(height: 14.h),
 
-                            _buildFormField(feeController, '레슨비 (만원)', keyboardType: TextInputType.number),
+                            _buildFormField(feeController, '레슨비 (원)', keyboardType: TextInputType.number),
                             SizedBox(height: 14.h),
                             TextFormField(
                               controller: introController,

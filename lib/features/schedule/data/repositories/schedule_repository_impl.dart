@@ -48,6 +48,7 @@ class ScheduleRepositoryImpl {
     String? location,
     String? lessonType,
     String? memo,
+    String? recurringGroupId,
   }) async {
     try {
       final data = {
@@ -61,6 +62,7 @@ class ScheduleRepositoryImpl {
         'location': location,
         'lesson_type': lessonType ?? DatabaseConstants.lessonTypeRegular,
         'memo': memo,
+        if (recurringGroupId != null) 'recurring_group_id': recurringGroupId,
       };
 
       data.removeWhere((key, value) => value == null);
@@ -106,6 +108,20 @@ class ScheduleRepositoryImpl {
           .eq(DatabaseConstants.scheduleId, scheduleId);
     } catch (e) {
       throw Exception('스케줄 삭제 실패: $e');
+    }
+  }
+
+  Future<int> deleteByRecurringGroup(String recurringGroupId) async {
+    try {
+      final response = await _supabaseService.client
+          .from(DatabaseConstants.lessonSchedules)
+          .delete()
+          .eq('recurring_group_id', recurringGroupId)
+          .eq('status', 'scheduled')
+          .select();
+      return List.from(response).length;
+    } catch (e) {
+      throw Exception('반복 레슨 일괄 삭제 실패: $e');
     }
   }
 
