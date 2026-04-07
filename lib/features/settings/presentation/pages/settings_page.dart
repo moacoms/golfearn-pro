@@ -847,156 +847,292 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   // ---------------------------------------------------------------------------
   // Edit Profile Dialog
   // ---------------------------------------------------------------------------
-  void _showEditProfileDialog(UserEntity? user) {
+
+  static const _proGrades = <String, String>{
+    'semi_pro': '세미프로',
+    'lesson_pro': '레슨프로',
+    'kpga_associate': 'KPGA 준회원',
+    'kpga_member': 'KPGA 정회원',
+    'tour_pro': '투어프로',
+  };
+
+  static const _specialtyOptions = [
+    '스윙교정', '숏게임', '퍼팅', '드라이버', '입문자 전문', '주니어 전문',
+  ];
+
+  void _showEditProfileDialog(UserEntity? user) async {
+    // 프로 전용 필드를 DB에서 직접 조회
+    final isLessonPro = user?.isLessonPro ?? false;
+    Map<String, dynamic>? proData;
+    if (isLessonPro && user != null) {
+      try {
+        proData = await Supabase.instance.client
+            .from('profiles')
+            .select('pro_location, pro_introduction, pro_experience_years, pro_specialties, pro_monthly_fee, pro_grade, pro_lesson_venues, pro_certification')
+            .eq('id', user.id)
+            .single();
+      } catch (_) {}
+    }
+
     final nameController = TextEditingController(text: user?.fullName ?? '');
-    final phoneController =
-        TextEditingController(text: user?.phoneNumber ?? '');
+    final phoneController = TextEditingController(text: user?.phoneNumber ?? '');
+    final locationController = TextEditingController(text: proData?['pro_location'] as String? ?? '');
+    final introController = TextEditingController(text: proData?['pro_introduction'] as String? ?? '');
+    final experienceController = TextEditingController(
+      text: (proData?['pro_experience_years'] as int?)?.toString() ?? '',
+    );
+    final feeController = TextEditingController(
+      text: (proData?['pro_monthly_fee'] as num?)?.toString() ?? '',
+    );
+    final venueController = TextEditingController();
+    final certController = TextEditingController(text: proData?['pro_certification'] as String? ?? '');
+
+    String? selectedGrade = proData?['pro_grade'] as String?;
+    List<String> venues = List<String>.from(
+      (proData?['pro_lesson_venues'] as List?)?.map((e) => e.toString()) ?? [],
+    );
+    List<String> selectedSpecialties = List<String>.from(
+      (proData?['pro_specialties'] as List?)?.map((e) => e.toString()) ?? [],
+    );
+
     final formKey = GlobalKey<FormState>();
+
+    if (!mounted) return;
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        titlePadding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 0),
-        contentPadding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 0),
-        actionsPadding: EdgeInsets.all(16.w),
-        title: Text(
-          '프로필 수정',
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF1F2937),
-          ),
-        ),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: '이름',
-                  labelStyle: TextStyle(fontSize: 14.sp),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: const BorderSide(
-                      color: AppTheme.primaryColor,
-                      width: 2,
-                    ),
-                  ),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 14.h,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+          insetPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+          child: Container(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(dialogContext).size.height * 0.85),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 헤더
+                Padding(
+                  padding: EdgeInsets.fromLTRB(24.w, 20.h, 16.w, 0),
+                  child: Row(
+                    children: [
+                      Text('프로필 수정', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700)),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return '이름을 입력해주세요';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 14.h),
-              TextFormField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: '전화번호',
-                  labelStyle: TextStyle(fontSize: 14.sp),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: const BorderSide(
-                      color: AppTheme.primaryColor,
-                      width: 2,
+                Divider(height: 1, color: Colors.grey[200]),
+                // 폼
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(24.w),
+                    child: Form(
+                      key: formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildFormField(nameController, '이름', required: true),
+                          SizedBox(height: 14.h),
+                          _buildFormField(phoneController, '전화번호', keyboardType: TextInputType.phone),
+
+                          if (isLessonPro) ...[
+                            SizedBox(height: 20.h),
+                            Text('프로 정보', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppTheme.primaryColor)),
+                            SizedBox(height: 14.h),
+
+                            // 프로 등급
+                            DropdownButtonFormField<String>(
+                              value: selectedGrade,
+                              decoration: _inputDecoration('프로 등급'),
+                              items: [
+                                const DropdownMenuItem(value: null, child: Text('선택 안함')),
+                                ..._proGrades.entries.map((e) =>
+                                  DropdownMenuItem(value: e.key, child: Text(e.value)),
+                                ),
+                              ],
+                              onChanged: (v) => setDialogState(() => selectedGrade = v),
+                            ),
+                            SizedBox(height: 14.h),
+
+                            // 레슨 장소
+                            Text('레슨 장소', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.grey[700])),
+                            SizedBox(height: 6.h),
+                            Wrap(
+                              spacing: 8.w,
+                              runSpacing: 6.h,
+                              children: venues.map((v) => Chip(
+                                label: Text(v, style: TextStyle(fontSize: 13.sp)),
+                                deleteIcon: Icon(Icons.close, size: 16.w),
+                                onDeleted: () => setDialogState(() => venues.remove(v)),
+                                backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                side: BorderSide.none,
+                              )).toList(),
+                            ),
+                            SizedBox(height: 6.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: venueController,
+                                    decoration: _inputDecoration('장소 입력 (예: 고양CC 인도어)'),
+                                  ),
+                                ),
+                                SizedBox(width: 8.w),
+                                IconButton(
+                                  onPressed: () {
+                                    final text = venueController.text.trim();
+                                    if (text.isNotEmpty && !venues.contains(text)) {
+                                      setDialogState(() => venues.add(text));
+                                      venueController.clear();
+                                    }
+                                  },
+                                  icon: Icon(Icons.add_circle, color: AppTheme.primaryColor, size: 28.w),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 14.h),
+
+                            _buildFormField(locationController, '레슨 지역 (예: 서울 강남, 경기 고양)'),
+                            SizedBox(height: 14.h),
+                            _buildFormField(experienceController, '경력 (년)', keyboardType: TextInputType.number),
+                            SizedBox(height: 14.h),
+                            _buildFormField(certController, '자격증'),
+                            SizedBox(height: 14.h),
+
+                            // 전문분야
+                            Text('전문분야', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.grey[700])),
+                            SizedBox(height: 6.h),
+                            Wrap(
+                              spacing: 8.w,
+                              runSpacing: 6.h,
+                              children: _specialtyOptions.map((s) {
+                                final selected = selectedSpecialties.contains(s);
+                                return FilterChip(
+                                  label: Text(s, style: TextStyle(fontSize: 13.sp, color: selected ? Colors.white : Colors.grey[700])),
+                                  selected: selected,
+                                  onSelected: (v) => setDialogState(() {
+                                    if (v) { selectedSpecialties.add(s); } else { selectedSpecialties.remove(s); }
+                                  }),
+                                  selectedColor: AppTheme.primaryColor,
+                                  checkmarkColor: Colors.white,
+                                  backgroundColor: Colors.grey[100],
+                                  side: BorderSide.none,
+                                );
+                              }).toList(),
+                            ),
+                            SizedBox(height: 14.h),
+
+                            _buildFormField(feeController, '레슨비 (만원)', keyboardType: TextInputType.number),
+                            SizedBox(height: 14.h),
+                            TextFormField(
+                              controller: introController,
+                              maxLines: 3,
+                              decoration: _inputDecoration('소개글'),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                  ),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 14.h,
                   ),
                 ),
-              ),
-            ],
+                // 버튼
+                Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (!formKey.currentState!.validate()) return;
+                        Navigator.of(dialogContext).pop();
+
+                        final extra = <String, dynamic>{};
+                        if (isLessonPro) {
+                          extra['pro_location'] = locationController.text.trim().isNotEmpty ? locationController.text.trim() : null;
+                          extra['pro_introduction'] = introController.text.trim().isNotEmpty ? introController.text.trim() : null;
+                          extra['pro_experience_years'] = experienceController.text.trim().isNotEmpty ? int.tryParse(experienceController.text.trim()) : null;
+                          extra['pro_specialties'] = selectedSpecialties.isNotEmpty ? selectedSpecialties : null;
+                          extra['pro_monthly_fee'] = feeController.text.trim().isNotEmpty ? num.tryParse(feeController.text.trim()) : null;
+                          extra['pro_grade'] = selectedGrade;
+                          extra['pro_lesson_venues'] = venues.isNotEmpty ? venues : null;
+                          extra['pro_certification'] = certController.text.trim().isNotEmpty ? certController.text.trim() : null;
+                        }
+
+                        try {
+                          await ref
+                              .read(authControllerProvider.notifier)
+                              .updateProfile(
+                                fullName: nameController.text.trim(),
+                                phoneNumber: phoneController.text.trim().isNotEmpty
+                                    ? phoneController.text.trim()
+                                    : null,
+                                extraFields: extra.isNotEmpty ? extra : null,
+                              );
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('프로필이 업데이트되었습니다'),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                                backgroundColor: AppTheme.primaryColor,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('프로필 업데이트 실패: $e'),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                                backgroundColor: const Color(0xFFEF4444),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                      ),
+                      child: Text('저장', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(
-              '취소',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: const Color(0xFF6B7280),
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              Navigator.of(dialogContext).pop();
-              try {
-                await ref
-                    .read(authControllerProvider.notifier)
-                    .updateProfile(
-                      fullName: nameController.text.trim(),
-                      phoneNumber: phoneController.text.trim().isNotEmpty
-                          ? phoneController.text.trim()
-                          : null,
-                    );
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('프로필이 업데이트되었습니다'),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.r),
-                      ),
-                      backgroundColor: AppTheme.primaryColor,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('프로필 업데이트 실패: $e'),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.r),
-                      ),
-                      backgroundColor: const Color(0xFFEF4444),
-                    ),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-            ),
-            child: Text(
-              '저장',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
       ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(fontSize: 14.sp),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+      ),
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+    );
+  }
+
+  Widget _buildFormField(TextEditingController controller, String label, {TextInputType? keyboardType, bool required = false}) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: _inputDecoration(label),
+      validator: required ? (value) {
+        if (value == null || value.trim().isEmpty) return '$label을(를) 입력해주세요';
+        return null;
+      } : null,
     );
   }
 

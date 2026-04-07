@@ -209,6 +209,7 @@ class AuthRepositoryImpl implements AuthRepository {
     String? phoneNumber,
     String? avatarUrl,
     String? sportType,
+    Map<String, dynamic>? extraFields,
   }) async {
     try {
       final userId = _supabaseService.currentUser?.id;
@@ -220,8 +221,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (fullName != null) updateData['full_name'] = fullName;
       if (phoneNumber != null) updateData['pro_phone'] = phoneNumber;
       if (avatarUrl != null) updateData['avatar_url'] = avatarUrl;
-      // sport_type은 DB 컬럼 추가 후 활성화
-      // if (sportType != null) updateData['sport_type'] = sportType;
+      if (extraFields != null) updateData.addAll(extraFields);
 
       if (updateData.isEmpty) {
         throw Exception('업데이트할 정보가 없습니다.');

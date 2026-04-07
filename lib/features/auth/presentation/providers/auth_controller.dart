@@ -145,6 +145,7 @@ class AuthController extends _$AuthController {
     String? phoneNumber,
     String? avatarUrl,
     String? sportType,
+    Map<String, dynamic>? extraFields,
   }) async {
     state = state.copyWith(isLoading: true, error: () => null);
 
@@ -154,6 +155,7 @@ class AuthController extends _$AuthController {
         phoneNumber: phoneNumber,
         avatarUrl: avatarUrl,
         sportType: sportType,
+        extraFields: extraFields,
       );
       state = state.copyWith(isLoading: false, user: () => user);
     } catch (e) {

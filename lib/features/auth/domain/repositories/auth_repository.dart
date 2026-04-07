@@ -31,6 +31,7 @@ abstract class AuthRepository {
     String? phoneNumber,
     String? avatarUrl,
     String? sportType,
+    Map<String, dynamic>? extraFields,
   });
 
   /// 레슨프로 등록
