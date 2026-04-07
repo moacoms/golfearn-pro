@@ -143,7 +143,7 @@ final studentNextLessonDateProvider = FutureProvider<DateTime?>((ref) async {
       .select('lesson_date')
       .inFilter('student_id', studentIds)
       .gte('lesson_date', today)
-      .order('lesson_date')
+      .order('lesson_date', ascending: true)
       .limit(1);
 
   final list = List<Map<String, dynamic>>.from(response);
@@ -163,8 +163,8 @@ final studentUpcomingSchedulesProvider = FutureProvider<List<ScheduleEntity>>((r
       .inFilter('student_id', studentIds)
       .eq('status', 'scheduled')
       .gte('lesson_date', today)
-      .order('lesson_date')
-      .order('lesson_time')
+      .order('lesson_date', ascending: true)
+      .order('lesson_time', ascending: true)
       .limit(10);
 
   final list = List<Map<String, dynamic>>.from(response);
