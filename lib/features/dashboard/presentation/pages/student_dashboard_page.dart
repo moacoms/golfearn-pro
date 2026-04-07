@@ -193,7 +193,7 @@ class StudentDashboardPage extends ConsumerWidget {
                 SizedBox(height: 24.h),
                 _buildQuickInfoCards(ref),
                 SizedBox(height: 24.h),
-                _buildUpcomingLessonsSection(ref),
+                _buildUpcomingLessonsSection(context, ref),
                 SizedBox(height: 24.h),
                 _buildMyPackagesSection(ref),
                 SizedBox(height: 24.h),
@@ -355,7 +355,7 @@ class StudentDashboardPage extends ConsumerWidget {
   // 3. Upcoming lessons section
   // ──────────────────────────────────────────────
 
-  Widget _buildUpcomingLessonsSection(WidgetRef ref) {
+  Widget _buildUpcomingLessonsSection(BuildContext context, WidgetRef ref) {
     final upcomingAsync = ref.watch(_myUpcomingLessonsProvider);
 
     return Container(
@@ -401,7 +401,7 @@ class StudentDashboardPage extends ConsumerWidget {
               }
               return Column(
                 children: lessons
-                    .map((lesson) => _buildUpcomingLessonItem(lesson))
+                    .map((lesson) => _buildUpcomingLessonItem(context, ref, lesson))
                     .toList(),
               );
             },
@@ -429,7 +429,7 @@ class StudentDashboardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildUpcomingLessonItem(Map<String, dynamic> lessonData) {
+  Widget _buildUpcomingLessonItem(BuildContext context, WidgetRef ref, Map<String, dynamic> lessonData) {
     final lessonDate = DateTime.parse(lessonData['lesson_date'] as String);
     final lessonTime = lessonData['lesson_time'] as String? ?? '';
     final duration = lessonData['duration_minutes'] as int? ?? 60;
@@ -466,96 +466,188 @@ class StudentDashboardPage extends ConsumerWidget {
         typeLabel = lessonType ?? '일반 레슨';
     }
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: _primary.withOpacity(0.04),
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: _primary.withOpacity(0.15)),
-      ),
-      child: Row(
-        children: [
-          // Date badge
-          Container(
-            width: 52.w,
-            padding: EdgeInsets.symmetric(vertical: 8.h),
-            decoration: BoxDecoration(
-              color: _primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  DateFormat('M/d').format(lessonDate),
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.bold,
-                    color: _primary,
-                  ),
-                ),
-                Text(
-                  dayLabel,
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    color: _primary.withOpacity(0.7),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 12.w),
-          // Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$timeStr  |  ${duration}분',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  '$proName  ·  $typeLabel',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                if (location != null && location.isNotEmpty) ...[
-                  SizedBox(height: 2.h),
+    final scheduleId = lessonData['id'] as String?;
+
+    return GestureDetector(
+      onTap: scheduleId != null ? () => _showLessonCancelDialog(context, ref, lessonData) : null,
+      child: Container(
+        margin: EdgeInsets.only(bottom: 12.h),
+        padding: EdgeInsets.all(14.w),
+        decoration: BoxDecoration(
+          color: _primary.withOpacity(0.04),
+          borderRadius: BorderRadius.circular(10.r),
+          border: Border.all(color: _primary.withOpacity(0.15)),
+        ),
+        child: Row(
+          children: [
+            // Date badge
+            Container(
+              width: 52.w,
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              decoration: BoxDecoration(
+                color: _primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Column(
+                children: [
                   Text(
-                    location,
+                    DateFormat('M/d').format(lessonDate),
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.bold,
+                      color: _primary,
+                    ),
+                  ),
+                  Text(
+                    dayLabel,
                     style: TextStyle(
                       fontSize: 11.sp,
-                      color: Colors.grey[500],
+                      color: _primary.withOpacity(0.7),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ],
-            ),
-          ),
-          // Status badge
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-            decoration: BoxDecoration(
-              color: _primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6.r),
-            ),
-            child: Text(
-              '예정',
-              style: TextStyle(
-                fontSize: 11.sp,
-                fontWeight: FontWeight.w600,
-                color: _primary,
               ),
             ),
+            SizedBox(width: 12.w),
+            // Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$timeStr  |  ${duration}분',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    '$proName  ·  $typeLabel',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  if (location != null && location.isNotEmpty) ...[
+                    SizedBox(height: 2.h),
+                    Text(
+                      location,
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: Colors.grey[500],
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            // Status badge
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: _primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6.r),
+              ),
+              child: Text(
+                '예정',
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w600,
+                  color: _primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showLessonCancelDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> lessonData) {
+    final scheduleId = lessonData['id'] as String;
+    final lessonDate = DateTime.parse(lessonData['lesson_date'] as String);
+    final lessonTime = lessonData['lesson_time'] as String? ?? '';
+
+    // 4시간 전 체크
+    final timeParts = lessonTime.split(':');
+    final lessonDateTime = DateTime(
+      lessonDate.year, lessonDate.month, lessonDate.day,
+      int.parse(timeParts[0]), int.parse(timeParts[1]),
+    );
+    if (lessonDateTime.difference(DateTime.now()).inHours < 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: const Text('레슨 시작 4시간 전에는 취소할 수 없습니다'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    final reasonController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        title: Text('레슨 취소', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${lessonDate.month}/${lessonDate.day} $lessonTime 레슨을 취소하시겠습니까?',
+              style: TextStyle(fontSize: 14.sp, height: 1.5),
+            ),
+            SizedBox(height: 14.h),
+            TextField(
+              controller: reasonController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                hintText: '취소 사유를 입력해주세요 (선택)',
+                hintStyle: TextStyle(fontSize: 13.sp, color: Colors.grey[400]),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('닫기', style: TextStyle(fontSize: 14.sp, color: Colors.grey[600])),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              try {
+                await Supabase.instance.client
+                    .from('lesson_schedules')
+                    .update({
+                      'status': 'cancelled',
+                      'cancelled_by': 'student',
+                      'cancel_reason': reasonController.text.trim().isNotEmpty ? reasonController.text.trim() : null,
+                      'updated_at': DateTime.now().toIso8601String(),
+                    })
+                    .eq('id', scheduleId);
+
+                ref.invalidate(_myUpcomingLessonsProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: const Text('레슨이 취소되었습니다'), backgroundColor: Colors.orange),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('취소 실패: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: Text('취소하기', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
