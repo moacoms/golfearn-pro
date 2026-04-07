@@ -74,8 +74,8 @@ final _myUpcomingLessonsProvider =
       .inFilter('student_id', studentIds)
       .eq('status', 'scheduled')
       .gte('lesson_date', today)
-      .order('lesson_date')
-      .order('lesson_time')
+      .order('lesson_date', ascending: true)
+      .order('lesson_time', ascending: true)
       .limit(5);
 
   return List<Map<String, dynamic>>.from(response);
