@@ -613,6 +613,26 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
   }
 
   void _showStudentCancelDialog(BuildContext context, WidgetRef ref, ScheduleEntity schedule) {
+    // 레슨 시작 4시간 전부터 취소 불가
+    final timeParts = schedule.lessonTime.split(':');
+    final lessonDateTime = DateTime(
+      schedule.lessonDate.year,
+      schedule.lessonDate.month,
+      schedule.lessonDate.day,
+      int.parse(timeParts[0]),
+      int.parse(timeParts[1]),
+    );
+    final hoursUntil = lessonDateTime.difference(DateTime.now()).inHours;
+    if (hoursUntil < 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('레슨 시작 4시간 전에는 취소할 수 없습니다'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     final reasonController = TextEditingController();
 
     showDialog(
