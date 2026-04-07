@@ -13,6 +13,8 @@ class ScheduleModel {
   final String? lessonType;
   final String? memo;
   final String? recurringGroupId;
+  final String? cancelledBy;
+  final String? cancelReason;
   final String? studentName;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -30,6 +32,8 @@ class ScheduleModel {
     this.lessonType,
     this.memo,
     this.recurringGroupId,
+    this.cancelledBy,
+    this.cancelReason,
     this.studentName,
     this.createdAt,
     this.updatedAt,
@@ -54,6 +58,8 @@ class ScheduleModel {
       lessonType: json['lesson_type'] as String?,
       memo: json['memo'] as String?,
       recurringGroupId: json['recurring_group_id'] as String?,
+      cancelledBy: json['cancelled_by'] as String?,
+      cancelReason: json['cancel_reason'] as String?,
       studentName: name,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
@@ -94,6 +100,8 @@ class ScheduleModel {
       lessonType: lessonType,
       memo: memo,
       recurringGroupId: recurringGroupId,
+      cancelledBy: cancelledBy,
+      cancelReason: cancelReason,
       studentName: studentName,
       createdAt: createdAt,
       updatedAt: updatedAt,

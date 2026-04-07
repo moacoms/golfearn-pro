@@ -75,6 +75,25 @@ Future<int> weeklyLessonCount(Ref ref) async {
   return repo.getWeeklyLessonCount(user.id);
 }
 
+/// 학생이 취소한 레슨 알림 (최근 7일, 프로 대시보드용)
+final studentCancelledLessonsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return [];
+
+  final weekAgo = DateTime.now().subtract(const Duration(days: 7)).toIso8601String();
+  final response = await Supabase.instance.client
+      .from('lesson_schedules')
+      .select('*, lesson_students(student_name)')
+      .eq('pro_id', user.id)
+      .eq('status', 'cancelled')
+      .eq('cancelled_by', 'student')
+      .gte('updated_at', weekAgo)
+      .order('updated_at', ascending: false)
+      .limit(10);
+
+  return List<Map<String, dynamic>>.from(response);
+});
+
 // ──────────────────────────────────────────────
 // 학생용 스케줄 프로바이더 (student_id 기반 조회)
 // ──────────────────────────────────────────────

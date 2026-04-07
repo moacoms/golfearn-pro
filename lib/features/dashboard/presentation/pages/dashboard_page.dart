@@ -23,6 +23,7 @@ class DashboardPage extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(todaySchedulesProvider);
+          ref.invalidate(studentCancelledLessonsProvider);
           ref.invalidate(studentCountProvider);
           ref.invalidate(monthlyTotalIncomeProvider);
           ref.invalidate(weeklyLessonCountProvider);
@@ -40,6 +41,7 @@ class DashboardPage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+              _buildCancelAlerts(ref),
               _buildTodaySchedule(ref),
               SizedBox(height: 16.h),
               _buildUpcomingLessons(ref),
@@ -128,6 +130,69 @@ class DashboardPage extends ConsumerWidget {
   // ──────────────────────────────────────────────
   // 1. Today's schedule card (existing)
   // ──────────────────────────────────────────────
+
+  Widget _buildCancelAlerts(WidgetRef ref) {
+    final cancelledAsync = ref.watch(studentCancelledLessonsProvider);
+
+    return cancelledAsync.when(
+      data: (cancelled) {
+        if (cancelled.isEmpty) return const SizedBox.shrink();
+        return Container(
+          margin: EdgeInsets.only(bottom: 16.h),
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: Colors.red[50],
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.cancel_outlined, size: 20.w, color: Colors.red),
+                  SizedBox(width: 8.w),
+                  Text('학생 취소 알림', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700, color: Colors.red[700])),
+                ],
+              ),
+              SizedBox(height: 10.h),
+              ...cancelled.map((lesson) {
+                final studentName = lesson['lesson_students']?['student_name'] ?? '학생';
+                final date = lesson['lesson_date'] as String? ?? '';
+                final time = lesson['lesson_time'] as String? ?? '';
+                final reason = lesson['cancel_reason'] as String?;
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 8.h),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.person, size: 16.w, color: Colors.red[300]),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$studentName님이 $date $time 레슨을 취소했습니다',
+                              style: TextStyle(fontSize: 13.sp, color: Colors.red[700]),
+                            ),
+                            if (reason != null && reason.isNotEmpty)
+                              Text('사유: $reason', style: TextStyle(fontSize: 12.sp, color: Colors.grey[600])),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
 
   Widget _buildTodaySchedule(WidgetRef ref) {
     final todayAsync = ref.watch(todaySchedulesProvider);

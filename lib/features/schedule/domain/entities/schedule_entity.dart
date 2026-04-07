@@ -11,6 +11,8 @@ class ScheduleEntity {
   final String? lessonType; // regular, playing, short_game, putting
   final String? memo;
   final String? recurringGroupId;
+  final String? cancelledBy; // 'student' or 'pro'
+  final String? cancelReason;
   final String? studentName; // join으로 가져올 때
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -28,6 +30,8 @@ class ScheduleEntity {
     this.lessonType,
     this.memo,
     this.recurringGroupId,
+    this.cancelledBy,
+    this.cancelReason,
     this.studentName,
     this.createdAt,
     this.updatedAt,
@@ -46,6 +50,8 @@ class ScheduleEntity {
     String? lessonType,
     String? memo,
     String? recurringGroupId,
+    String? cancelledBy,
+    String? cancelReason,
     String? studentName,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -63,6 +69,8 @@ class ScheduleEntity {
       lessonType: lessonType ?? this.lessonType,
       memo: memo ?? this.memo,
       recurringGroupId: recurringGroupId ?? this.recurringGroupId,
+      cancelledBy: cancelledBy ?? this.cancelledBy,
+      cancelReason: cancelReason ?? this.cancelReason,
       studentName: studentName ?? this.studentName,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

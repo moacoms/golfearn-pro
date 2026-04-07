@@ -269,7 +269,9 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
         side: BorderSide(color: Colors.grey[200]!),
       ),
       child: InkWell(
-        onTap: isLessonPro ? () => _showScheduleActions(context, ref, schedule) : null,
+        onTap: isLessonPro
+            ? () => _showScheduleActions(context, ref, schedule)
+            : (schedule.status == 'scheduled' ? () => _showStudentCancelDialog(context, ref, schedule) : null),
         borderRadius: BorderRadius.circular(12.r),
         child: Padding(
           padding: EdgeInsets.all(16.w),
@@ -607,6 +609,77 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
           ),
         );
       },
+    );
+  }
+
+  void _showStudentCancelDialog(BuildContext context, WidgetRef ref, ScheduleEntity schedule) {
+    final reasonController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        title: Text('레슨 취소', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${schedule.lessonDate.month}/${schedule.lessonDate.day} ${schedule.lessonTime} 레슨을 취소하시겠습니까?',
+              style: TextStyle(fontSize: 14.sp, height: 1.5),
+            ),
+            SizedBox(height: 14.h),
+            TextField(
+              controller: reasonController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                hintText: '취소 사유를 입력해주세요 (선택)',
+                hintStyle: TextStyle(fontSize: 13.sp, color: Colors.grey[400]),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('닫기', style: TextStyle(fontSize: 14.sp, color: Colors.grey[600])),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              try {
+                await ref.read(scheduleRepositoryProvider).updateSchedule(
+                  schedule.id,
+                  {
+                    'status': 'cancelled',
+                    'cancelled_by': 'student',
+                    'cancel_reason': reasonController.text.trim().isNotEmpty
+                        ? reasonController.text.trim()
+                        : null,
+                  },
+                );
+                ref.invalidate(studentWeeklySchedulesProvider);
+                ref.invalidate(studentUpcomingSchedulesProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: const Text('레슨이 취소되었습니다'), backgroundColor: Colors.orange),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('취소 실패: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: Text('취소하기', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
     );
   }
 
