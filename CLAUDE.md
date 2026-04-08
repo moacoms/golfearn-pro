@@ -17,15 +17,20 @@ Supabase 백엔드를 Golfearn 웹 프로젝트(golfearn.com)와 공유합니다
 # Install dependencies
 flutter pub get
 
-# Run (web)
+# Run (web) — 로컬 개발은 .env fallback 사용
 flutter run -d chrome --web-port 5000
 
-# Build web
-flutter build web --release
+# Build web (배포용) — 반드시 --dart-define 사용
+flutter build web --release \
+  --dart-define=SUPABASE_URL=https://bfcmjumgfrblvyjuvmbk.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=<key>
 
 # Code generation (Riverpod providers)
 dart run build_runner build --delete-conflicting-outputs
 ```
+
+> **주의**: `.env`는 assets에서 제거됨. 웹 빌드 시 `--dart-define`으로 환경변수를 주입해야 함.
+> 로컬 `flutter run`은 `.env` 파일을 fallback으로 읽음.
 
 ## Architecture
 
