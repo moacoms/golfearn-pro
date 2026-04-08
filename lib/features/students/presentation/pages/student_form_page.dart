@@ -120,6 +120,15 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
                 label: '전화번호',
                 hint: '010-0000-0000',
                 keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value != null && value.isNotEmpty) {
+                    final cleaned = value.replaceAll('-', '');
+                    if (!RegExp(r'^01[0-9]\d{7,8}$').hasMatch(cleaned)) {
+                      return '올바른 전화번호를 입력해주세요';
+                    }
+                  }
+                  return null;
+                },
               ),
               SizedBox(height: 12.h),
               _buildTextField(
@@ -127,6 +136,14 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
                 label: '이메일',
                 hint: 'email@example.com',
                 keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value != null && value.isNotEmpty) {
+                    if (!RegExp(r'^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$').hasMatch(value)) {
+                      return '올바른 이메일 형식을 입력해주세요';
+                    }
+                  }
+                  return null;
+                },
               ),
 
               SizedBox(height: 12.h),
@@ -196,6 +213,13 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
                 label: '총 레슨 횟수',
                 hint: '기존 레슨 횟수를 입력하세요',
                 keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value != null && value.isNotEmpty) {
+                    final num = int.tryParse(value);
+                    if (num == null || num < 0) return '0 이상의 숫자를 입력해주세요';
+                  }
+                  return null;
+                },
               ),
 
               SizedBox(height: 24.h),
@@ -529,14 +553,10 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
         context.pop();
       }
     } catch (e, stackTrace) {
-      print('========== 학생 저장 에러 ==========');
-      print('에러: $e');
-      print('스택: $stackTrace');
-      print('===================================');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: const Text('일시적인 오류가 발생했습니다. 다시 시도해주세요.'),
             backgroundColor: Colors.red,
           ),
         );

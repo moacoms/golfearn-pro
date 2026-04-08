@@ -29,7 +29,6 @@ class IncomeRepositoryImpl {
       final list = List<Map<String, dynamic>>.from(response);
       return list.map((json) => IncomeModel.fromJson(json).toEntity()).toList();
     } catch (e) {
-      print('수입 기록 조회 실패: $e');
       return [];
     }
   }
@@ -78,7 +77,6 @@ class IncomeRepositoryImpl {
       final list = List<Map<String, dynamic>>.from(response);
       return list.map((json) => IncomeModel.fromJson(json).toEntity()).toList();
     } catch (e) {
-      print('학생 수입 기록 조회 실패: $e');
       return [];
     }
   }

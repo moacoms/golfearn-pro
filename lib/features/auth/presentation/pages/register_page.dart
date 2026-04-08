@@ -102,7 +102,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       final result = await Supabase.instance.client
           .rpc('check_email_exists', params: {'email_input': email});
 
-      print('이메일 체크 결과: $result (type: ${result.runtimeType})');
 
       // RPC 결과가 bool, String, int 등 다양할 수 있으므로 안전하게 처리
       final exists = result == true || result == 'true' || result == 1;
@@ -112,7 +111,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         setState(() => _emailError = null);
       }
     } catch (e) {
-      print('이메일 체크 에러: $e');
       // RPC 함수 에러 시 무시 (제출 시점에 체크)
       setState(() => _emailError = null);
     } finally {
@@ -132,7 +130,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           .or('pro_phone.eq.$digitsOnly,pro_phone.eq.$phone')
           .maybeSingle();
 
-      print('전화번호 체크: $digitsOnly / $phone → $result');
 
       if (result != null) {
         setState(() => _phoneError = '이미 등록된 전화번호입니다.');
@@ -140,7 +137,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         setState(() => _phoneError = null);
       }
     } catch (e) {
-      print('전화번호 체크 에러: $e');
     }
   }
 
@@ -540,8 +536,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     if (value == null || value.isEmpty) {
       return '비밀번호를 입력해주세요';
     }
-    if (value.length < 6) {
-      return '비밀번호는 6자 이상이어야 합니다';
+    if (value.length < 8) {
+      return '비밀번호는 8자 이상이어야 합니다';
+    }
+    if (!RegExp(r'[a-zA-Z]').hasMatch(value) || !RegExp(r'[0-9]').hasMatch(value)) {
+      return '영문과 숫자를 모두 포함해주세요';
     }
     return null;
   }
@@ -577,7 +576,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     try {
       final emailExists = await Supabase.instance.client
           .rpc('check_email_exists', params: {'email_input': email});
-      print('제출 시 이메일 체크: $emailExists (type: ${emailExists.runtimeType})');
 
       if (emailExists == true || emailExists == 'true' || emailExists == 1) {
         if (mounted) {
@@ -586,7 +584,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         return;
       }
     } catch (e) {
-      print('이메일 체크 실패: $e');
     }
 
     // 전화번호 중복 체크
@@ -605,7 +602,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         return;
       }
     } catch (e) {
-      print('전화번호 체크 실패: $e');
     }
 
     try {

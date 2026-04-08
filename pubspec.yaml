@@ -97,7 +97,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/animations/
-    - .env
+    # .env removed from assets for security — use --dart-define for builds
     
   fonts:
     - family: Noto Sans KR

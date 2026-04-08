@@ -39,7 +39,6 @@ class AuthRepositoryImpl implements AuthRepository {
           return entity.copyWith(email: user.email ?? entity.email);
         }
       } catch (e) {
-        print('프로필 조회 실패: $e');
       }
 
       // 프로필이 없으면 auth 메타데이터에서 기본 정보 반환
@@ -58,43 +57,32 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) async {
     try {
-      print('로그인 시도: $email');
       final response = await _supabaseService.signIn(
         email: email,
         password: password,
       );
 
-      print('로그인 응답: ${response.user?.id}');
       if (response.user == null) {
         throw Exception('로그인에 실패했습니다.');
       }
 
       // 프로필 정보 조회
       try {
-        print('프로필 조회 시작: ${response.user!.id}');
         final profile = await _supabaseService.getProfile(response.user!.id);
-        print('프로필 조회 결과: $profile');
         if (profile != null) {
           return UserModel.fromJson(profile).toEntity();
         }
       } catch (e) {
-        print('프로필 조회 실패 상세: $e');
-        print('스택 트레이스: ${StackTrace.current}');
       }
 
       // 프로필이 없으면 기본 정보만 반환
-      print('기본 정보로 반환');
       return UserEntity(
         id: response.user!.id,
         email: response.user!.email!,
       );
     } on AuthException catch (e) {
-      print('AuthException 발생: ${e.message}');
-      print('AuthException 상태 코드: ${e.statusCode}');
       throw Exception(_getAuthErrorMessage(e.message));
     } catch (e, stackTrace) {
-      print('로그인 중 오류 발생: $e');
-      print('스택 트레이스: $stackTrace');
       throw Exception('로그인에 실패했습니다.');
     }
   }
@@ -159,7 +147,6 @@ class AuthRepositoryImpl implements AuthRepository {
         final entity = UserModel.fromJson(profile).toEntity();
         return entity.copyWith(email: email);
       } catch (e) {
-        print('프로필 처리 실패: $e');
         // 프로필 처리 실패해도 기본 정보로 진행
         return UserEntity(
           id: response.user!.id,
@@ -171,7 +158,6 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
     } on AuthException catch (e) {
-      print('signUp AuthException: ${e.message} (statusCode: ${e.statusCode})');
       // 422 = 이미 등록된 이메일 또는 유효하지 않은 입력
       if (e.statusCode == '422' ||
           e.message.contains('already') ||
@@ -180,7 +166,6 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       throw Exception(_getAuthErrorMessage(e.message));
     } catch (e) {
-      print('signUp 에러: $e');
       if (e.toString().contains('already') || e.toString().contains('이미 가입된')) {
         rethrow;
       }
@@ -194,11 +179,8 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> signOut() async {
     try {
-      print('AuthRepository: 로그아웃 시작');
       await _supabaseService.signOut();
-      print('AuthRepository: 로그아웃 완료');
     } catch (e) {
-      print('AuthRepository: 로그아웃 실패 - $e');
       throw Exception('로그아웃 중 오류가 발생했습니다: $e');
     }
   }

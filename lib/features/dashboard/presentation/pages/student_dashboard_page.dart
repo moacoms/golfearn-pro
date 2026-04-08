@@ -105,9 +105,6 @@ final _unmatchedProsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) 
 
   // 전화번호 정규화 (하이픈 제거)
   final phone = userPhone.replaceAll('-', '');
-  print('===== 학생 매칭 시작 =====');
-  print('user.id: ${user.id}');
-  print('userPhone: $userPhone → 정규화: $phone');
 
   try {
     // 1단계: user_id가 null이고 is_active인 전체 학생 조회
@@ -117,9 +114,7 @@ final _unmatchedProsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) 
         .eq('is_active', true);
 
     final allList = List<Map<String, dynamic>>.from(allResponse);
-    print('전체 활성 학생 수: ${allList.length}');
     for (final r in allList) {
-      print('  - ${r['student_name']}: phone=${r['student_phone']}, user_id=${r['user_id']}');
     }
 
     // 2단계: 전화번호 매칭 + user_id가 null인 것만 필터
@@ -129,11 +124,8 @@ final _unmatchedProsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) 
       return studentPhone == phone && userId == null;
     }).toList();
 
-    print('매칭 결과: ${matched.length}건');
-    print('===========================');
     return matched;
   } catch (e) {
-    print('매칭 조회 에러: $e');
     return [];
   }
 });

@@ -19,7 +19,6 @@ class LessonNoteRepositoryImpl {
       final list = List<Map<String, dynamic>>.from(response);
       return list.map((json) => LessonNoteModel.fromJson(json).toEntity()).toList();
     } catch (e) {
-      print('레슨 노트 조회 실패: $e');
       return [];
     }
   }
@@ -64,7 +63,6 @@ class LessonNoteRepositoryImpl {
         if (practiceTimeMinutes != null) 'practice_time_minutes': practiceTimeMinutes,
       };
 
-      print('레슨 노트 저장 데이터: $data');
 
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonNotes)
@@ -74,7 +72,6 @@ class LessonNoteRepositoryImpl {
 
       return LessonNoteModel.fromJson(response).toEntity();
     } catch (e) {
-      print('레슨 노트 작성 실패 상세: $e');
       throw Exception('레슨 노트 작성 실패: $e');
     }
   }

@@ -26,7 +26,6 @@ class ScheduleRepositoryImpl {
       final list = List<Map<String, dynamic>>.from(response);
       return list.map((json) => ScheduleModel.fromJson(json).toEntity()).toList();
     } catch (e) {
-      print('스케줄 조회 실패: $e');
       return [];
     }
   }

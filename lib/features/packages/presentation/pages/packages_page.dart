@@ -64,7 +64,7 @@ class PackagesPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('오류: $e')),
+        error: (_, __) => const Center(child: Text('데이터를 불러올 수 없습니다')),
       ),
     );
   }
@@ -419,7 +419,7 @@ class PackagesPage extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('일시적인 오류가 발생했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
         );
       }
     }
@@ -610,7 +610,7 @@ class PackagesPage extends ConsumerWidget {
                                 } catch (e) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('오류: $e'), backgroundColor: Colors.red),
+                                      const SnackBar(content: Text('일시적인 오류가 발생했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
                                     );
                                   }
                                 }

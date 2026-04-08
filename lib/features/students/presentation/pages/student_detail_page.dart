@@ -395,7 +395,7 @@ class StudentDetailPage extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('학생 삭제'),
-        content: Text('${student.studentName} 학생을 삭제하시겠습니까?'),
+        content: Text('${student.studentName} 학생을 삭제하시겠습니까?\n\n삭제하면 레슨 종료 상태로 변경됩니다.\n기존 스케줄과 패키지는 유지됩니다.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -420,7 +420,7 @@ class StudentDetailPage extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('삭제 실패: $e'), backgroundColor: Colors.red),
+                    const SnackBar(content: Text('삭제에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
                   );
                 }
               }

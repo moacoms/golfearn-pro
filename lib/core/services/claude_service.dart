@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ClaudeService {
   static const String _model = 'claude-haiku-4-5-20251001';
@@ -9,8 +10,10 @@ class ClaudeService {
   late final String _anonKey;
 
   ClaudeService() {
-    final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? '';
-    _anonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+    final supabaseUrl = const String.fromEnvironment('SUPABASE_URL').isNotEmpty
+        ? const String.fromEnvironment('SUPABASE_URL')
+        : (dotenv.env['SUPABASE_URL'] ?? '');
+    _anonKey = Supabase.instance.client.rest.headers['apikey'] ?? '';
     _proxyUrl = '$supabaseUrl/functions/v1/claude-proxy';
   }
 
@@ -116,7 +119,6 @@ ${briefInput != null && briefInput.isNotEmpty ? '## 오늘 레슨 키워드 (프
 
       final data = await _callClaude(prompt: prompt, maxTokens: 1500);
       final text = data['content'][0]['text'] as String;
-      print('AI 원본 응답: $text');
 
       // JSON 추출 시도
       String jsonStr = text

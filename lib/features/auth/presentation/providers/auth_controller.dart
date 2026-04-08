@@ -72,16 +72,12 @@ class AuthController extends _$AuthController {
     state = state.copyWith(isLoading: true, error: () => null);
 
     try {
-      print('AuthController: 로그인 시작 - $email');
       final user = await _authRepository.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      print('AuthController: 로그인 성공 - ${user.id}');
       state = state.copyWith(isLoading: false, user: () => user);
     } catch (e, stackTrace) {
-      print('AuthController: 로그인 실패 - $e');
-      print('AuthController: 스택 트레이스 - $stackTrace');
       state = state.copyWith(
         isLoading: false,
         error: () => e.toString(),
@@ -123,14 +119,11 @@ class AuthController extends _$AuthController {
     state = state.copyWith(isLoading: true, error: () => null);
 
     try {
-      print('AuthController: 로그아웃 시작');
       await _authRepository.signOut();
-      print('AuthController: 로그아웃 완료');
       state = state.copyWith(isLoading: false, user: () => null, error: () => null);
       // Provider를 무효화하여 캐시 클리어
       ref.invalidateSelf();
     } catch (e) {
-      print('AuthController: 로그아웃 실패 - $e');
       state = state.copyWith(
         isLoading: false,
         error: () => e.toString(),

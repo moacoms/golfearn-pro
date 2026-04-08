@@ -249,7 +249,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('오류: $e')),
+              error: (_, __) => const Center(child: Text('데이터를 불러올 수 없습니다')),
             ),
           ),
         ],
@@ -417,80 +417,107 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                       Navigator.pop(context);
                       final user = ref.read(currentUserProvider);
 
-                      // 1. 패키지 정보 미리 조회 (deduct 전에 해야 마지막 레슨도 기록됨)
-                      int perLessonAmount = 0;
-                      if (user != null && schedule.packageId != null) {
-                        try {
-                          final packages = await ref.read(packageRepositoryProvider)
-                              .getActivePackages(user.id, schedule.studentId);
-                          final pkg = packages.where((p) => p.id == schedule.packageId).firstOrNull;
-                          if (pkg != null && pkg.totalCount > 0) {
-                            perLessonAmount = (pkg.price / pkg.totalCount).round();
-                          }
-                        } catch (_) {}
-                      }
-
-                      // 2. 레슨 상태 완료 처리
-                      await ref.read(scheduleRepositoryProvider)
-                          .updateScheduleStatus(schedule.id, 'completed');
-
-                      // 3. 패키지 횟수 차감
-                      if (schedule.packageId != null) {
-                        await ref.read(packageRepositoryProvider)
-                            .deductLesson(schedule.packageId!);
-                        ref.invalidate(packagesProvider);
-                      }
-
-                      // 4. [자동화] 수입 자동 기록
-                      if (user != null && perLessonAmount > 0) {
-                        try {
-                          await ref.read(incomeRepositoryProvider).createIncomeRecord(
-                            proId: user.id,
-                            studentId: schedule.studentId,
-                            packageId: schedule.packageId,
-                            category: 'lesson',
-                            amount: perLessonAmount,
-                            incomeDate: schedule.lessonDate,
-                            description: '${schedule.studentName ?? "학생"} ${schedule.lessonTypeLabel}',
-                            paymentMethod: 'transfer',
-                          );
-                          ref.invalidate(monthlyIncomeRecordsProvider);
-                          ref.invalidate(monthlyTotalIncomeProvider);
-                        } catch (_) {}
-                      }
-
-                      // 4. [자동화] 학생 진도 자동 업데이트
                       try {
-                        final student = await ref.read(studentRepositoryProvider)
-                            .getStudent(schedule.studentId);
-                        await ref.read(studentRepositoryProvider).updateStudent(
-                          schedule.studentId,
-                          {
-                            'total_lesson_count': student.totalLessonCount + 1,
-                            'last_lesson_at': schedule.lessonDate.toIso8601String().split('T').first,
-                          },
-                        );
-                        ref.invalidate(studentsProvider);
-                      } catch (_) {}
-
-                      ref.invalidate(weeklySchedulesProvider);
-                      ref.invalidate(todaySchedulesProvider);
-
-                      // 5. [자동화] 다음 레슨 제안 (다음 주에 이미 레슨 없을 때만)
-                      if (pageContext.mounted && user != null) {
-                        final nextDate = schedule.lessonDate.add(const Duration(days: 7));
-                        final nextWeekSchedules = await ref.read(scheduleRepositoryProvider)
-                            .getSchedules(
-                              proId: user.id,
-                              startDate: nextDate,
-                              endDate: nextDate.add(const Duration(days: 1)),
-                            );
-                        final alreadyExists = nextWeekSchedules.any((s) =>
-                            s.studentId == schedule.studentId &&
-                            s.lessonTime == schedule.lessonTime);
-                        if (!alreadyExists && pageContext.mounted) {
-                          _showNextLessonSuggestion(pageContext, ref, schedule);
+                        // 1. 패키지 정보 미리 조회
+                        int perLessonAmount = 0;
+                        if (user != null && schedule.packageId != null) {
+                          try {
+                            final packages = await ref.read(packageRepositoryProvider)
+                                .getActivePackages(user.id, schedule.studentId);
+                            final pkg = packages.where((p) => p.id == schedule.packageId).firstOrNull;
+                            if (pkg != null && pkg.totalCount > 0) {
+                              perLessonAmount = (pkg.price / pkg.totalCount).round();
+                            }
+                          } catch (_) {}
                         }
+
+                        // 2. 레슨 상태 완료 처리
+                        await ref.read(scheduleRepositoryProvider)
+                            .updateScheduleStatus(schedule.id, 'completed');
+
+                        // 3. 패키지 횟수 차감
+                        bool packageDeducted = false;
+                        if (schedule.packageId != null) {
+                          try {
+                            await ref.read(packageRepositoryProvider)
+                                .deductLesson(schedule.packageId!);
+                            packageDeducted = true;
+                            ref.invalidate(packagesProvider);
+                          } catch (_) {
+                            // 패키지 차감 실패 → 레슨 상태 롤백
+                            await ref.read(scheduleRepositoryProvider)
+                                .updateScheduleStatus(schedule.id, 'scheduled');
+                            if (pageContext.mounted) {
+                              ScaffoldMessenger.of(pageContext).showSnackBar(
+                                const SnackBar(content: Text('패키지 처리 중 오류가 발생했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+                              );
+                            }
+                            ref.invalidate(weeklySchedulesProvider);
+                            return;
+                          }
+                        }
+
+                        // 4. 수입 자동 기록
+                        if (user != null && perLessonAmount > 0) {
+                          try {
+                            await ref.read(incomeRepositoryProvider).createIncomeRecord(
+                              proId: user.id,
+                              studentId: schedule.studentId,
+                              packageId: schedule.packageId,
+                              category: 'lesson',
+                              amount: perLessonAmount,
+                              incomeDate: schedule.lessonDate,
+                              description: '${schedule.studentName ?? "학생"} ${schedule.lessonTypeLabel}',
+                              paymentMethod: 'transfer',
+                            );
+                            ref.invalidate(monthlyIncomeRecordsProvider);
+                            ref.invalidate(monthlyTotalIncomeProvider);
+                          } catch (_) {
+                            // 수입 기록 실패는 치명적이지 않으므로 계속 진행
+                          }
+                        }
+
+                        // 5. 학생 진도 자동 업데이트
+                        try {
+                          final student = await ref.read(studentRepositoryProvider)
+                              .getStudent(schedule.studentId);
+                          await ref.read(studentRepositoryProvider).updateStudent(
+                            schedule.studentId,
+                            {
+                              'total_lesson_count': student.totalLessonCount + 1,
+                              'last_lesson_at': schedule.lessonDate.toIso8601String().split('T').first,
+                            },
+                          );
+                          ref.invalidate(studentsProvider);
+                        } catch (_) {}
+
+                        ref.invalidate(weeklySchedulesProvider);
+                        ref.invalidate(todaySchedulesProvider);
+
+                        // 6. 다음 레슨 제안
+                        if (pageContext.mounted && user != null) {
+                          final nextDate = schedule.lessonDate.add(const Duration(days: 7));
+                          final nextWeekSchedules = await ref.read(scheduleRepositoryProvider)
+                              .getSchedules(
+                                proId: user.id,
+                                startDate: nextDate,
+                                endDate: nextDate.add(const Duration(days: 1)),
+                              );
+                          final alreadyExists = nextWeekSchedules.any((s) =>
+                              s.studentId == schedule.studentId &&
+                              s.lessonTime == schedule.lessonTime);
+                          if (!alreadyExists && pageContext.mounted) {
+                            _showNextLessonSuggestion(pageContext, ref, schedule);
+                          }
+                        }
+                      } catch (e) {
+                        if (pageContext.mounted) {
+                          ScaffoldMessenger.of(pageContext).showSnackBar(
+                            const SnackBar(content: Text('레슨 완료 처리 중 오류가 발생했습니다.'), backgroundColor: Colors.red),
+                          );
+                        }
+                        ref.invalidate(weeklySchedulesProvider);
+                        ref.invalidate(todaySchedulesProvider);
                       }
                     },
                   ),
@@ -791,7 +818,6 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                 } else {
                   userMessage = '예약 실패: $errMsg';
                 }
-                print('다음 레슨 예약 에러: $e');
                 if (outerContext.mounted) {
                   ScaffoldMessenger.of(outerContext).showSnackBar(
                     SnackBar(content: Text(userMessage), backgroundColor: Colors.orange),
@@ -1193,7 +1219,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                                 } catch (e) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('오류: $e'), backgroundColor: Colors.red),
+                                      const SnackBar(content: Text('저장에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
                                     );
                                   }
                                 }

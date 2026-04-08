@@ -62,7 +62,6 @@ class SupabaseService {
 
       return response;
     } catch (e) {
-      print('프로필 조회 실패: $e');
       return null;
     }
   }

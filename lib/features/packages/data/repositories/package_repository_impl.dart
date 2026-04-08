@@ -20,7 +20,6 @@ class PackageRepositoryImpl {
       final list = List<Map<String, dynamic>>.from(response);
       return list.map((json) => PackageModel.fromJson(json).toEntity()).toList();
     } catch (e) {
-      print('패키지 조회 실패: $e');
       return [];
     }
   }
@@ -39,7 +38,6 @@ class PackageRepositoryImpl {
       final list = List<Map<String, dynamic>>.from(response);
       return list.map((json) => PackageModel.fromJson(json).toEntity()).toList();
     } catch (e) {
-      print('학생 패키지 조회 실패: $e');
       return [];
     }
   }
@@ -84,9 +82,6 @@ class PackageRepositoryImpl {
 
       return PackageModel.fromJson(response).toEntity();
     } catch (e) {
-      print('========== 패키지 생성 에러 ==========');
-      print('에러: $e');
-      print('=====================================');
       throw Exception('패키지 생성 실패: $e');
     }
   }
@@ -117,7 +112,6 @@ class PackageRepositoryImpl {
 
       return PackageModel.fromJson(response).toEntity();
     } catch (e) {
-      print('레슨 복원 실패: $e');
       return null;
     }
   }
@@ -132,8 +126,15 @@ class PackageRepositoryImpl {
           .eq(DatabaseConstants.packageId, packageId)
           .single();
 
-      final usedCount = (current['used_count'] as int? ?? 0) + 1;
+      final currentUsed = current['used_count'] as int? ?? 0;
       final totalCount = current['total_count'] as int? ?? 0;
+
+      // 횟수 초과 방지
+      if (currentUsed >= totalCount) {
+        throw Exception('패키지 잔여 횟수가 없습니다.');
+      }
+
+      final usedCount = currentUsed + 1;
 
       final updateData = <String, dynamic>{
         'used_count': usedCount,
@@ -154,7 +155,6 @@ class PackageRepositoryImpl {
 
       return PackageModel.fromJson(response).toEntity();
     } catch (e) {
-      print('레슨 차감 실패: $e');
       return null;
     }
   }

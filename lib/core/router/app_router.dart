@@ -32,34 +32,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                          state.matchedLocation == '/register';
       final isSplashRoute = state.matchedLocation == '/';
       
-      print('라우터 리다이렉트: ${state.matchedLocation}, 인증상태: $isAuthenticated');
       
       // OAuth 콜백 파라미터가 있는 경우 제거하고 로그인 페이지로
       if (state.uri.queryParameters.containsKey('code') || 
           state.uri.queryParameters.containsKey('error')) {
-        print('OAuth 파라미터 감지, 로그인으로 리다이렉트');
         return '/login';
       }
       
       // 스플래시 화면은 항상 허용
       if (isSplashRoute) {
-        print('스플래시 화면 허용');
         return null;
       }
       
       // 로그인하지 않은 경우 로그인 페이지로
       if (!isAuthenticated && !isAuthRoute) {
-        print('미인증 사용자, 로그인으로 리다이렉트');
         return '/login';
       }
       
       // 로그인한 경우 인증 페이지 접근 시 홈으로
       if (isAuthenticated && isAuthRoute) {
-        print('인증된 사용자가 로그인 페이지 접근, 홈으로 리다이렉트');
         return '/home';
       }
       
-      print('리다이렉트 없음');
       return null;
     },
     routes: [

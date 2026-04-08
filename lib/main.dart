@@ -7,38 +7,46 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 
+// --dart-define 으로 주입된 값 (빌드 시), 없으면 .env fallback
+const _kSupabaseUrl = String.fromEnvironment('SUPABASE_URL');
+const _kSupabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 전역 에러 핸들러 — 모든 에러를 콘솔에 출력
+  // 전역 에러 핸들러
   FlutterError.onError = (details) {
-    print('┌── Flutter Error ──');
-    print('│ ${details.exceptionAsString()}');
-    if (details.stack != null) {
-      print('│ ${details.stack.toString().split('\n').take(5).join('\n│ ')}');
+    if (kDebugMode) {
+      FlutterError.presentError(details);
     }
-    print('└───────────────────');
   };
 
-  // 비동기 에러도 콘솔에 출력
   PlatformDispatcher.instance.onError = (error, stack) {
-    print('┌── Async Error ──');
-    print('│ $error');
-    print('│ ${stack.toString().split('\n').take(5).join('\n│ ')}');
-    print('└──────────────────');
+    if (kDebugMode) {
+      debugPrint('Async Error: $error');
+    }
     return true;
   };
 
   // 한글 폰트 사전 로드 (CanvasKit IME 조합 깨짐 방지)
   await _loadKoreanFont();
 
-  // 환경변수 로드
-  await dotenv.load(fileName: ".env");
+  // 환경변수: dart-define 우선, 없으면 .env fallback (로컬 개발용)
+  String supabaseUrl = _kSupabaseUrl;
+  String supabaseAnonKey = _kSupabaseAnonKey;
 
-  // Supabase 초기화 (기존 Golfearn 프로젝트와 동일한 인스턴스)
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    try {
+      await dotenv.load(fileName: ".env");
+      supabaseUrl = dotenv.env['SUPABASE_URL'] ?? '';
+      supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+    } catch (_) {}
+  }
+
+  // Supabase 초기화
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
     authOptions: const FlutterAuthClientOptions(
       authFlowType: AuthFlowType.implicit,
       autoRefreshToken: true,
@@ -61,7 +69,6 @@ Future<void> _loadKoreanFont() async {
     fontLoader.addFont(fontData.then((data) => data.buffer.asByteData()));
     await fontLoader.load();
   } catch (e) {
-    print('한글 폰트 로드 실패 (무시 가능): $e');
   }
 }
 

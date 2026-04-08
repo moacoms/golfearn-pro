@@ -109,7 +109,7 @@ class GoogleSheetsService {
   }
 
   /// 시트 전체 업데이트 (덮어쓰기)
-  Future<void> _updateSheet(String sheetName, List<List<String>> rows) async {
+  Future<void> _updateSheet(String sheetName, List<List<dynamic>> rows) async {
     final url = '$_baseUrl/$_spreadsheetId/values/$sheetName'
         '?valueInputOption=USER_ENTERED&key=$_apiKey';
 
