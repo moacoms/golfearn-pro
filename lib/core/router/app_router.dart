@@ -17,7 +17,6 @@ import '../../features/packages/presentation/pages/packages_page.dart';
 import '../../features/lessons/presentation/pages/lessons_page.dart';
 import '../../features/income/presentation/pages/income_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
-import '../../features/analysis/presentation/pages/analysis_page.dart';
 import '../../shared/widgets/main_scaffold.dart';
 
 /// 라우터 프로바이더
@@ -184,16 +183,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => MaterialPage(
               key: state.pageKey,
               child: const FindProPage(),
-            ),
-          ),
-
-          // AI 스윙 분석
-          GoRoute(
-            path: '/analysis',
-            name: 'analysis',
-            pageBuilder: (context, state) => MaterialPage(
-              key: state.pageKey,
-              child: const AnalysisPage(),
             ),
           ),
 

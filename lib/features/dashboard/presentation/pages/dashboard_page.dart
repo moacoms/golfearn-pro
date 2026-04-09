@@ -936,9 +936,9 @@ class DashboardPage extends ConsumerWidget {
             SizedBox(width: 12.w),
             Expanded(
               child: _buildActionButton(
-                icon: Icons.auto_awesome,
-                label: 'AI 분석',
-                onTap: () => context.go('/analysis'),
+                icon: Icons.note_add,
+                label: '노트 작성',
+                onTap: () => context.go('/lessons'),
               ),
             ),
           ],

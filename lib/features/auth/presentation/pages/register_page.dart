@@ -37,6 +37,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   bool _checkingEmail = false;
 
   String? _phoneError;
+  String? _confirmPasswordError;
 
   @override
   void initState() {
@@ -289,6 +290,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       obscureText: _obscureConfirmPassword,
                       focusNode: _confirmPasswordFocus,
                       textInputAction: TextInputAction.done,
+                      errorText: _confirmPasswordError,
+                      onChanged: (value) {
+                        if (value.isNotEmpty && value != _passwordController.text) {
+                          setState(() => _confirmPasswordError = '비밀번호가 일치하지 않습니다');
+                        } else {
+                          setState(() => _confirmPasswordError = null);
+                        }
+                      },
                       suffixIcon: ExcludeFocus(
                         child: IconButton(
                           onPressed: () {
