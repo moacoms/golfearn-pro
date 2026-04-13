@@ -246,26 +246,24 @@ class AuthRepositoryImpl implements AuthRepository {
         throw Exception('로그인이 필요합니다.');
       }
 
-      final updateData = <String, dynamic>{
-        'full_name': fullName,
-        'pro_phone': phoneNumber,
-        'is_lesson_pro': true,
-        'is_student': false,
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-      if (bio != null) updateData['pro_introduction'] = bio;
-      if (experience != null) updateData['pro_experience_years'] = experience;
-      // sport_type은 DB 컬럼 추가 후 활성화
-      // if (sportType != null) updateData['sport_type'] = sportType;
+      // RLS가 is_lesson_pro 자가 update를 차단하므로 보안 RPC 경유
+      final profile = await _supabaseService.client.rpc(
+        'promote_to_lesson_pro',
+        params: {
+          'p_full_name': fullName,
+          'p_phone': phoneNumber,
+          'p_introduction': bio,
+          'p_experience_years': experience,
+        },
+      );
 
-      final profile = await _supabaseService.client
-          .from('profiles')
-          .update(updateData)
-          .eq('id', userId)
-          .select()
-          .single();
+      if (profile == null) {
+        throw Exception('레슨프로 등록 응답이 비어있습니다.');
+      }
 
-      return UserModel.fromJson(profile).toEntity();
+      return UserModel.fromJson(
+        Map<String, dynamic>.from(profile as Map),
+      ).toEntity();
     } catch (e) {
       throw Exception('레슨프로 등록 중 오류가 발생했습니다: $e');
     }

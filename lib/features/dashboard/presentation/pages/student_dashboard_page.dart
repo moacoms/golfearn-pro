@@ -1315,28 +1315,16 @@ class StudentDashboardPage extends ConsumerWidget {
             onPressed: () async {
               Navigator.of(dialogContext).pop();
               try {
-                final userId = Supabase.instance.client.auth.currentUser?.id;
-                if (userId == null) return;
-
-                await Supabase.instance.client
-                    .from('profiles')
-                    .update({
-                      'is_lesson_pro': true,
-                      'is_student': false,
-                      'updated_at': DateTime.now().toIso8601String(),
-                    })
-                    .eq('id', userId);
-
                 final currentUser = ref.read(currentUserProvider);
-                if (currentUser != null) {
-                  ref.read(authControllerProvider.notifier).state = AuthState(
-                    user: currentUser.copyWith(isLessonPro: true, isStudent: false),
-                  );
-                }
+                if (currentUser == null) return;
 
-                ref.invalidate(authControllerProvider);
-                ref.invalidate(currentUserProvider);
-                ref.invalidate(isLessonProProvider);
+                // RLS가 is_lesson_pro 자가 update를 차단하므로 controller → RPC 경유
+                await ref
+                    .read(authControllerProvider.notifier)
+                    .registerAsLessonPro(
+                      fullName: currentUser.fullName ?? '',
+                      phoneNumber: '',
+                    );
 
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
