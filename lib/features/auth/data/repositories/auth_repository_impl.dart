@@ -95,8 +95,9 @@ class AuthRepositoryImpl implements AuthRepository {
     String? phoneNumber,
     bool isLessonPro = false,
   }) async {
+    // 신규 가입은 항상 학생으로 시작. 프로 전환은 별도 registerAsLessonPro()로만 가능
+    // (클라이언트가 임의로 is_lesson_pro=true 설정하는 것을 차단)
     try {
-      // 1단계: signUp - full_name만 metadata로 전달 (트리거 호환)
       final response = await _supabaseService.signUp(
         email: email,
         password: password,
@@ -132,29 +133,35 @@ class AuthRepositoryImpl implements AuthRepository {
         await Future.delayed(const Duration(milliseconds: 500));
 
         // upsert: 트리거가 이미 만들었으면 update, 안 만들었으면 insert
+        // 보안: is_lesson_pro/is_student는 서버 트리거가 결정 (클라이언트 신뢰 X)
         final profile = await _supabaseService.client
             .from('profiles')
             .upsert({
               'id': response.user!.id,
               'full_name': fullName,
               'pro_phone': phoneNumber,
-              'is_lesson_pro': isLessonPro,
-              'is_student': !isLessonPro,
               'updated_at': DateTime.now().toIso8601String(),
             })
             .select()
             .single();
         final entity = UserModel.fromJson(profile).toEntity();
+        // 프로 전환 요청 시 별도 플로우로 승격
+        if (isLessonPro) {
+          return await registerAsLessonPro(
+            fullName: fullName ?? '',
+            phoneNumber: phoneNumber ?? '',
+          );
+        }
         return entity.copyWith(email: email);
       } catch (e) {
-        // 프로필 처리 실패해도 기본 정보로 진행
+        // 프로필 처리 실패해도 기본 정보로 진행 — 항상 학생으로 시작
         return UserEntity(
           id: response.user!.id,
           email: email,
           fullName: fullName,
           phoneNumber: phoneNumber,
-          isLessonPro: isLessonPro,
-          isStudent: !isLessonPro,
+          isLessonPro: false,
+          isStudent: true,
         );
       }
     } on AuthException catch (e) {
