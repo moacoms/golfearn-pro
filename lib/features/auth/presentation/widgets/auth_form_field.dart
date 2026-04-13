@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_theme.dart';
 
@@ -16,6 +17,8 @@ class AuthFormField extends StatelessWidget {
   final void Function(String)? onFieldSubmitted;
   final bool enabled;
   final String? errorText;
+  final int? maxLength;
+  final List<TextInputFormatter>? inputFormatters;
 
   const AuthFormField({
     super.key,
@@ -32,6 +35,8 @@ class AuthFormField extends StatelessWidget {
     this.onFieldSubmitted,
     this.enabled = true,
     this.errorText,
+    this.maxLength,
+    this.inputFormatters,
   });
 
   @override
@@ -60,9 +65,12 @@ class AuthFormField extends StatelessWidget {
           enabled: enabled,
           autocorrect: false,
           enableSuggestions: false,
+          maxLength: maxLength,
+          inputFormatters: inputFormatters,
           style: TextStyle(fontSize: 16.sp),
           decoration: InputDecoration(
             hintText: hintText,
+            counterText: '',
             hintStyle: TextStyle(
               fontSize: 16.sp,
               color: Colors.grey[400],

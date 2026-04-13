@@ -4,6 +4,25 @@ import '../../domain/entities/student_entity.dart';
 import '../models/student_model.dart';
 
 class StudentRepositoryImpl {
+  static const _allowedUpdateFields = <String>{
+    'student_name',
+    'student_phone',
+    'student_email',
+    'student_memo',
+    'current_level',
+    'goal',
+    'birth_date',
+    'gender',
+    'started_golf_at',
+    'average_score',
+    'group_name',
+    'family_group_id',
+    'total_lesson_count',
+    'last_lesson_at',
+    'is_active',
+    'user_id',
+  };
+
   final SupabaseService _supabaseService;
 
   StudentRepositoryImpl(this._supabaseService);
@@ -103,13 +122,15 @@ class StudentRepositoryImpl {
 
   Future<StudentEntity> updateStudent(String studentId, Map<String, dynamic> data) async {
     try {
-      // pro_id 변경 방지
-      data.remove('pro_id');
-      data['updated_at'] = DateTime.now().toIso8601String();
+      final filtered = <String, dynamic>{
+        for (final entry in data.entries)
+          if (_allowedUpdateFields.contains(entry.key)) entry.key: entry.value,
+      };
+      filtered['updated_at'] = DateTime.now().toIso8601String();
 
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonStudents)
-          .update(data)
+          .update(filtered)
           .eq(DatabaseConstants.studentId, studentId)
           .eq(DatabaseConstants.studentProId, _currentUserId)
           .select()

@@ -115,14 +115,32 @@ class ScheduleRepositoryImpl {
     }
   }
 
+  static const _allowedScheduleUpdateFields = <String>{
+    'student_id',
+    'package_id',
+    'lesson_date',
+    'lesson_time',
+    'duration_minutes',
+    'status',
+    'location',
+    'lesson_type',
+    'memo',
+    'recurring_group_id',
+    'cancelled_by',
+    'cancel_reason',
+  };
+
   Future<ScheduleEntity> updateSchedule(String scheduleId, Map<String, dynamic> data) async {
     try {
-      data.remove('pro_id');
-      data['updated_at'] = DateTime.now().toIso8601String();
+      final filtered = <String, dynamic>{
+        for (final entry in data.entries)
+          if (_allowedScheduleUpdateFields.contains(entry.key)) entry.key: entry.value,
+      };
+      filtered['updated_at'] = DateTime.now().toIso8601String();
 
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonSchedules)
-          .update(data)
+          .update(filtered)
           .eq(DatabaseConstants.scheduleId, scheduleId)
           .eq(DatabaseConstants.scheduleProId, _currentUserId)
           .select('*, lesson_students(student_name)')

@@ -106,14 +106,27 @@ class LessonNoteRepositoryImpl {
     }
   }
 
+  static const _allowedNoteUpdateFields = <String>{
+    'schedule_id',
+    'manual_note',
+    'homework',
+    'next_focus',
+    'key_points',
+    'improvements',
+    'practice_time_minutes',
+  };
+
   Future<LessonNoteEntity> updateLessonNote(String noteId, Map<String, dynamic> data) async {
     try {
-      data.remove('pro_id');
-      data['updated_at'] = DateTime.now().toIso8601String();
+      final filtered = <String, dynamic>{
+        for (final entry in data.entries)
+          if (_allowedNoteUpdateFields.contains(entry.key)) entry.key: entry.value,
+      };
+      filtered['updated_at'] = DateTime.now().toIso8601String();
 
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonNotes)
-          .update(data)
+          .update(filtered)
           .eq('id', noteId)
           .eq('pro_id', _currentUserId)
           .select('*')

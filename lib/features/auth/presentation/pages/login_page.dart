@@ -67,6 +67,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   hintText: 'example@golfearn.com',
                   keyboardType: TextInputType.emailAddress,
                   validator: _validateEmail,
+                  maxLength: 254,
                 ),
                 SizedBox(height: 20.h),
                 
@@ -88,9 +89,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                   ),
                   validator: _validatePassword,
+                  maxLength: 72,
                 ),
                 SizedBox(height: 32.h),
-                
+
                 // 로그인 버튼
                 AuthButton(
                   onPressed: authState.isLoading ? null : _handleLogin,
@@ -249,6 +251,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       hintText: 'example@golfearn.com',
                       keyboardType: TextInputType.emailAddress,
                       enabled: !isSending,
+                      maxLength: 254,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return '이메일을 입력해주세요';

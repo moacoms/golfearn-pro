@@ -178,14 +178,31 @@ class PackageRepositoryImpl {
     }
   }
 
+  static const _allowedPackageUpdateFields = <String>{
+    'package_name',
+    'package_type',
+    'total_count',
+    'used_count',
+    'price',
+    'start_date',
+    'end_date',
+    'status',
+    'payment_status',
+    'paid_amount',
+    'payment_method',
+  };
+
   /// 패키지 필드 업데이트 (결제 상태, 패키지 상태 등)
   Future<void> updatePackageField(String packageId, Map<String, dynamic> data) async {
     try {
-      data.remove('pro_id');
-      data['updated_at'] = DateTime.now().toIso8601String();
+      final filtered = <String, dynamic>{
+        for (final entry in data.entries)
+          if (_allowedPackageUpdateFields.contains(entry.key)) entry.key: entry.value,
+      };
+      filtered['updated_at'] = DateTime.now().toIso8601String();
       await _supabaseService.client
           .from(DatabaseConstants.lessonPackages)
-          .update(data)
+          .update(filtered)
           .eq(DatabaseConstants.packageId, packageId)
           .eq(DatabaseConstants.packageProId, _currentUserId);
     } catch (e) {
