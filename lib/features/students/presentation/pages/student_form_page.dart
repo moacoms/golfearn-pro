@@ -107,6 +107,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
                 controller: _nameController,
                 label: '이름 *',
                 hint: '학생 이름을 입력하세요',
+                maxLength: 50,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return '이름을 입력해주세요';
@@ -119,6 +120,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
                 controller: _phoneController,
                 label: '전화번호',
                 hint: '010-0000-0000',
+                maxLength: 13,
                 keyboardType: TextInputType.phone,
                 validator: (value) {
                   if (value != null && value.isNotEmpty) {
@@ -135,6 +137,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
                 controller: _emailController,
                 label: '이메일',
                 hint: 'email@example.com',
+                maxLength: 100,
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value != null && value.isNotEmpty) {
@@ -151,6 +154,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
                 controller: _groupNameController,
                 label: '그룹',
                 hint: '예: A반, 오전반, VIP',
+                maxLength: 30,
               ),
               SizedBox(height: 12.h),
               // 가족 연결
@@ -172,6 +176,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
                 controller: _goalController,
                 label: '목표',
                 hint: SportConstants.goalHint(sportType),
+                maxLength: 200,
               ),
               if (SportConstants.scoreLabel(sportType) != null) ...[
                 SizedBox(height: 12.h),
@@ -232,6 +237,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
                 label: '메모',
                 hint: '학생에 대한 메모를 입력하세요',
                 maxLines: 4,
+                maxLength: 500,
               ),
 
               SizedBox(height: 32.h),
@@ -293,12 +299,14 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
     String? hint,
     TextInputType? keyboardType,
     int maxLines = 1,
+    int? maxLength,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      maxLength: maxLength,
       validator: validator,
       decoration: InputDecoration(
         labelText: label,

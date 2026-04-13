@@ -26,7 +26,7 @@ class StudentDetailPage extends ConsumerWidget {
       ),
       error: (error, _) => Scaffold(
         appBar: AppBar(title: const Text('학생 상세')),
-        body: Center(child: Text('오류: $error')),
+        body: const Center(child: Text('학생 정보를 불러올 수 없습니다.')),
       ),
     );
   }

@@ -146,6 +146,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
                     TextFormField(
                       controller: _aiBriefController,
                       maxLines: 2,
+                      maxLength: 200,
                       decoration: _inputDecoration('').copyWith(
                         hintText: '오늘 레슨 키워드 입력 (예: 드라이버 슬라이스 교정, 그립 변경)',
                         hintStyle: TextStyle(fontSize: 13.sp, color: Colors.grey[400]),
@@ -165,6 +166,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
               TextFormField(
                 controller: _noteController,
                 maxLines: 6,
+                maxLength: 2000,
                 decoration: _inputDecoration('').copyWith(
                   hintText: '오늘 레슨 내용을 기록하세요',
                 ),
@@ -177,6 +179,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
               TextFormField(
                 controller: _improvementsController,
                 maxLines: 3,
+                maxLength: 1000,
                 decoration: _inputDecoration('').copyWith(
                   hintText: '개선할 점을 줄바꿈으로 구분하여 입력',
                 ),
@@ -189,6 +192,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
               TextFormField(
                 controller: _keyPointsController,
                 maxLines: 3,
+                maxLength: 1000,
                 decoration: _inputDecoration('').copyWith(
                   hintText: '핵심 포인트를 줄바꿈으로 구분하여 입력',
                 ),
@@ -201,6 +205,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
               TextFormField(
                 controller: _homeworkController,
                 maxLines: 3,
+                maxLength: 1000,
                 decoration: _inputDecoration('').copyWith(
                   hintText: '다음 레슨까지 연습할 내용',
                 ),
@@ -213,6 +218,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
               TextFormField(
                 controller: _nextFocusController,
                 maxLines: 2,
+                maxLength: 500,
                 decoration: _inputDecoration('').copyWith(
                   hintText: '다음 레슨에서 집중할 내용',
                 ),
@@ -396,7 +402,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('AI 생성 실패: ${e.toString().replaceAll("Exception: ", "")}'),
+            content: const Text('AI 생성에 실패했습니다. 다시 시도해주세요.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -495,7 +501,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: ${e.toString().replaceAll('Exception: ', '')}'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('저장에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
         );
       }
     } finally {

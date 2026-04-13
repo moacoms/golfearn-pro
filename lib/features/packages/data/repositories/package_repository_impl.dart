@@ -8,8 +8,21 @@ class PackageRepositoryImpl {
 
   PackageRepositoryImpl(this._supabaseService);
 
+  String get _currentUserId {
+    final uid = _supabaseService.currentUser?.id;
+    if (uid == null) throw Exception('인증이 필요합니다.');
+    return uid;
+  }
+
+  void _verifyProAccess(String proId) {
+    if (proId != _currentUserId) {
+      throw Exception('접근 권한이 없습니다.');
+    }
+  }
+
   /// 전체 패키지 목록 조회
   Future<List<PackageEntity>> getPackages(String proId) async {
+    _verifyProAccess(proId);
     try {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonPackages)
@@ -26,6 +39,7 @@ class PackageRepositoryImpl {
 
   /// 특정 학생의 활성 패키지 조회
   Future<List<PackageEntity>> getActivePackages(String proId, String studentId) async {
+    _verifyProAccess(proId);
     try {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonPackages)
@@ -56,6 +70,7 @@ class PackageRepositoryImpl {
     int? paidAmount,
     String? paymentMethod,
   }) async {
+    _verifyProAccess(proId);
     try {
       final data = {
         'pro_id': proId,
@@ -82,7 +97,7 @@ class PackageRepositoryImpl {
 
       return PackageModel.fromJson(response).toEntity();
     } catch (e) {
-      throw Exception('패키지 생성 실패: $e');
+      throw Exception('패키지 생성 실패');
     }
   }
 
@@ -93,6 +108,7 @@ class PackageRepositoryImpl {
           .from(DatabaseConstants.lessonPackages)
           .select()
           .eq(DatabaseConstants.packageId, packageId)
+          .eq(DatabaseConstants.packageProId, _currentUserId)
           .single();
 
       final usedCount = (current['used_count'] as int? ?? 1) - 1;
@@ -107,6 +123,7 @@ class PackageRepositoryImpl {
           .from(DatabaseConstants.lessonPackages)
           .update(updateData)
           .eq(DatabaseConstants.packageId, packageId)
+          .eq(DatabaseConstants.packageProId, _currentUserId)
           .select('*')
           .single();
 
@@ -124,6 +141,7 @@ class PackageRepositoryImpl {
           .from(DatabaseConstants.lessonPackages)
           .select()
           .eq(DatabaseConstants.packageId, packageId)
+          .eq(DatabaseConstants.packageProId, _currentUserId)
           .single();
 
       final currentUsed = current['used_count'] as int? ?? 0;
@@ -150,6 +168,7 @@ class PackageRepositoryImpl {
           .from(DatabaseConstants.lessonPackages)
           .update(updateData)
           .eq(DatabaseConstants.packageId, packageId)
+          .eq(DatabaseConstants.packageProId, _currentUserId)
           .select('*')
           .single();
 
@@ -162,13 +181,15 @@ class PackageRepositoryImpl {
   /// 패키지 필드 업데이트 (결제 상태, 패키지 상태 등)
   Future<void> updatePackageField(String packageId, Map<String, dynamic> data) async {
     try {
+      data.remove('pro_id');
       data['updated_at'] = DateTime.now().toIso8601String();
       await _supabaseService.client
           .from(DatabaseConstants.lessonPackages)
           .update(data)
-          .eq(DatabaseConstants.packageId, packageId);
+          .eq(DatabaseConstants.packageId, packageId)
+          .eq(DatabaseConstants.packageProId, _currentUserId);
     } catch (e) {
-      throw Exception('패키지 업데이트 실패: $e');
+      throw Exception('패키지 업데이트 실패');
     }
   }
 
@@ -181,9 +202,10 @@ class PackageRepositoryImpl {
             'status': 'cancelled',
             'updated_at': DateTime.now().toIso8601String(),
           })
-          .eq(DatabaseConstants.packageId, packageId);
+          .eq(DatabaseConstants.packageId, packageId)
+          .eq(DatabaseConstants.packageProId, _currentUserId);
     } catch (e) {
-      throw Exception('패키지 취소 실패: $e');
+      throw Exception('패키지 취소 실패');
     }
   }
 }

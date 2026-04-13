@@ -640,7 +640,7 @@ class StudentDashboardPage extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('취소 실패: $e'), backgroundColor: Colors.red),
+                    const SnackBar(content: Text('취소에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
                   );
                 }
               }
@@ -946,7 +946,7 @@ class StudentDashboardPage extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('연결 실패: $e'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('연결에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
         );
       }
     }
@@ -1351,7 +1351,7 @@ class StudentDashboardPage extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('전환 실패: $e'),
+                      content: const Text('전환에 실패했습니다. 다시 시도해주세요.'),
                       backgroundColor: Colors.red,
                     ),
                   );

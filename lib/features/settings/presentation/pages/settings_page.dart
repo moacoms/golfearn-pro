@@ -424,7 +424,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         if (mounted) {
                           ScaffoldMessenger.of(this.context).showSnackBar(
                             SnackBar(
-                              content: Text('내보내기 실패: $e'),
+                              content: const Text('내보내기에 실패했습니다. 다시 시도해주세요.'),
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.r),
@@ -1053,7 +1053,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('프로필 업데이트 실패: $e'),
+                                content: const Text('프로필 업데이트에 실패했습니다. 다시 시도해주세요.'),
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                                 backgroundColor: const Color(0xFFEF4444),
@@ -1173,7 +1173,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('로그아웃 실패: $e'),
+            content: const Text('로그아웃에 실패했습니다. 다시 시도해주세요.'),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10.r),

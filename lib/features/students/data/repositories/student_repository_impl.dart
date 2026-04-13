@@ -8,7 +8,20 @@ class StudentRepositoryImpl {
 
   StudentRepositoryImpl(this._supabaseService);
 
+  String get _currentUserId {
+    final uid = _supabaseService.currentUser?.id;
+    if (uid == null) throw Exception('인증이 필요합니다.');
+    return uid;
+  }
+
+  void _verifyProAccess(String proId) {
+    if (proId != _currentUserId) {
+      throw Exception('접근 권한이 없습니다.');
+    }
+  }
+
   Future<List<StudentEntity>> getStudents(String proId, {bool activeOnly = true}) async {
+    _verifyProAccess(proId);
     try {
       var query = _supabaseService.client
           .from(DatabaseConstants.lessonStudents)
@@ -23,7 +36,7 @@ class StudentRepositoryImpl {
       final list = List<Map<String, dynamic>>.from(response);
       return list.map((json) => StudentModel.fromJson(json).toEntity()).toList();
     } catch (e) {
-      throw Exception('학생 목록 조회 실패: $e');
+      throw Exception('학생 목록 조회 실패');
     }
   }
 
@@ -33,10 +46,11 @@ class StudentRepositoryImpl {
           .from(DatabaseConstants.lessonStudents)
           .select()
           .eq(DatabaseConstants.studentId, studentId)
+          .eq(DatabaseConstants.studentProId, _currentUserId)
           .single();
       return StudentModel.fromJson(response).toEntity();
     } catch (e) {
-      throw Exception('학생 조회 실패: $e');
+      throw Exception('학생 조회 실패');
     }
   }
 
@@ -54,6 +68,7 @@ class StudentRepositoryImpl {
     int? averageScore,
     String? groupName,
   }) async {
+    _verifyProAccess(proId);
     try {
       final data = {
         'pro_id': proId,
@@ -82,23 +97,26 @@ class StudentRepositoryImpl {
           .single();
       return StudentModel.fromJson(response).toEntity();
     } catch (e) {
-      throw Exception('학생 등록 실패: $e');
+      throw Exception('학생 등록 실패');
     }
   }
 
   Future<StudentEntity> updateStudent(String studentId, Map<String, dynamic> data) async {
     try {
+      // pro_id 변경 방지
+      data.remove('pro_id');
       data['updated_at'] = DateTime.now().toIso8601String();
 
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonStudents)
           .update(data)
           .eq(DatabaseConstants.studentId, studentId)
+          .eq(DatabaseConstants.studentProId, _currentUserId)
           .select()
           .single();
       return StudentModel.fromJson(response).toEntity();
     } catch (e) {
-      throw Exception('학생 정보 수정 실패: $e');
+      throw Exception('학생 정보 수정 실패');
     }
   }
 
@@ -111,9 +129,10 @@ class StudentRepositoryImpl {
             'is_active': false,
             'updated_at': DateTime.now().toIso8601String(),
           })
-          .eq(DatabaseConstants.studentId, studentId);
+          .eq(DatabaseConstants.studentId, studentId)
+          .eq(DatabaseConstants.studentProId, _currentUserId);
     } catch (e) {
-      throw Exception('학생 삭제 실패: $e');
+      throw Exception('학생 삭제 실패');
     }
   }
 
@@ -123,6 +142,7 @@ class StudentRepositoryImpl {
           .from(DatabaseConstants.lessonStudents)
           .select()
           .eq('family_group_id', familyGroupId)
+          .eq(DatabaseConstants.studentProId, _currentUserId)
           .eq(DatabaseConstants.studentIsActive, true);
 
       final response = await query.order('student_name');
@@ -138,6 +158,7 @@ class StudentRepositoryImpl {
   }
 
   Future<int> getStudentCount(String proId) async {
+    _verifyProAccess(proId);
     try {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonStudents)

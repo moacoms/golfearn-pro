@@ -167,14 +167,14 @@ ${briefInput != null && briefInput.isNotEmpty ? '## 오늘 레슨 키워드 (프
           {'role': 'user', 'content': prompt}
         ],
       }),
-    );
+    ).timeout(const Duration(seconds: 30));
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else if (response.statusCode == 401) {
       throw Exception('API 키가 유효하지 않습니다');
     } else {
-      throw Exception('API 호출 실패: ${response.statusCode} - ${response.body}');
+      throw Exception('AI 서비스에 일시적인 문제가 발생했습니다.');
     }
   }
 

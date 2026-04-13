@@ -306,7 +306,7 @@ class PackagesPage extends ConsumerWidget {
           } catch (e) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('변경 실패: $e'), backgroundColor: Colors.red),
+                const SnackBar(content: Text('변경에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
               );
             }
           }
@@ -345,7 +345,7 @@ class PackagesPage extends ConsumerWidget {
           } catch (e) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('변경 실패: $e'), backgroundColor: Colors.red),
+                const SnackBar(content: Text('변경에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
               );
             }
           }

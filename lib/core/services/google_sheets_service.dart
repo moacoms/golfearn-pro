@@ -101,10 +101,10 @@ class GoogleSheetsService {
       body: jsonEncode({
         'values': [row],
       }),
-    );
+    ).timeout(const Duration(seconds: 15));
 
     if (response.statusCode != 200) {
-      throw Exception('Google Sheets 추가 실패: ${response.statusCode}');
+      throw Exception('데이터 저장에 실패했습니다.');
     }
   }
 
@@ -119,10 +119,10 @@ class GoogleSheetsService {
       body: jsonEncode({
         'values': rows,
       }),
-    );
+    ).timeout(const Duration(seconds: 15));
 
     if (response.statusCode != 200) {
-      throw Exception('Google Sheets 업데이트 실패: ${response.statusCode}');
+      throw Exception('데이터 업데이트에 실패했습니다.');
     }
   }
 
@@ -130,7 +130,7 @@ class GoogleSheetsService {
   Future<List<List<String>>> readSheet(String sheetName) async {
     final url = '$_baseUrl/$_spreadsheetId/values/$sheetName?key=$_apiKey';
 
-    final response = await http.get(Uri.parse(url));
+    final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 15));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -138,7 +138,7 @@ class GoogleSheetsService {
       if (values == null) return [];
       return values.map((row) => (row as List).map((cell) => cell.toString()).toList()).toList();
     } else {
-      throw Exception('Google Sheets 읽기 실패: ${response.statusCode}');
+      throw Exception('데이터를 불러올 수 없습니다.');
     }
   }
 }

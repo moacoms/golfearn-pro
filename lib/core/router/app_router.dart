@@ -27,32 +27,51 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     debugLogDiagnostics: true,
     redirect: (context, state) {
-      final isAuthRoute = state.matchedLocation == '/login' || 
+      final isAuthRoute = state.matchedLocation == '/login' ||
                          state.matchedLocation == '/register';
       final isSplashRoute = state.matchedLocation == '/';
-      
-      
+
       // OAuth 콜백 파라미터가 있는 경우 제거하고 로그인 페이지로
-      if (state.uri.queryParameters.containsKey('code') || 
+      if (state.uri.queryParameters.containsKey('code') ||
           state.uri.queryParameters.containsKey('error')) {
         return '/login';
       }
-      
+
       // 스플래시 화면은 항상 허용
       if (isSplashRoute) {
         return null;
       }
-      
+
       // 로그인하지 않은 경우 로그인 페이지로
       if (!isAuthenticated && !isAuthRoute) {
         return '/login';
       }
-      
+
       // 로그인한 경우 인증 페이지 접근 시 홈으로
       if (isAuthenticated && isAuthRoute) {
         return '/home';
       }
-      
+
+      // 역할 기반 접근 제어: 프로 전용 라우트
+      if (isAuthenticated) {
+        const proOnlyRoutes = ['/students', '/income', '/packages'];
+        final isProOnlyRoute = proOnlyRoutes.any(
+          (route) => state.matchedLocation.startsWith(route),
+        );
+        if (isProOnlyRoute && !ref.read(isLessonProProvider)) {
+          return '/home';
+        }
+
+        // 학생 전용 라우트
+        const studentOnlyRoutes = ['/find-pro'];
+        final isStudentOnlyRoute = studentOnlyRoutes.any(
+          (route) => state.matchedLocation.startsWith(route),
+        );
+        if (isStudentOnlyRoute && ref.read(isLessonProProvider)) {
+          return '/home';
+        }
+      }
+
       return null;
     },
     routes: [

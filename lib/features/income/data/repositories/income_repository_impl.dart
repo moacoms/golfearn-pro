@@ -8,10 +8,23 @@ class IncomeRepositoryImpl {
 
   IncomeRepositoryImpl(this._supabaseService);
 
+  String get _currentUserId {
+    final uid = _supabaseService.currentUser?.id;
+    if (uid == null) throw Exception('인증이 필요합니다.');
+    return uid;
+  }
+
+  void _verifyProAccess(String proId) {
+    if (proId != _currentUserId) {
+      throw Exception('접근 권한이 없습니다.');
+    }
+  }
+
   Future<List<IncomeEntity>> getIncomeRecords(String proId, {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
+    _verifyProAccess(proId);
     try {
       var query = _supabaseService.client
           .from(DatabaseConstants.proIncomeRecords)
@@ -43,6 +56,7 @@ class IncomeRepositoryImpl {
     String? description,
     String paymentMethod = 'cash',
   }) async {
+    _verifyProAccess(proId);
     try {
       final data = <String, dynamic>{
         'pro_id': proId,
@@ -63,7 +77,7 @@ class IncomeRepositoryImpl {
 
       return IncomeModel.fromJson(response).toEntity();
     } catch (e) {
-      throw Exception('수입 기록 등록 실패: $e');
+      throw Exception('수입 기록 등록 실패');
     }
   }
 
@@ -73,6 +87,7 @@ class IncomeRepositoryImpl {
           .from(DatabaseConstants.proIncomeRecords)
           .select('*, lesson_students(student_name)')
           .eq('student_id', studentId)
+          .eq('pro_id', _currentUserId)
           .order('payment_date', ascending: false);
       final list = List<Map<String, dynamic>>.from(response);
       return list.map((json) => IncomeModel.fromJson(json).toEntity()).toList();
@@ -86,13 +101,15 @@ class IncomeRepositoryImpl {
       await _supabaseService.client
           .from(DatabaseConstants.proIncomeRecords)
           .delete()
-          .eq('id', recordId);
+          .eq('id', recordId)
+          .eq('pro_id', _currentUserId);
     } catch (e) {
-      throw Exception('수입 기록 삭제 실패: $e');
+      throw Exception('수입 기록 삭제 실패');
     }
   }
 
   Future<int> getMonthlyIncome(String proId) async {
+    _verifyProAccess(proId);
     try {
       final now = DateTime.now();
       final monthStart = DateTime(now.year, now.month, 1);

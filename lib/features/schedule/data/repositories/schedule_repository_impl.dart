@@ -8,16 +8,52 @@ class ScheduleRepositoryImpl {
 
   ScheduleRepositoryImpl(this._supabaseService);
 
+  String get _currentUserId {
+    final uid = _supabaseService.currentUser?.id;
+    if (uid == null) throw Exception('인증이 필요합니다.');
+    return uid;
+  }
+
+  void _verifyProAccess(String proId) {
+    if (proId != _currentUserId) {
+      throw Exception('접근 권한이 없습니다.');
+    }
+  }
+
   Future<List<ScheduleEntity>> getSchedules({
     required String proId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    _verifyProAccess(proId);
+    try {
+      final response = await _supabaseService.client
+          .from(DatabaseConstants.lessonSchedules)
+          .select('*, lesson_students(student_name)')
+          .eq(DatabaseConstants.scheduleProId, proId)
+          .gte(DatabaseConstants.scheduleLessonDate, startDate.toIso8601String().split('T').first)
+          .lte(DatabaseConstants.scheduleLessonDate, endDate.toIso8601String().split('T').first)
+          .order(DatabaseConstants.scheduleLessonDate)
+          .order(DatabaseConstants.scheduleLessonTime);
+
+      final list = List<Map<String, dynamic>>.from(response);
+      return list.map((json) => ScheduleModel.fromJson(json).toEntity()).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// 학생용: student user_id 기반 스케줄 조회
+  Future<List<ScheduleEntity>> getStudentSchedules({
+    required String studentUserId,
     required DateTime startDate,
     required DateTime endDate,
   }) async {
     try {
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonSchedules)
-          .select('*, lesson_students(student_name)')
-          .eq(DatabaseConstants.scheduleProId, proId)
+          .select('*, lesson_students!inner(student_name, user_id)')
+          .eq('lesson_students.user_id', studentUserId)
           .gte(DatabaseConstants.scheduleLessonDate, startDate.toIso8601String().split('T').first)
           .lte(DatabaseConstants.scheduleLessonDate, endDate.toIso8601String().split('T').first)
           .order(DatabaseConstants.scheduleLessonDate)
@@ -49,6 +85,7 @@ class ScheduleRepositoryImpl {
     String? memo,
     String? recurringGroupId,
   }) async {
+    _verifyProAccess(proId);
     try {
       final data = {
         'pro_id': proId,
@@ -74,24 +111,26 @@ class ScheduleRepositoryImpl {
 
       return ScheduleModel.fromJson(response).toEntity();
     } catch (e) {
-      throw Exception('스케줄 등록 실패: $e');
+      throw Exception('스케줄 등록 실패');
     }
   }
 
   Future<ScheduleEntity> updateSchedule(String scheduleId, Map<String, dynamic> data) async {
     try {
+      data.remove('pro_id');
       data['updated_at'] = DateTime.now().toIso8601String();
 
       final response = await _supabaseService.client
           .from(DatabaseConstants.lessonSchedules)
           .update(data)
           .eq(DatabaseConstants.scheduleId, scheduleId)
+          .eq(DatabaseConstants.scheduleProId, _currentUserId)
           .select('*, lesson_students(student_name)')
           .single();
 
       return ScheduleModel.fromJson(response).toEntity();
     } catch (e) {
-      throw Exception('스케줄 수정 실패: $e');
+      throw Exception('스케줄 수정 실패');
     }
   }
 
@@ -104,9 +143,10 @@ class ScheduleRepositoryImpl {
       await _supabaseService.client
           .from(DatabaseConstants.lessonSchedules)
           .delete()
-          .eq(DatabaseConstants.scheduleId, scheduleId);
+          .eq(DatabaseConstants.scheduleId, scheduleId)
+          .eq(DatabaseConstants.scheduleProId, _currentUserId);
     } catch (e) {
-      throw Exception('스케줄 삭제 실패: $e');
+      throw Exception('스케줄 삭제 실패');
     }
   }
 
@@ -117,14 +157,16 @@ class ScheduleRepositoryImpl {
           .delete()
           .eq('recurring_group_id', recurringGroupId)
           .eq('status', 'scheduled')
+          .eq(DatabaseConstants.scheduleProId, _currentUserId)
           .select();
       return List.from(response).length;
     } catch (e) {
-      throw Exception('반복 레슨 일괄 삭제 실패: $e');
+      throw Exception('반복 레슨 일괄 삭제 실패');
     }
   }
 
   Future<int> getWeeklyLessonCount(String proId) async {
+    _verifyProAccess(proId);
     try {
       final now = DateTime.now();
       final weekStart = now.subtract(Duration(days: now.weekday - 1));

@@ -717,7 +717,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('취소 실패: $e'), backgroundColor: Colors.red),
+                    const SnackBar(content: Text('취소에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
                   );
                 }
               }
@@ -816,7 +816,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                 if (errMsg.contains('23505') || errMsg.contains('duplicate')) {
                   userMessage = '${nextDate.month}/${nextDate.day} ${schedule.lessonTime}에 이미 레슨이 있습니다';
                 } else {
-                  userMessage = '예약 실패: $errMsg';
+                  userMessage = '예약에 실패했습니다. 다시 시도해주세요.';
                 }
                 if (outerContext.mounted) {
                   ScaffoldMessenger.of(outerContext).showSnackBar(
@@ -866,7 +866,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('학생 목록을 불러올 수 없습니다: $e'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('학생 목록을 불러올 수 없습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
         );
       }
     }

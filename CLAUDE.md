@@ -139,3 +139,13 @@ ANTHROPIC_API_KEY=<key>
 - `vercel.json`으로 SPA 라우팅 설정
 - Preview 배포는 Vercel Authentication이 걸림 (Standard Protection)
 - Production 배포만 공개 접근 가능
+
+## Skills
+- dart-flutter-patterns: 모든 Flutter 코드 작성 시 적용
+- flutter-dart-code-review: 코드 작성 완료 후 리뷰 시 적용
+- tdd-workflow: 새 기능 개발 시 적용
+- verification-loop: 기능 완성 후 최종 검증 시 적용
+- coding-standards: 전체 코드 품질 기준 적용
+- security-review: 보안 관련 코드 작성 시 적용
+- deep-research: 새로운 기술/라이브러리 조사 시 적용
+- git-workflow: 커밋 시 적용
