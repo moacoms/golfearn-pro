@@ -100,7 +100,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   text: '로그인',
                 ),
                 SizedBox(height: 16.h),
-                
+
                 // 비밀번호 찾기 링크
                 TextButton(
                   onPressed: () => _showResetPasswordDialog(),
@@ -111,6 +111,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       color: Colors.grey[600],
                     ),
                   ),
+                ),
+                SizedBox(height: 24.h),
+
+                // 구분선 ("또는")
+                _buildDivider(),
+                SizedBox(height: 20.h),
+
+                // 카카오 로그인 버튼
+                _KakaoLoginButton(
+                  onPressed:
+                      authState.isLoading ? null : _handleKakaoLogin,
                 ),
                 SizedBox(height: 40.h),
                 
@@ -127,18 +138,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget _buildHeader() {
     return Column(
       children: [
-        // 로고 (추후 실제 로고로 교체)
-        Container(
-          width: 80.w,
-          height: 80.w,
-          decoration: BoxDecoration(
-            color: AppTheme.primaryColor,
-            borderRadius: BorderRadius.circular(20.r),
-          ),
-          child: Icon(
-            Icons.sports,
-            size: 40.w,
-            color: Colors.white,
+        ClipRRect(
+          borderRadius: BorderRadius.circular(20.r),
+          child: Image.asset(
+            'assets/icons/app_icon.png',
+            width: 80.w,
+            height: 80.w,
+            fit: BoxFit.cover,
           ),
         ),
         SizedBox(height: 24.h),
@@ -354,7 +360,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
-      
+
       // 로그인 성공 시 자동으로 라우터가 홈으로 리다이렉트
       if (mounted) {
         context.go('/home');
@@ -371,5 +377,87 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         );
       }
     }
+  }
+
+  Future<void> _handleKakaoLogin() async {
+    try {
+      await ref.read(authControllerProvider.notifier).signInWithKakao();
+      // 성공 시 브라우저/Custom Tab이 열리고, 돌아오면 authStateChanges가
+      // 세션을 방출함 → app_router 의 redirect 가 /home 으로 보냄.
+      // 여기서는 특별히 할 일 없음.
+    } catch (e) {
+      if (mounted) {
+        final msg = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12.w),
+          child: Text(
+            '또는',
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: Colors.grey[500],
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
+      ],
+    );
+  }
+}
+
+class _KakaoLoginButton extends StatelessWidget {
+  const _KakaoLoginButton({required this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  static const Color _kakaoYellow = Color(0xFFFEE500);
+  static const Color _kakaoText = Color(0xFF191919);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 52.h,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _kakaoYellow,
+          foregroundColor: _kakaoText,
+          disabledBackgroundColor: _kakaoYellow.withValues(alpha: 0.5),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.chat_bubble, size: 20.w, color: _kakaoText),
+            SizedBox(width: 10.w),
+            Text(
+              '카카오로 시작하기',
+              style: TextStyle(
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w600,
+                color: _kakaoText,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

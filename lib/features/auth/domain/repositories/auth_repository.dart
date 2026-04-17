@@ -46,4 +46,8 @@ abstract class AuthRepository {
 
   /// 비밀번호 재설정 이메일 발송
   Future<void> resetPassword({required String email});
+
+  /// 카카오 OAuth 로그인 (웹 기반 flow, supabase 네이티브 provider)
+  /// 성공 시 authStateChanges stream이 세션을 방출함 → 호출자는 즉시 리턴값 사용 X
+  Future<void> signInWithKakao();
 }

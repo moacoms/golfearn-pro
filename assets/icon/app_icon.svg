@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Background: Golfearn primary green, iOS rounded-square -->
+  <rect width="1024" height="1024" rx="228" ry="228" fill="#10B981"/>
+
+  <!-- Subtle inner gradient for depth -->
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#34D399" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#10B981" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ballShade" cx="40%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E5E7EB"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="228" ry="228" fill="url(#bgGlow)"/>
+
+  <!-- Golf ball -->
+  <circle cx="512" cy="512" r="340" fill="url(#ballShade)"/>
+
+  <!-- Golf ball dimples (subtle) -->
+  <g fill="#D1D5DB" opacity="0.55">
+    <!-- Top row -->
+    <circle cx="430" cy="260" r="16"/>
+    <circle cx="512" cy="235" r="16"/>
+    <circle cx="594" cy="260" r="16"/>
+    <!-- Upper middle row -->
+    <circle cx="350" cy="340" r="16"/>
+    <circle cx="430" cy="320" r="16"/>
+    <circle cx="594" cy="320" r="16"/>
+    <circle cx="674" cy="340" r="16"/>
+    <!-- Middle row (around G) -->
+    <circle cx="300" cy="430" r="16"/>
+    <circle cx="300" cy="512" r="16"/>
+    <circle cx="300" cy="594" r="16"/>
+    <circle cx="724" cy="430" r="16"/>
+    <circle cx="724" cy="512" r="16"/>
+    <circle cx="724" cy="594" r="16"/>
+    <!-- Lower middle row -->
+    <circle cx="350" cy="684" r="16"/>
+    <circle cx="430" cy="704" r="16"/>
+    <circle cx="594" cy="704" r="16"/>
+    <circle cx="674" cy="684" r="16"/>
+    <!-- Bottom row -->
+    <circle cx="430" cy="764" r="16"/>
+    <circle cx="512" cy="789" r="16"/>
+    <circle cx="594" cy="764" r="16"/>
+  </g>
+
+  <!-- Letter G (centered, overlapping the ball) -->
+  <text x="512" y="648"
+        font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif"
+        font-size="460"
+        font-weight="900"
+        text-anchor="middle"
+        fill="#10B981"
+        letter-spacing="-8">G</text>
+</svg>

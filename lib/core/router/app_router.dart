@@ -31,9 +31,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                          state.matchedLocation == '/register';
       final isSplashRoute = state.matchedLocation == '/';
 
-      // OAuth 콜백 파라미터가 있는 경우 제거하고 로그인 페이지로
-      if (state.uri.queryParameters.containsKey('code') ||
-          state.uri.queryParameters.containsKey('error')) {
+      // OAuth 콜백 파라미터 처리 (Kakao 로그인 등)
+      // supabase_flutter가 먼저 code를 세션으로 교환하므로,
+      // 이 시점에는 isAuthenticated가 이미 true일 수 있음.
+      final hasOAuthCallback =
+          state.uri.queryParameters.containsKey('code') ||
+              state.uri.queryParameters.containsKey('error');
+      if (hasOAuthCallback) {
+        // 이미 세션 생성됨 → 홈으로 (역할 기반 라우팅은 이후 단계에서)
+        if (isAuthenticated) {
+          return '/home';
+        }
+        // 아직 세션이 안 붙었거나 에러 → 로그인 페이지
         return '/login';
       }
 

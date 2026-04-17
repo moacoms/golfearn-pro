@@ -190,6 +190,27 @@ class AuthController extends _$AuthController {
     }
   }
 
+  /// 카카오 로그인 (OAuth)
+  /// 리다이렉트 기반이므로 완료 후 authStateChanges stream이 state를 갱신함.
+  /// 호출자는 예외만 처리하면 됨.
+  Future<void> signInWithKakao() async {
+    state = state.copyWith(isLoading: true, error: () => null);
+
+    try {
+      await _authRepository.signInWithKakao();
+      // 웹: 브라우저가 카카오로 이동 후 돌아오면 authStateChanges가 처리
+      // 모바일: Custom Tabs/SFSafariVC 후 동일
+      // 성공 여부는 여기서 알 수 없음 → isLoading 해제만
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: () => e.toString(),
+      );
+      rethrow;
+    }
+  }
+
   /// 비밀번호 재설정
   Future<void> resetPassword({required String email}) async {
     state = state.copyWith(isLoading: true, error: () => null);

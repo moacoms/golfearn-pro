@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../domain/entities/user_entity.dart';
@@ -277,6 +278,30 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception(_getAuthErrorMessage(e.message));
     } catch (e) {
       throw Exception('이메일 발송에 실패했습니다.');
+    }
+  }
+
+  @override
+  Future<void> signInWithKakao() async {
+    try {
+      // 웹: 현재 오리진으로 복귀 (localhost:8080 또는 vercel.app)
+      //      Supabase Site URL이 다른 프로젝트(golfearn.com) 공유 중이므로
+      //      redirectTo를 명시하지 않으면 엉뚱한 곳으로 감.
+      // 모바일: 커스텀 스킴 (supabase_flutter가 Custom Tabs/SFSafariVC 처리)
+      final redirectTo = kIsWeb
+          ? '${Uri.base.origin}/'
+          : 'io.supabase.golfearn://login-callback';
+
+      await _supabaseService.client.auth.signInWithOAuth(
+        OAuthProvider.kakao,
+        redirectTo: redirectTo,
+      );
+      // OAuth 리다이렉트 기반이므로 여기서는 세션이 아직 없음.
+      // 콜백 후 authStateChanges stream이 세션을 방출함.
+    } on AuthException catch (e) {
+      throw Exception(_getAuthErrorMessage(e.message));
+    } catch (e) {
+      throw Exception('카카오 로그인 중 오류가 발생했습니다.');
     }
   }
 
