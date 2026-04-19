@@ -188,6 +188,33 @@ class LessonsPage extends ConsumerWidget {
                   ],
                 ),
               ],
+              if (note.hasFieldData) ...[
+                SizedBox(height: 8.h),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6.r),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.golf_course, size: 14.w,
+                          color: AppTheme.primaryColor),
+                      SizedBox(width: 4.w),
+                      Text(
+                        '필드 ${note.fieldData!['total_score'] ?? '-'}타',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),

@@ -9,6 +9,7 @@ class LessonNoteEntity {
   final List<String>? keyPoints;
   final List<String>? improvements;
   final int? practiceTimeMinutes;
+  final Map<String, dynamic>? fieldData;
   final String? studentName; // join용
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -24,10 +25,13 @@ class LessonNoteEntity {
     this.keyPoints,
     this.improvements,
     this.practiceTimeMinutes,
+    this.fieldData,
     this.studentName,
     this.createdAt,
     this.updatedAt,
   });
+
+  bool get hasFieldData => fieldData != null && fieldData!.isNotEmpty;
 
   /// 레슨 날짜 (createdAt 기반)
   DateTime get lessonDate => createdAt ?? DateTime.now();
@@ -52,6 +56,7 @@ class LessonNoteEntity {
     List<String>? keyPoints,
     List<String>? improvements,
     int? practiceTimeMinutes,
+    Map<String, dynamic>? fieldData,
     String? studentName,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -67,6 +72,7 @@ class LessonNoteEntity {
       keyPoints: keyPoints ?? this.keyPoints,
       improvements: improvements ?? this.improvements,
       practiceTimeMinutes: practiceTimeMinutes ?? this.practiceTimeMinutes,
+      fieldData: fieldData ?? this.fieldData,
       studentName: studentName ?? this.studentName,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

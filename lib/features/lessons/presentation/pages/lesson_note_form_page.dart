@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/constants/sport_constants.dart';
 import '../../../../core/services/claude_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../students/presentation/providers/student_provider.dart';
 import '../../domain/entities/lesson_note_entity.dart';
 import '../providers/lesson_note_provider.dart';
+import '../widgets/field_lesson_tab.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class LessonNoteFormPage extends ConsumerStatefulWidget {
@@ -19,7 +19,8 @@ class LessonNoteFormPage extends ConsumerStatefulWidget {
   ConsumerState<LessonNoteFormPage> createState() => _LessonNoteFormPageState();
 }
 
-class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
+class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _noteController;
   late final TextEditingController _homeworkController;
@@ -28,7 +29,9 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
   late final TextEditingController _improvementsController;
 
   late final TextEditingController _aiBriefController;
+  late final TabController _tabController;
   String? _selectedStudentId;
+  Map<String, dynamic>? _fieldData;
   bool _isLoading = false;
   bool _isAiGenerating = false;
 
@@ -48,8 +51,10 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
       text: n?.improvements?.join('\n') ?? '',
     );
     _aiBriefController = TextEditingController();
+    _tabController = TabController(length: 2, vsync: this);
     if (n != null) {
       _selectedStudentId = n.studentId;
+      _fieldData = n.fieldData;
     }
   }
 
@@ -61,6 +66,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
     _keyPointsController.dispose();
     _improvementsController.dispose();
     _aiBriefController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -93,21 +99,23 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
       ),
       body: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 학생 선택
-              studentsAsync.when(
+        child: Column(
+          children: [
+            // 학생 선택 (탭 밖 — 양쪽 탭 공통)
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 16.w, 16.w, 0),
+              child: studentsAsync.when(
                 data: (students) {
                   return DropdownButtonFormField<String>(
                     value: _selectedStudentId,
                     hint: const Text('학생 선택'),
                     items: students.map((s) {
-                      return DropdownMenuItem(value: s.id, child: Text(s.studentName));
+                      return DropdownMenuItem(
+                          value: s.id, child: Text(s.studentName));
                     }).toList(),
-                    onChanged: isEditing ? null : (v) => setState(() => _selectedStudentId = v),
+                    onChanged: isEditing
+                        ? null
+                        : (v) => setState(() => _selectedStudentId = v),
                     validator: (v) => v == null ? '학생을 선택해주세요' : null,
                     decoration: _inputDecoration('학생 *'),
                   );
@@ -115,8 +123,52 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
                 loading: () => const CircularProgressIndicator(),
                 error: (_, __) => const Text('학생 목록 로드 실패'),
               ),
-              SizedBox(height: 16.h),
+            ),
+            SizedBox(height: 12.h),
 
+            // 탭 바
+            TabBar(
+              controller: _tabController,
+              labelColor: AppTheme.primaryColor,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: AppTheme.primaryColor,
+              labelStyle: TextStyle(
+                  fontSize: 14.sp, fontWeight: FontWeight.w600),
+              tabs: const [
+                Tab(text: '일반 노트'),
+                Tab(text: '필드 레슨 노트'),
+              ],
+            ),
+
+            // 탭 뷰
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // Tab 0: 일반 노트 (기존 폼)
+                  _buildGeneralNoteTab(),
+                  // Tab 1: 필드 레슨 노트
+                  FieldLessonTab(
+                    initialFieldData: _fieldData,
+                    onFieldDataChanged: (data) {
+                      setState(() => _fieldData = data);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGeneralNoteTab() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
               // AI 간단 메모 + 생성 버튼
               Container(
                 padding: EdgeInsets.all(14.w),
@@ -226,9 +278,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
               SizedBox(height: 32.h),
             ],
           ),
-        ),
-      ),
-    );
+        );
   }
 
   Widget _buildAiGenerateButton() {
@@ -474,6 +524,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
           'next_focus': _nextFocusController.text.trim().isEmpty ? null : _nextFocusController.text.trim(),
           'key_points': _textToList(_keyPointsController.text),
           'improvements': _textToList(_improvementsController.text),
+          'field_data': _fieldData,
         });
       } else {
         await repo.createLessonNote(
@@ -484,6 +535,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage> {
           nextFocus: _nextFocusController.text.trim().isEmpty ? null : _nextFocusController.text.trim(),
           keyPoints: _textToList(_keyPointsController.text),
           improvements: _textToList(_improvementsController.text),
+          fieldData: _fieldData,
         );
       }
 

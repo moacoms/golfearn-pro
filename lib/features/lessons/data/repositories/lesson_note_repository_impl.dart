@@ -79,6 +79,7 @@ class LessonNoteRepositoryImpl {
     List<String>? keyPoints,
     List<String>? improvements,
     int? practiceTimeMinutes,
+    Map<String, dynamic>? fieldData,
   }) async {
     _verifyProAccess(proId);
     try {
@@ -92,6 +93,7 @@ class LessonNoteRepositoryImpl {
         if (keyPoints != null) 'key_points': keyPoints,
         if (improvements != null) 'improvements': improvements,
         if (practiceTimeMinutes != null) 'practice_time_minutes': practiceTimeMinutes,
+        if (fieldData != null) 'field_data': fieldData,
       };
 
       final response = await _supabaseService.client
@@ -114,6 +116,7 @@ class LessonNoteRepositoryImpl {
     'key_points',
     'improvements',
     'practice_time_minutes',
+    'field_data',
   };
 
   Future<LessonNoteEntity> updateLessonNote(String noteId, Map<String, dynamic> data) async {

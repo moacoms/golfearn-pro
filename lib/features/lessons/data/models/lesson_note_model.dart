@@ -11,6 +11,7 @@ class LessonNoteModel {
   final List<String>? keyPoints;
   final List<String>? improvements;
   final int? practiceTimeMinutes;
+  final Map<String, dynamic>? fieldData;
   final String? studentName;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -26,6 +27,7 @@ class LessonNoteModel {
     this.keyPoints,
     this.improvements,
     this.practiceTimeMinutes,
+    this.fieldData,
     this.studentName,
     this.createdAt,
     this.updatedAt,
@@ -53,6 +55,9 @@ class LessonNoteModel {
           ? List<String>.from(json['improvements'])
           : null,
       practiceTimeMinutes: json['practice_time_minutes'] as int?,
+      fieldData: json['field_data'] != null
+          ? Map<String, dynamic>.from(json['field_data'] as Map)
+          : null,
       studentName: name,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
@@ -75,6 +80,7 @@ class LessonNoteModel {
       keyPoints: keyPoints,
       improvements: improvements,
       practiceTimeMinutes: practiceTimeMinutes,
+      fieldData: fieldData,
       studentName: studentName,
       createdAt: createdAt,
       updatedAt: updatedAt,
