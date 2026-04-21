@@ -19,11 +19,13 @@ class HoleCard extends StatelessWidget {
   static const _memoMaxLength = 200;
 
   int get _holeNumber => holeData['hole_number'] as int;
+  int? get _roundNumber => holeData['round_number'] as int?;
   int get _par => holeData['par'] as int;
   int get _score => holeData['score'] as int;
   String get _scoreLabel => holeData['score_label'] as String? ?? '';
   int get _putts => holeData['putts'] as int? ?? 0;
   String get _memo => holeData['memo'] as String? ?? '';
+  String? get _greenSide => holeData['green_side'] as String?;
 
   List<Map<String, dynamic>> get _shots {
     final raw = holeData['shots'] as List<dynamic>?;
@@ -34,7 +36,11 @@ class HoleCard extends StatelessWidget {
   // -- helpers ---------------------------------------------------------------
 
   String _buildTitle() {
-    final base = '$_holeNumber\uBC88\uD640 Par $_par';
+    final roundSuffix = _roundNumber != null ? ' ($_roundNumber\uCC28)' : '';
+    final greenSuffix = _greenSide != null
+        ? ' \u00B7 ${GolfFieldConstants.greenSides[_greenSide] ?? ''}'
+        : '';
+    final base = '$_holeNumber\uBC88\uD640$roundSuffix$greenSuffix Par $_par';
     if (_scoreLabel.isEmpty) return base;
 
     final label =
@@ -142,6 +148,10 @@ class HoleCard extends StatelessWidget {
     onChanged(_updated({'memo': value}));
   }
 
+  void _onGreenSideChanged(String? side) {
+    onChanged(_updated({'green_side': side}));
+  }
+
   // -- build -----------------------------------------------------------------
 
   @override
@@ -166,6 +176,8 @@ class HoleCard extends StatelessWidget {
         ),
         children: [
           _buildParSelector(context),
+          Divider(height: 16.h),
+          _buildGreenSideSelector(context),
           Divider(height: 16.h),
           _buildScoreSelector(context),
           Divider(height: 16.h),
@@ -262,6 +274,42 @@ class HoleCard extends StatelessWidget {
             );
           }).toList(),
         ),
+      ],
+    );
+  }
+
+  Widget _buildGreenSideSelector(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          '\uADF8\uB9B0',
+          style: TextStyle(
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.textSecondary,
+          ),
+        ),
+        SizedBox(width: 12.w),
+        ...GolfFieldConstants.greenSides.entries.map((entry) {
+          final isSelected = entry.key == _greenSide;
+          return Padding(
+            padding: EdgeInsets.only(right: 8.w),
+            child: ChoiceChip(
+              label: Text(entry.value),
+              selected: isSelected,
+              selectedColor: AppTheme.primaryColor,
+              labelStyle: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w500,
+                color: isSelected ? Colors.white : AppTheme.textPrimary,
+              ),
+              onSelected: (selected) =>
+                  _onGreenSideChanged(selected ? entry.key : null),
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          );
+        }),
       ],
     );
   }

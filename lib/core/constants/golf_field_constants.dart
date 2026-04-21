@@ -6,12 +6,19 @@ class GolfFieldConstants {
     'full': '18홀',
     'front_9': '전반 9홀',
     'back_9': '후반 9홀',
+    'nine_double': '9홀 x 2',
   };
 
-  static int holeCount(String courseType) => courseType == 'full' ? 18 : 9;
+  static int holeCount(String courseType) {
+    if (courseType == 'full' || courseType == 'nine_double') return 18;
+    return 9;
+  }
 
-  static int startHole(String courseType) =>
-      courseType == 'back_9' ? 10 : 1;
+  // 그린 위치 (한국 골프장은 좌/우 그린 운영이 많음)
+  static const Map<String, String> greenSides = {
+    'left': '좌그린',
+    'right': '우그린',
+  };
 
   // 샷 유형
   static const Map<String, String> shotTypes = {
@@ -142,14 +149,17 @@ class GolfFieldConstants {
   };
 
   // 기본 홀 데이터 생성
-  static Map<String, dynamic> createEmptyHole(int holeNumber) {
+  // round: nine_double 에서 1차/2차 구분. 일반 코스는 null.
+  static Map<String, dynamic> createEmptyHole(int holeNumber, {int? round}) {
     return {
       'hole_number': holeNumber,
+      'round_number': ?round,
       'par': 4,
       'score': 4,
       'score_label': 'par',
       'putts': 2,
       'memo': '',
+      'green_side': null,
       'shots': <Map<String, dynamic>>[],
     };
   }
@@ -167,8 +177,6 @@ class GolfFieldConstants {
 
   // 기본 필드 데이터 생성
   static Map<String, dynamic> createEmptyFieldData(String courseType) {
-    final count = holeCount(courseType);
-    final start = startHole(courseType);
     return {
       'course_type': courseType,
       'course_name': '',
@@ -178,10 +186,24 @@ class GolfFieldConstants {
         for (final key in routineChecks.keys) key: false,
       },
       'review_notes': '',
-      'holes': List.generate(
-        count,
-        (i) => createEmptyHole(start + i),
-      ),
+      'holes': _generateHoles(courseType),
     };
+  }
+
+  static List<Map<String, dynamic>> _generateHoles(String courseType) {
+    switch (courseType) {
+      case 'front_9':
+        return List.generate(9, (i) => createEmptyHole(i + 1));
+      case 'back_9':
+        return List.generate(9, (i) => createEmptyHole(i + 10));
+      case 'nine_double':
+        return [
+          for (var round = 1; round <= 2; round++)
+            for (var h = 1; h <= 9; h++) createEmptyHole(h, round: round),
+        ];
+      case 'full':
+      default:
+        return List.generate(18, (i) => createEmptyHole(i + 1));
+    }
   }
 }

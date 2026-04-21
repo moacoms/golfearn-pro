@@ -138,24 +138,23 @@ class _FieldLessonTabState extends State<FieldLessonTab> {
           ),
         ),
         SizedBox(height: 8.h),
-        Row(
+        Wrap(
+          spacing: 8.w,
+          runSpacing: 8.h,
           children: GolfFieldConstants.courseTypes.entries.map((entry) {
             final isSelected = _courseType == entry.key;
-            return Padding(
-              padding: EdgeInsets.only(right: 8.w),
-              child: ChoiceChip(
-                label: Text(
-                  entry.value,
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    color: isSelected ? Colors.white : AppTheme.textSecondary,
-                  ),
+            return ChoiceChip(
+              label: Text(
+                entry.value,
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  color: isSelected ? Colors.white : AppTheme.textSecondary,
                 ),
-                selected: isSelected,
-                selectedColor: AppTheme.primaryLight,
-                backgroundColor: AppTheme.surfaceElevated,
-                onSelected: (_) => _onCourseTypeChanged(entry.key),
               ),
+              selected: isSelected,
+              selectedColor: AppTheme.primaryLight,
+              backgroundColor: AppTheme.surfaceElevated,
+              onSelected: (_) => _onCourseTypeChanged(entry.key),
             );
           }).toList(),
         ),
@@ -224,14 +223,84 @@ class _FieldLessonTabState extends State<FieldLessonTab> {
   }
 
   Widget _buildHoleCards() {
-    final holes = _holes;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 600;
+        final maxWidth = constraints.maxWidth;
+
+        if (_courseType == 'nine_double') {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildRoundSection(1, isWide, 0, maxWidth),
+              SizedBox(height: 16.h),
+              _buildRoundSection(2, isWide, 9, maxWidth),
+            ],
+          );
+        }
+        return _buildHoleList(_holes, 0, isWide, maxWidth);
+      },
+    );
+  }
+
+  Widget _buildRoundSection(
+    int round,
+    bool isWide,
+    int startIndex,
+    double maxWidth,
+  ) {
+    final holes = _holes
+        .where((h) => (h['round_number'] as int?) == round)
+        .toList();
     return Column(
-      children: List.generate(holes.length, (index) {
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(bottom: 8.h, left: 4.w),
+          child: Text(
+            '$round\uCC28 라운드 (1~9)',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.primaryLight,
+            ),
+          ),
+        ),
+        _buildHoleList(holes, startIndex, isWide, maxWidth),
+      ],
+    );
+  }
+
+  Widget _buildHoleList(
+    List<Map<String, dynamic>> holes,
+    int offset,
+    bool isWide,
+    double maxWidth,
+  ) {
+    if (isWide) {
+      final gap = 12.w;
+      final itemWidth = (maxWidth - gap) / 2;
+      return Wrap(
+        spacing: gap,
+        runSpacing: 12.h,
+        children: List.generate(holes.length, (i) {
+          return SizedBox(
+            width: itemWidth,
+            child: HoleCard(
+              holeData: holes[i],
+              onChanged: (updated) => _onHoleChanged(offset + i, updated),
+            ),
+          );
+        }),
+      );
+    }
+    return Column(
+      children: List.generate(holes.length, (i) {
         return Padding(
           padding: EdgeInsets.only(bottom: 12.h),
           child: HoleCard(
-            holeData: holes[index],
-            onChanged: (updated) => _onHoleChanged(index, updated),
+            holeData: holes[i],
+            onChanged: (updated) => _onHoleChanged(offset + i, updated),
           ),
         );
       }),
