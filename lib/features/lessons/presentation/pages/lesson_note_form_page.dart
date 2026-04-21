@@ -51,11 +51,16 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage>
       text: n?.improvements?.join('\n') ?? '',
     );
     _aiBriefController = TextEditingController();
-    _tabController = TabController(length: 2, vsync: this);
     if (n != null) {
       _selectedStudentId = n.studentId;
       _fieldData = n.fieldData;
     }
+    // 편집 시 필드 데이터가 있으면 필드 레슨 노트 탭으로 시작
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: _fieldData != null ? 1 : 0,
+    );
   }
 
   @override
