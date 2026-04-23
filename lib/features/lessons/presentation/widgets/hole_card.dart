@@ -16,6 +16,7 @@ class HoleCard extends StatelessWidget {
 
   static const _parOptions = [3, 4, 5];
   static const _maxPutts = 6;
+  static const _maxPenalty = 4;
   static const _memoMaxLength = 200;
 
   int get _holeNumber => holeData['hole_number'] as int;
@@ -24,6 +25,8 @@ class HoleCard extends StatelessWidget {
   int get _score => holeData['score'] as int;
   String get _scoreLabel => holeData['score_label'] as String? ?? '';
   int get _putts => holeData['putts'] as int? ?? 0;
+  int get _penaltyStrokes => holeData['penalty_strokes'] as int? ?? 0;
+  int? get _yardageM => holeData['yardage_m'] as int?;
   String get _memo => holeData['memo'] as String? ?? '';
   String? get _greenSide => holeData['green_side'] as String?;
 
@@ -40,8 +43,12 @@ class HoleCard extends StatelessWidget {
     final greenSuffix = _greenSide != null
         ? ' \u00B7 ${GolfFieldConstants.greenSides[_greenSide] ?? ''}'
         : '';
-    final base = '$_holeNumber\uBC88\uD640$roundSuffix$greenSuffix Par $_par';
-    if (_scoreLabel.isEmpty) return base;
+    final yardageSuffix = _yardageM != null ? ' (${_yardageM}m)' : '';
+    final penaltySuffix =
+        _penaltyStrokes > 0 ? ' \u00B7 \uBC8C$_penaltyStrokes' : '';
+    final base =
+        '$_holeNumber\uBC88\uD640$roundSuffix$greenSuffix Par $_par$yardageSuffix';
+    if (_scoreLabel.isEmpty) return '$base$penaltySuffix';
 
     final label =
         GolfFieldConstants.scoreLabels[_scoreLabel] ?? _scoreLabel;
@@ -51,7 +58,7 @@ class HoleCard extends StatelessWidget {
         : relative < 0
             ? ''
             : '\u00B1';
-    return '$base \u2014 $label ($sign$relative)';
+    return '$base \u2014 $label ($sign$relative)$penaltySuffix';
   }
 
   Color _chipColorForLabel(String label) {
@@ -152,6 +159,16 @@ class HoleCard extends StatelessWidget {
     onChanged(_updated({'green_side': side}));
   }
 
+  void _onYardageChanged(String raw) {
+    final v = int.tryParse(raw.trim());
+    onChanged(_updated({'yardage_m': v}));
+  }
+
+  void _onPenaltyChanged(int delta) {
+    final next = (_penaltyStrokes + delta).clamp(0, _maxPenalty);
+    onChanged(_updated({'penalty_strokes': next}));
+  }
+
   // -- build -----------------------------------------------------------------
 
   @override
@@ -176,12 +193,16 @@ class HoleCard extends StatelessWidget {
         ),
         children: [
           _buildParSelector(context),
+          SizedBox(height: 8.h),
+          _buildYardageField(context),
           Divider(height: 16.h),
           _buildGreenSideSelector(context),
           Divider(height: 16.h),
           _buildScoreSelector(context),
           Divider(height: 16.h),
           _buildPuttsCounter(context),
+          SizedBox(height: 8.h),
+          _buildPenaltyCounter(context),
           Divider(height: 16.h),
           ...List.generate(shots.length, (i) {
             return Padding(
@@ -310,6 +331,88 @@ class HoleCard extends StatelessWidget {
             ),
           );
         }),
+      ],
+    );
+  }
+
+  Widget _buildYardageField(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          '거리(m)',
+          style: TextStyle(
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.textSecondary,
+          ),
+        ),
+        SizedBox(width: 12.w),
+        SizedBox(
+          width: 80.w,
+          child: TextField(
+            controller: TextEditingController.fromValue(
+              TextEditingValue(
+                text: _yardageM?.toString() ?? '',
+                selection: TextSelection.collapsed(
+                  offset: _yardageM?.toString().length ?? 0,
+                ),
+              ),
+            ),
+            keyboardType: TextInputType.number,
+            maxLength: 4,
+            style: TextStyle(fontSize: 13.sp),
+            decoration: InputDecoration(
+              hintText: '예: 380',
+              counterText: '',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 10.w,
+                vertical: 8.h,
+              ),
+            ),
+            onChanged: _onYardageChanged,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPenaltyCounter(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          '벌타 (OB/해저드)',
+          style: TextStyle(
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.textSecondary,
+          ),
+        ),
+        const Spacer(),
+        _counterButton(
+          icon: Icons.remove,
+          enabled: _penaltyStrokes > 0,
+          onTap: () => _onPenaltyChanged(-1),
+        ),
+        SizedBox(
+          width: 36.w,
+          child: Text(
+            '$_penaltyStrokes',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w700,
+              color: _penaltyStrokes > 0
+                  ? const Color(0xFFDC2626)
+                  : AppTheme.textPrimary,
+            ),
+          ),
+        ),
+        _counterButton(
+          icon: Icons.add,
+          enabled: _penaltyStrokes < _maxPenalty,
+          onTap: () => _onPenaltyChanged(1),
+        ),
       ],
     );
   }

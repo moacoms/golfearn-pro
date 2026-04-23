@@ -20,6 +20,15 @@ class GolfFieldConstants {
     'right': '우그린',
   };
 
+  // 티박스 (한국 골프장 기준 색상)
+  static const Map<String, String> teeBoxes = {
+    'black': '블랙(챔피언)',
+    'blue': '블루(백)',
+    'white': '화이트(레귤러)',
+    'gold': '골드(시니어)',
+    'red': '레드(여성)',
+  };
+
   // 샷 유형
   static const Map<String, String> shotTypes = {
     'tee': '티샷',
@@ -158,6 +167,8 @@ class GolfFieldConstants {
       'score': 4,
       'score_label': 'par',
       'putts': 2,
+      'penalty_strokes': 0,
+      'yardage_m': null,
       'memo': '',
       'green_side': null,
       'shots': <Map<String, dynamic>>[],
@@ -172,6 +183,7 @@ class GolfFieldConstants {
       'causes': <String>[],
       'club': shotType == 'putt' ? 'putter' : '',
       'lie': shotType == 'tee' ? 'tee_box' : '',
+      'distance_m': null,
     };
   }
 
@@ -180,6 +192,7 @@ class GolfFieldConstants {
     return {
       'course_type': courseType,
       'course_name': '',
+      'tee_box': null,
       'total_score': 0,
       'total_putts': 0,
       'routine_check': {

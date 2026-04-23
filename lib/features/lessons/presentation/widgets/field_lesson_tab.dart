@@ -69,6 +69,12 @@ class _FieldLessonTabState extends State<FieldLessonTab> {
     _updateFieldData({..._fieldData, 'course_name': name});
   }
 
+  void _onTeeBoxChanged(String? teeBox) {
+    _updateFieldData({..._fieldData, 'tee_box': teeBox});
+  }
+
+  String? get _teeBox => _fieldData['tee_box'] as String?;
+
   void _onRoutineToggled(String key, bool value) {
     final updatedRoutine = {..._routineCheck, key: value};
     _updateFieldData({..._fieldData, 'routine_check': updatedRoutine});
@@ -107,6 +113,8 @@ class _FieldLessonTabState extends State<FieldLessonTab> {
           _buildCourseTypeSelector(),
           SizedBox(height: 12.h),
           _buildCourseNameField(),
+          SizedBox(height: 12.h),
+          _buildTeeBoxSelector(),
           SizedBox(height: 16.h),
           _buildRoutineSection(),
           SizedBox(height: 16.h),
@@ -182,6 +190,44 @@ class _FieldLessonTabState extends State<FieldLessonTab> {
       ),
       style: TextStyle(fontSize: 14.sp),
       onChanged: _onCourseNameChanged,
+    );
+  }
+
+  Widget _buildTeeBoxSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '티박스',
+          style: TextStyle(
+            fontSize: 15.sp,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Wrap(
+          spacing: 8.w,
+          runSpacing: 8.h,
+          children: GolfFieldConstants.teeBoxes.entries.map((entry) {
+            final isSelected = _teeBox == entry.key;
+            return ChoiceChip(
+              label: Text(
+                entry.value,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: isSelected ? Colors.white : AppTheme.textSecondary,
+                ),
+              ),
+              selected: isSelected,
+              selectedColor: AppTheme.primaryLight,
+              backgroundColor: AppTheme.surfaceElevated,
+              onSelected: (selected) =>
+                  _onTeeBoxChanged(selected ? entry.key : null),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 

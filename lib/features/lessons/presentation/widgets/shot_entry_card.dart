@@ -33,6 +33,7 @@ class ShotEntryCard extends StatelessWidget {
   static const _chipColor = AppTheme.primaryLight;
 
   bool get _isPutt => shotType == 'putt';
+  bool get _isTee => shotType == 'tee';
 
   String get _selectedClub =>
       (shotData['club'] as String?) ?? (_isPutt ? 'putter' : '');
@@ -44,10 +45,23 @@ class ShotEntryCard extends StatelessWidget {
   List<String> get _selectedCauses =>
       List<String>.from((shotData['causes'] as List?) ?? <String>[]);
 
+  int? get _distanceM => shotData['distance_m'] as int?;
+
+  String get _distanceLabel {
+    if (_isTee) return '비거리(m)';
+    if (_isPutt) return '거리(m)';
+    return '남은 거리(m)';
+  }
+
   Map<String, dynamic> _emitUpdated(String key, dynamic value) {
     final updated = Map<String, dynamic>.from(shotData);
     updated[key] = value;
     return updated;
+  }
+
+  void _onDistanceChanged(String raw) {
+    final v = int.tryParse(raw.trim());
+    onChanged(_emitUpdated('distance_m', v));
   }
 
   @override
@@ -69,6 +83,10 @@ class ShotEntryCard extends StatelessWidget {
               color: Colors.grey[800],
             ),
           ),
+          SizedBox(height: 8.h),
+
+          // Distance input (context-aware label)
+          _buildDistanceField(),
           SizedBox(height: 8.h),
 
           // Club selector
@@ -106,6 +124,54 @@ class ShotEntryCard extends StatelessWidget {
         fontWeight: FontWeight.w600,
         color: Colors.grey[700],
       ),
+    );
+  }
+
+  Widget _buildDistanceField() {
+    return Row(
+      children: [
+        SizedBox(
+          width: 80.w,
+          child: Text(
+            _distanceLabel,
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+        ),
+        SizedBox(width: 8.w),
+        SizedBox(
+          width: 80.w,
+          child: TextField(
+            controller: TextEditingController.fromValue(
+              TextEditingValue(
+                text: _distanceM?.toString() ?? '',
+                selection: TextSelection.collapsed(
+                  offset: _distanceM?.toString().length ?? 0,
+                ),
+              ),
+            ),
+            keyboardType: TextInputType.number,
+            maxLength: 4,
+            style: TextStyle(fontSize: 12.sp),
+            decoration: InputDecoration(
+              hintText: '옵션',
+              counterText: '',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 10.w,
+                vertical: 8.h,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6.r),
+              ),
+            ),
+            onChanged: _onDistanceChanged,
+          ),
+        ),
+      ],
     );
   }
 
