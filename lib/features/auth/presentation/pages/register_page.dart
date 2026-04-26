@@ -149,7 +149,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.error!),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }
@@ -576,7 +576,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(_emailError ?? _phoneError ?? '입력 정보를 확인해주세요'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.errorColor,
         ),
       );
       return;
@@ -662,7 +662,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(displayMsg),
-              backgroundColor: Colors.red,
+              backgroundColor: AppTheme.errorColor,
               duration: const Duration(seconds: 2),
             ),
           );

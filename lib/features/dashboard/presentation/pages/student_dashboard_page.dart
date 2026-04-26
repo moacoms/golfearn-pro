@@ -579,7 +579,7 @@ class StudentDashboardPage extends ConsumerWidget {
     );
     if (lessonDateTime.difference(DateTime.now()).inHours < 4) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: const Text('레슨 시작 4시간 전에는 취소할 수 없습니다'), backgroundColor: Colors.orange),
+        SnackBar(content: const Text('레슨 시작 4시간 전에는 취소할 수 없습니다'), backgroundColor: AppTheme.warningColor),
       );
       return;
     }
@@ -634,18 +634,18 @@ class StudentDashboardPage extends ConsumerWidget {
                 ref.invalidate(_myUpcomingLessonsProvider);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: const Text('레슨이 취소되었습니다'), backgroundColor: Colors.orange),
+                    SnackBar(content: const Text('레슨이 취소되었습니다'), backgroundColor: AppTheme.warningColor),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('취소에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+                    const SnackBar(content: Text('취소에 실패했습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
                   );
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor, foregroundColor: Colors.white),
             child: Text('취소하기', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600)),
           ),
         ],
@@ -946,7 +946,7 @@ class StudentDashboardPage extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('연결에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('연결에 실패했습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
         );
       }
     }
@@ -1340,7 +1340,7 @@ class StudentDashboardPage extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: const Text('전환에 실패했습니다. 다시 시도해주세요.'),
-                      backgroundColor: Colors.red,
+                      backgroundColor: AppTheme.errorColor,
                     ),
                   );
                 }

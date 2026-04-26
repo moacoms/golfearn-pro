@@ -417,7 +417,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('AI 생성은 하루 최대 ${_maxDailyAiUses}회까지 가능합니다 (오늘 ${todayCount}회 사용)'),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppTheme.warningColor,
           ),
         );
       }
@@ -494,7 +494,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('AI 생성에 실패했습니다. 다시 시도해주세요.'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }
@@ -691,7 +691,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('저장에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('저장에 실패했습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
         );
       }
     } finally {

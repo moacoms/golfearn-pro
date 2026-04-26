@@ -420,7 +420,7 @@ class StudentDetailPage extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('삭제에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+                    const SnackBar(content: Text('삭제에 실패했습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
                   );
                 }
               }

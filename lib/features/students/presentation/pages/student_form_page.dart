@@ -565,7 +565,7 @@ class _StudentFormPageState extends ConsumerState<StudentFormPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('일시적인 오류가 발생했습니다. 다시 시도해주세요.'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }

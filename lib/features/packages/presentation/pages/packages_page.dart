@@ -306,7 +306,7 @@ class PackagesPage extends ConsumerWidget {
           } catch (e) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('변경에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+                const SnackBar(content: Text('변경에 실패했습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
               );
             }
           }
@@ -345,7 +345,7 @@ class PackagesPage extends ConsumerWidget {
           } catch (e) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('변경에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+                const SnackBar(content: Text('변경에 실패했습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
               );
             }
           }
@@ -411,7 +411,7 @@ class PackagesPage extends ConsumerWidget {
 
       if (students.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('먼저 학생을 등록해주세요'), backgroundColor: Colors.orange),
+          const SnackBar(content: Text('먼저 학생을 등록해주세요'), backgroundColor: AppTheme.warningColor),
         );
         return;
       }
@@ -419,7 +419,7 @@ class PackagesPage extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('일시적인 오류가 발생했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('일시적인 오류가 발생했습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
         );
       }
     }
@@ -579,7 +579,7 @@ class PackagesPage extends ConsumerWidget {
                                 final price = int.tryParse(priceController.text);
                                 if (count == null || count <= 0 || price == null || price <= 0) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('횟수와 금액을 올바르게 입력해주세요'), backgroundColor: Colors.orange),
+                                    const SnackBar(content: Text('횟수와 금액을 올바르게 입력해주세요'), backgroundColor: AppTheme.warningColor),
                                   );
                                   return;
                                 }
@@ -610,7 +610,7 @@ class PackagesPage extends ConsumerWidget {
                                 } catch (e) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('일시적인 오류가 발생했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+                                      const SnackBar(content: Text('일시적인 오류가 발생했습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
                                     );
                                   }
                                 }

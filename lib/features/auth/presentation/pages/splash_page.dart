@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/widgets/app_loading_view.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -128,17 +129,12 @@ class _SplashPageState extends ConsumerState<SplashPage>
                       ),
                     ),
                     SizedBox(height: 60.h),
-                    
-                    // 로딩 인디케이터
-                    SizedBox(
-                      width: 30.w,
-                      height: 30.w,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 3,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white.withOpacity(0.8),
-                        ),
-                      ),
+
+                    // 로딩 인디케이터 (스플래시 배경이 primary 색상이라 흰색)
+                    AppLoadingView(
+                      size: 30.w,
+                      color: Colors.white.withValues(alpha: 0.85),
+                      strokeWidth: 3,
                     ),
                   ],
                 ),

@@ -379,11 +379,11 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'scheduled': return Colors.blue;
+      case 'scheduled': return AppTheme.secondaryColor;
       case 'completed': return AppTheme.primaryColor;
-      case 'cancelled': return Colors.grey;
-      case 'no_show': return Colors.red;
-      default: return Colors.grey;
+      case 'cancelled': return AppTheme.textMuted;
+      case 'no_show': return AppTheme.errorColor;
+      default: return AppTheme.textMuted;
     }
   }
 
@@ -449,7 +449,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                                 .updateScheduleStatus(schedule.id, 'scheduled');
                             if (pageContext.mounted) {
                               ScaffoldMessenger.of(pageContext).showSnackBar(
-                                const SnackBar(content: Text('패키지 처리 중 오류가 발생했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+                                const SnackBar(content: Text('패키지 처리 중 오류가 발생했습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
                               );
                             }
                             ref.invalidate(weeklySchedulesProvider);
@@ -513,7 +513,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                       } catch (e) {
                         if (pageContext.mounted) {
                           ScaffoldMessenger.of(pageContext).showSnackBar(
-                            const SnackBar(content: Text('레슨 완료 처리 중 오류가 발생했습니다.'), backgroundColor: Colors.red),
+                            const SnackBar(content: Text('레슨 완료 처리 중 오류가 발생했습니다.'), backgroundColor: AppTheme.errorColor),
                           );
                         }
                         ref.invalidate(weeklySchedulesProvider);
@@ -522,7 +522,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                     },
                   ),
                   ListTile(
-                    leading: Icon(Icons.cancel, color: Colors.orange[600]),
+                    leading: const Icon(Icons.cancel, color: AppTheme.warningColor),
                     title: const Text('레슨 취소'),
                     onTap: () async {
                       Navigator.pop(context);
@@ -533,7 +533,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.person_off, color: Colors.red),
+                    leading: const Icon(Icons.person_off, color: AppTheme.errorColor),
                     title: const Text('노쇼 처리'),
                     onTap: () async {
                       Navigator.pop(context);
@@ -582,7 +582,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                   ),
                 ],
                 ListTile(
-                  leading: const Icon(Icons.delete, color: Colors.red),
+                  leading: const Icon(Icons.delete, color: AppTheme.errorColor),
                   title: const Text('이 레슨만 삭제'),
                   onTap: () async {
                     Navigator.pop(context);
@@ -594,7 +594,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                 ),
                 if (schedule.recurringGroupId != null)
                   ListTile(
-                    leading: const Icon(Icons.delete_sweep, color: Colors.red),
+                    leading: const Icon(Icons.delete_sweep, color: AppTheme.errorColor),
                     title: const Text('반복 레슨 전체 삭제'),
                     subtitle: const Text('예정된 반복 레슨을 모두 삭제합니다'),
                     onTap: () async {
@@ -612,7 +612,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                             ),
                             ElevatedButton(
                               onPressed: () => Navigator.pop(ctx, true),
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor, foregroundColor: Colors.white),
                               child: const Text('전체 삭제'),
                             ),
                           ],
@@ -654,7 +654,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('레슨 시작 4시간 전에는 취소할 수 없습니다'),
-          backgroundColor: Colors.orange,
+          backgroundColor: AppTheme.warningColor,
         ),
       );
       return;
@@ -711,18 +711,18 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                 ref.invalidate(studentUpcomingSchedulesProvider);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: const Text('레슨이 취소되었습니다'), backgroundColor: Colors.orange),
+                    SnackBar(content: const Text('레슨이 취소되었습니다'), backgroundColor: AppTheme.warningColor),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('취소에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+                    const SnackBar(content: Text('취소에 실패했습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
                   );
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor, foregroundColor: Colors.white),
             child: Text('취소하기', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600)),
           ),
         ],
@@ -820,7 +820,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                 }
                 if (outerContext.mounted) {
                   ScaffoldMessenger.of(outerContext).showSnackBar(
-                    SnackBar(content: Text(userMessage), backgroundColor: Colors.orange),
+                    SnackBar(content: Text(userMessage), backgroundColor: AppTheme.warningColor),
                   );
                 }
               }
@@ -857,7 +857,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('먼저 학생을 등록해주세요'),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppTheme.warningColor,
           ),
         );
         return;
@@ -866,7 +866,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('학생 목록을 불러올 수 없습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('학생 목록을 불러올 수 없습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
         );
       }
     }
@@ -1219,7 +1219,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                                 } catch (e) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('저장에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+                                      const SnackBar(content: Text('저장에 실패했습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
                                     );
                                   }
                                 }

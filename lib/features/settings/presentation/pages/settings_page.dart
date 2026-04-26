@@ -51,14 +51,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final isLessonPro = ref.watch(isLessonProProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFB),
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         title: Text(
           '설정',
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF1F2937),
+            color: AppTheme.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -136,7 +136,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             style: TextStyle(
               fontSize: 20.sp,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1F2937),
+              color: AppTheme.textPrimary,
             ),
           ),
           SizedBox(height: 4.h),
@@ -145,7 +145,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             email,
             style: TextStyle(
               fontSize: 14.sp,
-              color: const Color(0xFF6B7280),
+              color: AppTheme.textSecondary,
             ),
           ),
           if (phone.isNotEmpty) ...[
@@ -154,7 +154,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               phone,
               style: TextStyle(
                 fontSize: 14.sp,
-                color: const Color(0xFF6B7280),
+                color: AppTheme.textSecondary,
               ),
             ),
           ],
@@ -195,7 +195,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         style: TextStyle(
           fontSize: 13.sp,
           fontWeight: FontWeight.w600,
-          color: const Color(0xFF9CA3AF),
+          color: AppTheme.textMuted,
           letterSpacing: 0.5,
         ),
       ),
@@ -233,7 +233,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             },
           ),
         ),
-        Divider(height: 1, color: const Color(0xFFF3F4F6), indent: 52.w),
+        Divider(height: 1, color: AppTheme.borderLight, indent: 52.w),
         // Default lesson price — linked to profile
         _settingsTile(
           icon: Icons.monetization_on_outlined,
@@ -266,7 +266,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           title: '데이터 내보내기',
           trailing: Icon(
             Icons.chevron_right,
-            color: const Color(0xFFD1D5DB),
+            color: AppTheme.borderColor,
             size: 22.sp,
           ),
           onTap: _showExportDialog,
@@ -304,7 +304,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1F2937),
+              color: AppTheme.textPrimary,
             ),
           ),
           content: Column(
@@ -314,7 +314,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 '내보낼 데이터를 선택해주세요.',
                 style: TextStyle(
                   fontSize: 14.sp,
-                  color: const Color(0xFF6B7280),
+                  color: AppTheme.textSecondary,
                 ),
               ),
               SizedBox(height: 12.h),
@@ -329,7 +329,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   style: TextStyle(
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1F2937),
+                    color: AppTheme.textPrimary,
                   ),
                 ),
                 onChanged: (value) {
@@ -341,7 +341,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   });
                 },
               ),
-              Divider(height: 1, color: const Color(0xFFF3F4F6)),
+              Divider(height: 1, color: AppTheme.borderLight),
               _exportCheckbox(
                 label: '학생 목록',
                 value: selections['students']!,
@@ -392,7 +392,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 '취소',
                 style: TextStyle(
                   fontSize: 14.sp,
-                  color: const Color(0xFF6B7280),
+                  color: AppTheme.textSecondary,
                 ),
               ),
             ),
@@ -429,7 +429,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.r),
                               ),
-                              backgroundColor: const Color(0xFFEF4444),
+                              backgroundColor: AppTheme.errorColor,
                             ),
                           );
                         }
@@ -481,7 +481,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         label,
         style: TextStyle(
           fontSize: 14.sp,
-          color: const Color(0xFF1F2937),
+          color: AppTheme.textPrimary,
         ),
       ),
       onChanged: onChanged,
@@ -723,12 +723,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _settingsTile(
           icon: Icons.logout,
           title: '로그아웃',
-          iconColor: const Color(0xFFEF4444),
-          titleColor: const Color(0xFFEF4444),
+          iconColor: AppTheme.errorColor,
+          titleColor: AppTheme.errorColor,
           trailing: const SizedBox.shrink(),
           onTap: _handleLogout,
         ),
-        Divider(height: 1, color: const Color(0xFFF3F4F6), indent: 52.w),
+        Divider(height: 1, color: AppTheme.borderLight, indent: 52.w),
         _settingsTile(
           icon: Icons.info_outline,
           title: '앱 버전',
@@ -736,7 +736,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             '1.0.0',
             style: TextStyle(
               fontSize: 14.sp,
-              color: const Color(0xFF9CA3AF),
+              color: AppTheme.textMuted,
             ),
           ),
         ),
@@ -802,7 +802,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 style: TextStyle(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w500,
-                  color: titleColor ?? const Color(0xFF1F2937),
+                  color: titleColor ?? AppTheme.textPrimary,
                 ),
               ),
             ),
@@ -1056,7 +1056,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                                 content: const Text('프로필 업데이트에 실패했습니다. 다시 시도해주세요.'),
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-                                backgroundColor: const Color(0xFFEF4444),
+                                backgroundColor: AppTheme.errorColor,
                               ),
                             );
                           }
@@ -1133,14 +1133,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               '취소',
               style: TextStyle(
                 fontSize: 14.sp,
-                color: const Color(0xFF6B7280),
+                color: AppTheme.textSecondary,
               ),
             ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
+              backgroundColor: AppTheme.errorColor,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),
@@ -1178,7 +1178,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10.r),
             ),
-            backgroundColor: const Color(0xFFEF4444),
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }

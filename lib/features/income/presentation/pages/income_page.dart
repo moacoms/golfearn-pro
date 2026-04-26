@@ -589,7 +589,7 @@ class IncomePage extends ConsumerWidget {
                           final amount = int.tryParse(amountController.text);
                           if (amount == null || amount <= 0) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('올바른 금액을 입력해주세요'), backgroundColor: Colors.orange),
+                              const SnackBar(content: Text('올바른 금액을 입력해주세요'), backgroundColor: AppTheme.warningColor),
                             );
                             return;
                           }
@@ -623,7 +623,7 @@ class IncomePage extends ConsumerWidget {
                           } catch (e) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('저장에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+                                const SnackBar(content: Text('저장에 실패했습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
                               );
                             }
                           }

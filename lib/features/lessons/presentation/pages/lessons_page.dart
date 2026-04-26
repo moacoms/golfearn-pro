@@ -343,7 +343,7 @@ class LessonsPage extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('학생 목록을 불러올 수 없습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('학생 목록을 불러올 수 없습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
         );
       }
     }

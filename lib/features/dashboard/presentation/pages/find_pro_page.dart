@@ -680,7 +680,7 @@ class _FindProPageState extends ConsumerState<FindProPage> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('레슨 신청에 실패했습니다. 다시 시도해주세요.'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('레슨 신청에 실패했습니다. 다시 시도해주세요.'), backgroundColor: AppTheme.errorColor),
         );
       }
     }

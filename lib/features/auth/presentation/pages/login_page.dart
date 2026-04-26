@@ -37,7 +37,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.error!),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }
@@ -85,7 +85,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     },
                     icon: Icon(
                       _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                      color: Colors.grey[600],
+                      color: AppTheme.textSecondary,
                     ),
                   ),
                   validator: _validatePassword,
@@ -108,7 +108,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     '비밀번호를 잊으셨나요?',
                     style: TextStyle(
                       fontSize: 14.sp,
-                      color: Colors.grey[600],
+                      color: AppTheme.textSecondary,
                     ),
                   ),
                 ),
@@ -154,7 +154,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           style: TextStyle(
             fontSize: 28.sp,
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: AppTheme.textPrimary,
           ),
         ),
         SizedBox(height: 8.h),
@@ -163,7 +163,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           '레슨프로를 위한 스마트 CRM',
           style: TextStyle(
             fontSize: 16.sp,
-            color: Colors.grey[600],
+            color: AppTheme.textSecondary,
           ),
         ),
       ],
@@ -178,7 +178,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           '계정이 없으신가요? ',
           style: TextStyle(
             fontSize: 14.sp,
-            color: Colors.grey[600],
+            color: AppTheme.textSecondary,
           ),
         ),
         GestureDetector(
@@ -247,7 +247,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       '가입하신 이메일 주소를 입력하시면\n비밀번호 재설정 링크를 보내드립니다.',
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: Colors.grey[600],
+                        color: AppTheme.textSecondary,
                       ),
                     ),
                     SizedBox(height: 16.h),
@@ -281,7 +281,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     '취소',
                     style: TextStyle(
                       fontSize: 14.sp,
-                      color: Colors.grey[600],
+                      color: AppTheme.textSecondary,
                     ),
                   ),
                 ),
@@ -319,7 +319,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   content: Text(
                                     e.toString().replaceAll('Exception: ', ''),
                                   ),
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: AppTheme.errorColor,
                                   duration: const Duration(seconds: 2),
                                 ),
                               );
@@ -371,7 +371,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(msg),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.errorColor,
             duration: const Duration(seconds: 2),
           ),
         );
@@ -391,7 +391,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(msg),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.errorColor,
             duration: const Duration(seconds: 2),
           ),
         );
@@ -402,18 +402,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget _buildDivider() {
     return Row(
       children: [
-        Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
+        Expanded(child: Divider(color: AppTheme.borderColor, thickness: 1)),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 12.w),
           child: Text(
             '또는',
             style: TextStyle(
               fontSize: 13.sp,
-              color: Colors.grey[500],
+              color: AppTheme.textMuted,
             ),
           ),
         ),
-        Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
+        Expanded(child: Divider(color: AppTheme.borderColor, thickness: 1)),
       ],
     );
   }
