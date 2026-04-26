@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:golfearn_pro/core/constants/golf_field_constants.dart';
 import 'package:golfearn_pro/core/theme/app_theme.dart';
 
+import '../providers/lesson_note_provider.dart';
 import './hole_card.dart';
 import './score_summary_card.dart';
 import './field_stats_card.dart';
@@ -192,25 +194,99 @@ class _FieldLessonTabState extends State<FieldLessonTab> {
   }
 
   Widget _buildCourseNameField() {
-    return TextField(
-      controller: TextEditingController.fromValue(
-        TextEditingValue(
-          text: (_fieldData['course_name'] as String?) ?? '',
-          selection: TextSelection.collapsed(
-            offset: ((_fieldData['course_name'] as String?) ?? '').length,
-          ),
-        ),
-      ),
-      decoration: InputDecoration(
-        hintText: '코스명 (예: 고양CC)',
-        prefixIcon: Icon(
-          Icons.place_outlined,
-          size: 20.sp,
-          color: AppTheme.textMuted,
-        ),
-      ),
-      style: TextStyle(fontSize: 14.sp),
-      onChanged: _onCourseNameChanged,
+    final currentName = (_fieldData['course_name'] as String?) ?? '';
+    return Consumer(
+      builder: (context, ref, _) {
+        final namesAsync = ref.watch(proCourseNamesProvider);
+        final suggestions = namesAsync.maybeWhen(
+          data: (list) => list,
+          orElse: () => const <String>[],
+        );
+
+        return Autocomplete<String>(
+          initialValue: TextEditingValue(text: currentName),
+          optionsBuilder: (textEditingValue) {
+            final query = textEditingValue.text.trim().toLowerCase();
+            if (query.isEmpty) {
+              return suggestions.take(8);
+            }
+            return suggestions
+                .where((name) => name.toLowerCase().contains(query))
+                .take(8);
+          },
+          onSelected: _onCourseNameChanged,
+          fieldViewBuilder:
+              (context, controller, focusNode, onFieldSubmitted) {
+            return TextField(
+              controller: controller,
+              focusNode: focusNode,
+              decoration: InputDecoration(
+                hintText: '코스명 (예: 고양CC)',
+                prefixIcon: Icon(
+                  Icons.place_outlined,
+                  size: 20.sp,
+                  color: AppTheme.textMuted,
+                ),
+              ),
+              style: TextStyle(fontSize: 14.sp),
+              onChanged: _onCourseNameChanged,
+              onSubmitted: (_) => onFieldSubmitted(),
+            );
+          },
+          optionsViewBuilder: (context, onSelected, options) {
+            final list = options.toList();
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                elevation: 4,
+                borderRadius: BorderRadius.circular(8.r),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: 220.h,
+                    maxWidth: MediaQuery.of(context).size.width - 32.w,
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.symmetric(vertical: 4.h),
+                    itemCount: list.length,
+                    itemBuilder: (_, i) {
+                      final option = list[i];
+                      return InkWell(
+                        onTap: () => onSelected(option),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 10.h,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.history,
+                                size: 16.sp,
+                                color: AppTheme.textMuted,
+                              ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Text(
+                                  option,
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

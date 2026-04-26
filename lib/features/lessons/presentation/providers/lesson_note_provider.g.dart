@@ -188,3 +188,50 @@ final class StudentNotesFamily extends $Family
   @override
   String toString() => r'studentNotesProvider';
 }
+
+/// 현재 프로가 과거 입력한 골프장명 distinct 목록.
+/// 사용 빈도 내림차순 → 자주 가는 코스가 위에. 자동완성 소스.
+
+@ProviderFor(proCourseNames)
+final proCourseNamesProvider = ProCourseNamesProvider._();
+
+/// 현재 프로가 과거 입력한 골프장명 distinct 목록.
+/// 사용 빈도 내림차순 → 자주 가는 코스가 위에. 자동완성 소스.
+
+final class ProCourseNamesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<String>>,
+          List<String>,
+          FutureOr<List<String>>
+        >
+    with $FutureModifier<List<String>>, $FutureProvider<List<String>> {
+  /// 현재 프로가 과거 입력한 골프장명 distinct 목록.
+  /// 사용 빈도 내림차순 → 자주 가는 코스가 위에. 자동완성 소스.
+  ProCourseNamesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'proCourseNamesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$proCourseNamesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<String>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<String>> create(Ref ref) {
+    return proCourseNames(ref);
+  }
+}
+
+String _$proCourseNamesHash() => r'43313b029b7d962f6d05e51ef5c4c8d7d3f8f359';

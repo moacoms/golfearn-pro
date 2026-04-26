@@ -33,6 +33,26 @@ Future<List<LessonNoteEntity>> studentNotes(Ref ref, String studentId) async {
   return repo.getStudentNotes(user.id, studentId);
 }
 
+/// 현재 프로가 과거 입력한 골프장명 distinct 목록.
+/// 사용 빈도 내림차순 → 자주 가는 코스가 위에. 자동완성 소스.
+@riverpod
+Future<List<String>> proCourseNames(Ref ref) async {
+  final notes = await ref.watch(lessonNotesProvider.future);
+  final counts = <String, int>{};
+  for (final note in notes) {
+    final fd = note.fieldData;
+    if (fd == null) continue;
+    final raw = fd['course_name'];
+    if (raw is! String) continue;
+    final name = raw.trim();
+    if (name.isEmpty) continue;
+    counts[name] = (counts[name] ?? 0) + 1;
+  }
+  final entries = counts.entries.toList()
+    ..sort((a, b) => b.value.compareTo(a.value));
+  return entries.map((e) => e.key).toList();
+}
+
 // ──────────────────────────────────────────────
 // 학생용 레슨 노트 프로바이더 (student_id 기반 조회)
 // ──────────────────────────────────────────────
