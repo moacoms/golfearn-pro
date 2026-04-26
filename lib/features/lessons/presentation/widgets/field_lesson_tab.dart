@@ -25,6 +25,23 @@ class FieldLessonTab extends StatefulWidget {
 class _FieldLessonTabState extends State<FieldLessonTab> {
   late Map<String, dynamic> _fieldData;
 
+  // 홀 네비게이터 점프용 GlobalKey (홀 인덱스 → key)
+  final Map<int, GlobalKey> _holeKeys = {};
+
+  GlobalKey _keyForIndex(int index) =>
+      _holeKeys.putIfAbsent(index, () => GlobalKey());
+
+  void _jumpToHole(int index) {
+    final ctx = _holeKeys[index]?.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+      alignment: 0.05,
+    );
+  }
+
   String get _courseType => (_fieldData['course_type'] as String?) ?? 'full';
 
   List<Map<String, dynamic>> get _holes =>
@@ -62,6 +79,8 @@ class _FieldLessonTabState extends State<FieldLessonTab> {
       'course_name': _fieldData['course_name'] ?? '',
       'review_notes': _fieldData['review_notes'] ?? '',
     };
+    // 홀 개수 변경 시 점프 키 초기화
+    _holeKeys.clear();
     _updateFieldData(updated);
   }
 
@@ -120,6 +139,8 @@ class _FieldLessonTabState extends State<FieldLessonTab> {
           SizedBox(height: 16.h),
           ScoreSummaryCard(fieldData: _fieldData),
           SizedBox(height: 16.h),
+          _buildHoleNavigator(),
+          SizedBox(height: 12.h),
           _buildHoleCards(),
           if (_hasAnyHoleData) ...[
             SizedBox(height: 16.h),
@@ -268,6 +289,88 @@ class _FieldLessonTabState extends State<FieldLessonTab> {
     );
   }
 
+  Widget _buildHoleNavigator() {
+    final holes = _holes;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '홀 이동',
+          style: TextStyle(
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textSecondary,
+          ),
+        ),
+        SizedBox(height: 6.h),
+        SizedBox(
+          height: 36.h,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: holes.length,
+            separatorBuilder: (_, _) => SizedBox(width: 6.w),
+            itemBuilder: (_, i) {
+              final hole = holes[i];
+              final scoreLabel = (hole['score_label'] as String?) ?? '';
+              final hasScore = scoreLabel.isNotEmpty;
+              final round = hole['round_number'] as int?;
+              final num = hole['hole_number'] as int;
+              final label = round != null ? '$round-$num' : '$num';
+              return InkWell(
+                onTap: () => _jumpToHole(i),
+                borderRadius: BorderRadius.circular(8.r),
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppTheme.borderColor),
+                    borderRadius: BorderRadius.circular(8.r),
+                    color: AppTheme.surfaceColor,
+                  ),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      if (hasScore) ...[
+                        SizedBox(width: 5.w),
+                        Container(
+                          width: 6.w,
+                          height: 6.w,
+                          decoration: BoxDecoration(
+                            color: _navDotColor(scoreLabel),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Color _navDotColor(String label) {
+    return switch (GolfFieldConstants.scoreColor(label)) {
+      'gold' => const Color(0xFFD4A853),
+      'red' => const Color(0xFFDC2626),
+      'green' => AppTheme.primaryColor,
+      'blue' => const Color(0xFF3B82F6),
+      _ => const Color(0xFF9CA3AF),
+    };
+  }
+
   Widget _buildHoleCards() {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -333,6 +436,7 @@ class _FieldLessonTabState extends State<FieldLessonTab> {
           return SizedBox(
             width: itemWidth,
             child: HoleCard(
+              key: _keyForIndex(offset + i),
               holeData: holes[i],
               onChanged: (updated) => _onHoleChanged(offset + i, updated),
             ),
@@ -345,6 +449,7 @@ class _FieldLessonTabState extends State<FieldLessonTab> {
         return Padding(
           padding: EdgeInsets.only(bottom: 12.h),
           child: HoleCard(
+            key: _keyForIndex(offset + i),
             holeData: holes[i],
             onChanged: (updated) => _onHoleChanged(offset + i, updated),
           ),

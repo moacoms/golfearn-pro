@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -5,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/claude_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../students/presentation/providers/student_provider.dart';
+import '../../data/services/lesson_note_draft_service.dart';
 import '../../domain/entities/lesson_note_entity.dart';
 import '../providers/lesson_note_provider.dart';
 import '../widgets/field_lesson_tab.dart';
@@ -35,7 +38,13 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage>
   bool _isLoading = false;
   bool _isAiGenerating = false;
 
+  // 드래프트 자동 저장 (디바운스 800ms)
+  Timer? _draftDebounce;
+  static const _draftDebounceDuration = Duration(milliseconds: 800);
+  bool _draftRestoreChecked = false;
+
   bool get isEditing => widget.note != null;
+  String? get _draftNoteId => widget.note?.id;
 
   @override
   void initState() {
@@ -61,10 +70,33 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage>
       vsync: this,
       initialIndex: _fieldData != null ? 1 : 0,
     );
+
+    // 텍스트 변경 시 드래프트 자동 저장 (디바운스)
+    _noteController.addListener(_scheduleDraftSave);
+    _homeworkController.addListener(_scheduleDraftSave);
+    _nextFocusController.addListener(_scheduleDraftSave);
+    _keyPointsController.addListener(_scheduleDraftSave);
+    _improvementsController.addListener(_scheduleDraftSave);
+
+    // 첫 프레임 후 드래프트 복원 다이얼로그
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeRestoreDraft();
+    });
   }
 
   @override
   void dispose() {
+    // 드래프트 디바운스 즉시 flush (마지막 입력 보존)
+    if (_draftDebounce?.isActive ?? false) {
+      _draftDebounce!.cancel();
+      _flushDraft();
+    }
+    _noteController.removeListener(_scheduleDraftSave);
+    _homeworkController.removeListener(_scheduleDraftSave);
+    _nextFocusController.removeListener(_scheduleDraftSave);
+    _keyPointsController.removeListener(_scheduleDraftSave);
+    _improvementsController.removeListener(_scheduleDraftSave);
+
     _noteController.dispose();
     _homeworkController.dispose();
     _nextFocusController.dispose();
@@ -120,7 +152,10 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage>
                     }).toList(),
                     onChanged: isEditing
                         ? null
-                        : (v) => setState(() => _selectedStudentId = v),
+                        : (v) {
+                            setState(() => _selectedStudentId = v);
+                            _scheduleDraftSave();
+                          },
                     validator: (v) => v == null ? '학생을 선택해주세요' : null,
                     decoration: _inputDecoration('학생 *'),
                   );
@@ -157,6 +192,7 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage>
                     initialFieldData: _fieldData,
                     onFieldDataChanged: (data) {
                       setState(() => _fieldData = data);
+                      _scheduleDraftSave();
                     },
                   ),
                 ],
@@ -505,6 +541,99 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage>
         .toList();
   }
 
+  // -- 드래프트 저장/복원 --
+
+  void _scheduleDraftSave() {
+    _draftDebounce?.cancel();
+    _draftDebounce = Timer(_draftDebounceDuration, _flushDraft);
+  }
+
+  Map<String, dynamic>? _collectDraft() {
+    final isEmpty = _noteController.text.trim().isEmpty &&
+        _homeworkController.text.trim().isEmpty &&
+        _nextFocusController.text.trim().isEmpty &&
+        _keyPointsController.text.trim().isEmpty &&
+        _improvementsController.text.trim().isEmpty &&
+        _selectedStudentId == null &&
+        _fieldData == null;
+    if (isEmpty) return null;
+    return {
+      'student_id': _selectedStudentId,
+      'manual_note': _noteController.text,
+      'homework': _homeworkController.text,
+      'next_focus': _nextFocusController.text,
+      'key_points': _keyPointsController.text,
+      'improvements': _improvementsController.text,
+      'field_data': _fieldData,
+    };
+  }
+
+  Future<void> _flushDraft() async {
+    final draft = _collectDraft();
+    if (draft == null) {
+      await LessonNoteDraftService.clear(noteId: _draftNoteId);
+      return;
+    }
+    await LessonNoteDraftService.save(
+      noteId: _draftNoteId,
+      draft: draft,
+    );
+  }
+
+  Future<void> _maybeRestoreDraft() async {
+    if (_draftRestoreChecked) return;
+    _draftRestoreChecked = true;
+
+    final draft = await LessonNoteDraftService.load(noteId: _draftNoteId);
+    if (draft == null || !mounted) return;
+
+    final shouldRestore = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('이전 작성 내용 복원'),
+        content: const Text(
+          '저장하지 않은 작성 내역이 있습니다.\n복원할까요?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('새로 시작'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('복원'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (shouldRestore != true) {
+      await LessonNoteDraftService.clear(noteId: _draftNoteId);
+      return;
+    }
+
+    setState(() {
+      if (!isEditing) {
+        _selectedStudentId = draft['student_id'] as String?;
+      }
+      _noteController.text = (draft['manual_note'] as String?) ?? '';
+      _homeworkController.text = (draft['homework'] as String?) ?? '';
+      _nextFocusController.text = (draft['next_focus'] as String?) ?? '';
+      _keyPointsController.text = (draft['key_points'] as String?) ?? '';
+      _improvementsController.text = (draft['improvements'] as String?) ?? '';
+      final restoredField = draft['field_data'];
+      _fieldData = restoredField is Map
+          ? Map<String, dynamic>.from(restoredField)
+          : null;
+      if (_fieldData != null) {
+        _tabController.animateTo(1);
+      }
+    });
+  }
+
   Future<void> _saveNote() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedStudentId == null) {
@@ -545,6 +674,10 @@ class _LessonNoteFormPageState extends ConsumerState<LessonNoteFormPage>
       }
 
       ref.invalidate(lessonNotesProvider);
+
+      // 저장 성공 시 드래프트 정리 (디바운스도 취소)
+      _draftDebounce?.cancel();
+      await LessonNoteDraftService.clear(noteId: _draftNoteId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
