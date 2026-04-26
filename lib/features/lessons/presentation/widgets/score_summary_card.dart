@@ -31,6 +31,8 @@ class ScoreSummaryCard extends StatelessWidget {
           _buildScoreRow(stats),
           SizedBox(height: 12.h),
           _buildStatGrid(stats),
+          SizedBox(height: 8.h),
+          _buildShortGameGrid(stats),
         ],
       ),
     );
@@ -111,6 +113,36 @@ class ScoreSummaryCard extends StatelessWidget {
     );
   }
 
+  Widget _buildShortGameGrid(_SummaryStats stats) {
+    return Row(
+      children: [
+        _buildStatItem(
+          '샌드세이브',
+          stats.sandSaveAttempts > 0
+              ? '${stats.sandSaveRate.toStringAsFixed(0)}%'
+              : '—',
+          Icons.beach_access,
+        ),
+        SizedBox(width: 16.w),
+        _buildStatItem(
+          '업앤다운',
+          stats.upDownAttempts > 0
+              ? '${stats.upDownRate.toStringAsFixed(0)}%'
+              : '—',
+          Icons.flash_on,
+        ),
+        SizedBox(width: 16.w),
+        _buildStatItem(
+          '드라이빙 평균',
+          stats.drivingAvgM != null
+              ? '${stats.drivingAvgM!.round()}m'
+              : '—',
+          Icons.golf_course,
+        ),
+      ],
+    );
+  }
+
   Widget _buildStatItem(String label, String value, IconData icon) {
     return Expanded(
       child: Container(
@@ -156,6 +188,11 @@ class ScoreSummaryCard extends StatelessWidget {
     var fairwayEligible = 0;
     var fairwayHits = 0;
     var girCount = 0;
+    var sandSaveAttempts = 0;
+    var sandSaveMade = 0;
+    var upDownAttempts = 0;
+    var upDownMade = 0;
+    final driveDistances = <int>[];
 
     for (final hole in holes) {
       final par = hole['par'] as int? ?? 4;
@@ -186,12 +223,46 @@ class ScoreSummaryCard extends StatelessWidget {
       if (_isGreenInRegulation(shots, par)) {
         girCount++;
       }
+
+      final sandSave = hole['sand_save'] as String?;
+      if (sandSave == 'made') {
+        sandSaveAttempts++;
+        sandSaveMade++;
+      } else if (sandSave == 'missed') {
+        sandSaveAttempts++;
+      }
+
+      final upDown = hole['up_and_down'] as String?;
+      if (upDown == 'made') {
+        upDownAttempts++;
+        upDownMade++;
+      } else if (upDown == 'missed') {
+        upDownAttempts++;
+      }
+
+      // 드라이빙 거리: 티샷 + 드라이버 + distance_m 입력된 경우
+      for (final shot in shots) {
+        if (shot['shot_type'] == 'tee' &&
+            shot['club'] == 'driver' &&
+            shot['distance_m'] is int) {
+          driveDistances.add(shot['distance_m'] as int);
+        }
+      }
     }
 
     final fairwayHitRate = fairwayEligible > 0
         ? (fairwayHits / fairwayEligible) * 100
         : 0.0;
     final girRate = holes.isNotEmpty ? (girCount / holes.length) * 100 : 0.0;
+    final sandSaveRate = sandSaveAttempts > 0
+        ? (sandSaveMade / sandSaveAttempts) * 100
+        : 0.0;
+    final upDownRate = upDownAttempts > 0
+        ? (upDownMade / upDownAttempts) * 100
+        : 0.0;
+    final drivingAvgM = driveDistances.isEmpty
+        ? null
+        : driveDistances.reduce((a, b) => a + b) / driveDistances.length;
 
     return _SummaryStats(
       totalScore: totalScore,
@@ -199,6 +270,11 @@ class ScoreSummaryCard extends StatelessWidget {
       totalPutts: totalPutts,
       fairwayHitRate: fairwayHitRate,
       girRate: girRate,
+      sandSaveAttempts: sandSaveAttempts,
+      sandSaveRate: sandSaveRate,
+      upDownAttempts: upDownAttempts,
+      upDownRate: upDownRate,
+      drivingAvgM: drivingAvgM,
     );
   }
 
@@ -227,6 +303,11 @@ class _SummaryStats {
     required this.totalPutts,
     required this.fairwayHitRate,
     required this.girRate,
+    required this.sandSaveAttempts,
+    required this.sandSaveRate,
+    required this.upDownAttempts,
+    required this.upDownRate,
+    required this.drivingAvgM,
   });
 
   final int totalScore;
@@ -234,4 +315,9 @@ class _SummaryStats {
   final int totalPutts;
   final double fairwayHitRate;
   final double girRate;
+  final int sandSaveAttempts;
+  final double sandSaveRate;
+  final int upDownAttempts;
+  final double upDownRate;
+  final double? drivingAvgM;
 }

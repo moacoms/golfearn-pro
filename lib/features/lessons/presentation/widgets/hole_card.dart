@@ -29,6 +29,8 @@ class HoleCard extends StatelessWidget {
   int? get _yardageM => holeData['yardage_m'] as int?;
   String get _memo => holeData['memo'] as String? ?? '';
   String? get _greenSide => holeData['green_side'] as String?;
+  String? get _sandSave => holeData['sand_save'] as String?;
+  String? get _upAndDown => holeData['up_and_down'] as String?;
 
   List<Map<String, dynamic>> get _shots {
     final raw = holeData['shots'] as List<dynamic>?;
@@ -169,6 +171,14 @@ class HoleCard extends StatelessWidget {
     onChanged(_updated({'penalty_strokes': next}));
   }
 
+  void _onSandSaveChanged(String? value) {
+    onChanged(_updated({'sand_save': value}));
+  }
+
+  void _onUpAndDownChanged(String? value) {
+    onChanged(_updated({'up_and_down': value}));
+  }
+
   // -- build -----------------------------------------------------------------
 
   @override
@@ -203,6 +213,18 @@ class HoleCard extends StatelessWidget {
           _buildPuttsCounter(context),
           SizedBox(height: 8.h),
           _buildPenaltyCounter(context),
+          SizedBox(height: 8.h),
+          _buildShortGameRow(
+            label: '샌드세이브',
+            value: _sandSave,
+            onChanged: _onSandSaveChanged,
+          ),
+          SizedBox(height: 6.h),
+          _buildShortGameRow(
+            label: '업앤다운',
+            value: _upAndDown,
+            onChanged: _onUpAndDownChanged,
+          ),
           Divider(height: 16.h),
           ...List.generate(shots.length, (i) {
             return Padding(
@@ -373,6 +395,59 @@ class HoleCard extends StatelessWidget {
             onChanged: _onYardageChanged,
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildShortGameRow({
+    required String label,
+    required String? value,
+    required void Function(String?) onChanged,
+  }) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 80.w,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+        ),
+        SizedBox(width: 8.w),
+        ...GolfFieldConstants.shortGameOutcomes.entries.map((entry) {
+          final isSelected = value == entry.key;
+          final isMade = entry.key == 'made';
+          final color = isMade
+              ? AppTheme.primaryColor
+              : const Color(0xFFDC2626);
+          return Padding(
+            padding: EdgeInsets.only(right: 6.w),
+            child: ChoiceChip(
+              label: Text(
+                entry.value,
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected ? Colors.white : color,
+                ),
+              ),
+              selected: isSelected,
+              selectedColor: color,
+              backgroundColor: Colors.grey[100],
+              side: isSelected
+                  ? BorderSide.none
+                  : BorderSide(color: color.withValues(alpha: 0.4)),
+              onSelected: (selected) =>
+                  onChanged(selected ? entry.key : null),
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          );
+        }),
       ],
     );
   }

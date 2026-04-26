@@ -29,6 +29,13 @@ class GolfFieldConstants {
     'red': '레드(여성)',
   };
 
+  // 숏게임 결과 (샌드세이브 / 업앤다운 공용)
+  // 'made' = 성공, 'missed' = 실패, null = 시도 없음
+  static const Map<String, String> shortGameOutcomes = {
+    'made': '성공',
+    'missed': '실패',
+  };
+
   // 샷 유형
   static const Map<String, String> shotTypes = {
     'tee': '티샷',
@@ -171,6 +178,8 @@ class GolfFieldConstants {
       'yardage_m': null,
       'memo': '',
       'green_side': null,
+      'sand_save': null,
+      'up_and_down': null,
       'shots': <Map<String, dynamic>>[],
     };
   }
