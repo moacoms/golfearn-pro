@@ -11,7 +11,9 @@
 
 ## Decision
 
-`MediaQuery`는 건드리지 않고, `Builder` 안에서 `MediaQuery.of(context).size.width`를 읽어 `ScreenUtilInit.designSize`를 동적으로 조정. 화면 너비 > 507px이면 `designWidth = screenWidth / 1.3`로 설정해 스케일을 **1.3배로 고정**. 좁은 화면(≤ 507px)은 자연 스케일(392 기준 그대로) 유지.
+`MediaQuery`는 건드리지 않고, `Builder` 안에서 `MediaQuery.of(context).size`를 읽어 `ScreenUtilInit.designSize`를 동적으로 조정. 화면 너비 > 507px이면 `designWidth = screenWidth / 1.3`로 설정해 스케일을 **1.3배로 고정**. 좁은 화면(≤ 507px)은 자연 스케일(392 기준 그대로) 유지.
+
+**2026-04-26 후속 수정**: 초기엔 `designHeight`를 `designWidth`에 비례해서 산출(=designWidth × 844/390)했는데, 이로 인해 데스크탑(예: 1440×1161)에서 `designHeight ≈ 2400`이 되어 `.h` 단위가 ~0.48배로 축소됨. 결과: 차트 `reservedSize: 24.h` 같은 세로 예약 공간이 12px 정도로 줄어 라벨이 짤림. 수정: `designHeight`도 `screenHeight / 1.3`로 독립 캡(자연 cutoff = 844 × 1.3 = 1097). `.w`와 `.h`가 동일한 1.3배로 유지되도록 보장.
 
 ## Alternatives Considered
 

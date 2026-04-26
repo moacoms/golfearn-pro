@@ -22,16 +22,19 @@ class GolfearnProApp extends ConsumerWidget {
 
     return Builder(
       builder: (context) {
-        final screenWidth = MediaQuery.of(context).size.width;
+        final size = MediaQuery.of(context).size;
         final naturalCutoff = _baseDesignWidth * _maxScale;
 
-        // 좁은 화면: 자연 스케일 (screenWidth / 390)
-        // 넓은 화면: designSize를 비례 확대하여 스케일을 _maxScale로 고정
-        final designWidth = screenWidth > naturalCutoff
-            ? screenWidth / _maxScale
+        // 좁은 화면: 자연 스케일 (screen / base).
+        // 넓은 화면: designWidth/Height를 actualSize에 맞춰 _maxScale로 캡.
+        // 너비·높이를 독립적으로 조정해 .w와 .h가 동일한 배율로 유지되도록 함.
+        final designWidth = size.width > naturalCutoff
+            ? size.width / _maxScale
             : _baseDesignWidth;
-        final designHeight =
-            designWidth * (_baseDesignHeight / _baseDesignWidth);
+        final naturalHeightCutoff = _baseDesignHeight * _maxScale;
+        final designHeight = size.height > naturalHeightCutoff
+            ? size.height / _maxScale
+            : _baseDesignHeight;
 
         return ScreenUtilInit(
           designSize: Size(designWidth, designHeight),
